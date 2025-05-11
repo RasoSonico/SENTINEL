@@ -35,6 +35,7 @@ export const useAzureAuth = (
 
   // Evitar re-renders con configuración inicial
   const isInitializedRef = useRef(false);
+  const alreadyProcessedRef = useRef(false);
 
   // Variables constantes - NO las guardes en estado
   const tenantId = config.tenantId;
@@ -42,7 +43,7 @@ export const useAzureAuth = (
   const discoveryUrl = useMemo(
     () =>
       enabled && tenantId
-        ? `https://login.microsoftonline.com/${tenantId}/v2.0`
+        ? `https://login.microsoftonline.com/${tenantId}/v2.0/.well-known/openid-configuration`
         : null,
     [enabled, tenantId]
   );
@@ -291,9 +292,8 @@ export const useAzureAuth = (
   // Procesar respuesta automáticamente - Con verificación para evitar ciclos
   useEffect(() => {
     if (!enabled || !response || response.type !== "success") return;
-
-    const alreadyProcessedRef = useRef(false);
     if (alreadyProcessedRef.current) return;
+
     alreadyProcessedRef.current = true;
 
     console.log("Processing automatic response", response.type);
