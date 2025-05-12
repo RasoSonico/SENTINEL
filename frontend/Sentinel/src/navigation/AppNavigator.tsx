@@ -3,9 +3,7 @@ import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { AppTabParamList } from "./types";
 import { ObraNavigator } from "./moduleNavigators/ObraNavigator";
-// import { CatalogoNavigator } from './moduleNavigators/CatalogoNavigator';
-// import { CronogramaNavigator } from './moduleNavigators/CronogramaNavigator';
-// import { AvanceNavigator } from './moduleNavigators/AvanceNavigator';
+import { AvanceNavigator } from "./moduleNavigators/AvanceNavigator"; // Importar correctamente
 import { Ionicons } from "@expo/vector-icons";
 import { View, Text } from "react-native";
 import PerfilScreen from "../modules/profiles/PerfilScreen";
@@ -44,14 +42,18 @@ export const AppNavigator = () => {
         },
         tabBarActiveTintColor: "#0366d6",
         tabBarInactiveTintColor: "gray",
+        headerShown: false, // Ocultamos el header principal ya que lo maneja cada navegador
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} />
+      {/* Usar el navegador de avances, no directamente la pantalla */}
+      <Tab.Screen name="Avances" component={AvanceNavigator} />
+      <Tab.Screen name="Perfil" component={PerfilScreen} />
+
+      {/* Estas pantallas están comentadas hasta que las necesites */}
+      {/* <Tab.Screen name="Home" component={HomeScreen} /> */}
       {/* <Tab.Screen name="Obras" component={ObraNavigator} /> */}
       {/* <Tab.Screen name="Catalogos" component={CatalogoNavigator} /> */}
       {/* <Tab.Screen name="Cronogramas" component={CronogramaNavigator} /> */}
-      {/* <Tab.Screen name="Avances" component={AvanceNavigator} /> */}
-      <Tab.Screen name="Perfil" component={PerfilScreen} />
     </Tab.Navigator>
   );
 };

@@ -1,58 +1,46 @@
-import axios, {
-  AxiosError,
-  AxiosResponse,
-  InternalAxiosRequestConfig,
-} from "axios";
+import { API_URL } from "@env";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { store } from "../../redux/store";
-import { logout } from "../../redux/slices/authSlice";
+import axios, { InternalAxiosRequestConfig } from "axios";
 
 // URL base de la API
-const API_URL = "http://127.0.0.1:8000/api/"; // Cambiar según entorno
+export const isDevelopment = process.env.NODE_ENV === "development";
 
-// Crear cliente axios con configuración base
-const axiosClient = axios.create({
+const apiClient = axios.create({
   baseURL: API_URL,
   headers: {
     "Content-Type": "application/json",
-    Accept: "application/json",
   },
 });
 
-// Interceptor para AÑADIR TOKEN A LAS PETICIONES
-// Este interceptor se ejecuta antes de cada petición
-axiosClient.interceptors.request.use(
+// Interceptor para añadir token a las peticiones
+apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
-    // Obtener token de storage
     const token = await AsyncStorage.getItem("token");
-
-    // Si hay token, añadirlo a los headers
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-
     return config;
   },
-  (error: AxiosError) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Interceptor para manejar respuestas
-axiosClient.interceptors.response.use(
-  (response: AxiosResponse) => {
-    return response;
-  },
-  async (error: AxiosError) => {
-    // Manejar errores de autenticación (401)
-    if (error.response?.status === 401) {
-      // Limpiar token y dirigir a login
-      await AsyncStorage.removeItem("token");
-      store.dispatch(logout());
+// Interceptor para manejar errores de autenticación
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    // Si el error es 401 (Unauthorized), podríamos redireccionar al login
+    // o refrescar el token, pero no usaremos el store directamente aquí
+    if (error.response && error.response.status === 401) {
+      // En lugar de usar el store, guardamos un flag en AsyncStorage
+      await AsyncStorage.setItem("auth_error", "true");
+
+      // Podríamos disparar un evento que otros componentes puedan escuchar
+      const event = new Event("auth_error");
+      document.dispatchEvent(event);
     }
 
     return Promise.reject(error);
   }
 );
 
-export default axiosClient;
+export default apiClient;

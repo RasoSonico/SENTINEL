@@ -1,6 +1,7 @@
 //Tipos para los parámetros de navegación
 import { RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
+import { NavigatorScreenParams } from "@react-navigation/native";
 
 // Parámetros para la navegación de autenticación
 export type AuthStackParamList = {
@@ -55,6 +56,7 @@ export type CronogramaStackParamList = {
 // Parámetros para el navegador de Avances
 export type AvanceStackParamList = {
   AvancesList: undefined;
+  AvanceRegistration: { constructionId: string; constructionName: string };
   AvanceDetail: { avanceId: string; title: string };
   AvanceCreate: undefined;
   AvanceEdit: { avanceId: string };
@@ -64,6 +66,22 @@ export type AvanceStackParamList = {
   EstimacionEdit: { estimacionId: string };
   Dashboard: undefined;
 };
+
+// Tipos para props de navegación específicas
+export type AvanceListScreenNavigationProp = StackNavigationProp<
+  AvanceStackParamList,
+  "AvancesList"
+>;
+
+export type AdvanceRegistrationScreenNavigationProp = StackNavigationProp<
+  AvanceStackParamList,
+  "AvanceRegistration"
+>;
+
+export type AdvanceDetailScreenNavigationProp = StackNavigationProp<
+  AvanceStackParamList,
+  "AvanceDetail"
+>;
 
 // Tipo para la ruta raíz que decide entre Auth y App
 export type RootStackParamList = {

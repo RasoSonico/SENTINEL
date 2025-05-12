@@ -116,3 +116,88 @@ export interface EstimationDetail {
   created_at: string;
   updated_at: string;
 }
+export interface AdvanceRegistration {
+  construction_id: string;
+  concept_id: string;
+  quantity: number;
+  is_completed: boolean;
+  notes?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+export interface AdvancePhoto {
+  id: string;
+  url: string;
+  thumbnail_url: string;
+  created_at: string;
+}
+
+export interface PhysicalAdvance {
+  id: string;
+  construction_id: string;
+  construction_name: string;
+  concept_id: string;
+  concept_code: string;
+  concept_name: string;
+  concept_unit: string;
+  quantity: number;
+  is_completed: boolean;
+  notes: string;
+  latitude: number | null;
+  longitude: number | null;
+  status: "pending" | "approved" | "rejected";
+  approval_date: string | null;
+  rejection_reason: string | null;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+  created_by_name: string;
+  approved_by: string | null;
+  approved_by_name: string | null;
+  photos: AdvancePhoto[];
+  program_status: "on_schedule" | "ahead" | "delayed";
+}
+
+export interface PhysicalAdvanceSummary {
+  construction_id: string;
+  total_advances: number;
+  pending_advances: number;
+  approved_advances: number;
+  rejected_advances: number;
+  total_concepts: number;
+  completed_concepts: number;
+  physical_progress_percentage: number;
+  financial_progress_percentage: number;
+  last_advance_date: string | null;
+}
+
+// Tipos adicionales para la entidad UserConstruction
+export interface UserRole {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface UserDetails {
+  id: string;
+  username: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  outter_id: string | null;
+  roles: string[];
+  is_active: boolean;
+}
+
+export interface UserConstruction {
+  id: string;
+  user: string;
+  construction: string;
+  role: string;
+  is_active: boolean;
+  asignation_date: string;
+  user_details: UserDetails;
+  role_details: UserRole;
+  construction_details: Construction;
+}
