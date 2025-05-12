@@ -11,4 +11,5 @@ app_name = 'obra'
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('constructions/my/', views.ConstructionViewSet.as_view({'get': 'my_constructions'}), name='my-constructions'),
 ]

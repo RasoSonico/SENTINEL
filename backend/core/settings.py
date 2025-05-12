@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework_simplejwt',
     'corsheaders',
     'catalogo',
     'avance',
@@ -151,6 +152,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = True  # Especificar los orígenes permitidos en prod
 
+AZURE_TENANT_ID = config('AZURE_TENANT_ID')
+AZURE_CLIENT_ID = config('AZURE_CLIENT_ID')
+AZURE_CLIENT_SECRET = config('AZURE_CLIENT_SECRET', default='')
+AZURE_AUTHORITY = config('AZURE_AUTHORITY', default=f'https://login.microsoftonline.com/{AZURE_TENANT_ID}')
+AZURE_REDIRECT_URI = config('AZURE_REDIRECT_URI', default='')
+AZURE_SCOPE = config('AZURE_SCOPE', default='openid profile email')
+
 # REST Framework settings
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
@@ -158,12 +166,24 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.AllowAny',  # Permitir acceso a cualquier usuario (desarrollo)
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        #'tu_app.authentication.AzureADB2CAuthentication',  ##Aquí añadiremos la autenticación con Azure AD B2C posteriormente
+        #PROD
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'usuarios.authentication.AzureExternalIDAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+        #Desarrollo
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
     ],
 
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
+}
 
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
 }

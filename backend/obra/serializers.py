@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Construction, UserConstruction, ConstructionChangeControl
 from usuarios.serializers import UserSerializer, UserRoleSerializer
+from usuarios.models import Role
 
 class ConstructionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -22,9 +23,14 @@ class ConstructionSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("El presupuesto no puede ser negativo")
         return value
 
+class RoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Role
+        fields = ['id', 'name', 'description']
+
 class UserConstructionSerializer(serializers.ModelSerializer):
     user_details = UserSerializer(source='user', read_only=True)
-    role_details = UserRoleSerializer(source='role', read_only=True)
+    role_details = RoleSerializer(source='role', read_only=True)
     construction_details = ConstructionSerializer(source='construction', read_only=True)
     
     class Meta:

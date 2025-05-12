@@ -17,7 +17,8 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'outter_id']
         
     def get_roles(self, obj):
-        return [role.role for role in obj.roles.all()]
+        # Devuelve solo los nombres de los roles, no los objetos completos
+        return [user_role.role.name for user_role in obj.roles.all()]
         
     def validate(self, data):
         # Validar contraseñas solo en creación
@@ -67,11 +68,6 @@ class UserRoleSerializer(serializers.ModelSerializer):
         model = UserRole
         fields = ['id', 'user', 'role']
         
-    def validate_role(self, value):
-        valid_roles = [choice[0] for choice in UserRole.ROLE_CHOICES]
-        if value not in valid_roles:
-            raise serializers.ValidationError(f"Rol no válido. Opciones: {', '.join(valid_roles)}")
-        return value
         
     def validate(self, data):
         # Verificar que no exista ya esta combinación usuario-rol

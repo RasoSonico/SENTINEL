@@ -1,6 +1,8 @@
 from rest_framework import viewsets, permissions, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from django.conf import settings
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from .models import Construction, UserConstruction, ConstructionChangeControl
 from .serializers import (ConstructionSerializer, UserConstructionSerializer, 
                          ConstructionChangeControlSerializer)
@@ -36,6 +38,25 @@ class ConstructionViewSet(viewsets.ModelViewSet):
             user_obras__user=user,
             user_obras__is_active=True
         ).distinct()
+    
+    @action(detail=False, methods=['get'])
+    def my_constructions(self, request):
+        user = request.user
+        if user.is_anonymous:
+            return Response({"error": "Usuario no autenticado"}, status=401)
+        
+        role = request.query_params.get('role', None)
+        
+        queryset = Construction.objects.filter(
+            user_obras__user=user,
+            user_obras__is_active=True
+        )
+        
+        if role:
+            queryset = queryset.filter(user_obras__role__name=role)
+        
+        serializer = self.get_serializer(queryset.distinct(), many=True)
+        return Response(serializer.data)
 
 class UserConstructionViewSet(viewsets.ModelViewSet):
     queryset = UserConstruction.objects.all()

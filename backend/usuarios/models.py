@@ -26,8 +26,9 @@ class Role (models.Model):
         ('ADMIN', 'Administrador'),
         ('INSPECTOR', 'Inspector'),
         ('INVERSIONISTA', 'Inversionista'),
+        ('DESARROLLADOR', 'Desarrollador'),
+        ('CONTRATISTA', 'Contratista'),
     ]
-
 
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50, choices=ROLES, default='INSPECTOR')
@@ -58,5 +59,5 @@ class UserRole(models.Model):
         ordering = ['user']
 
     def __str__(self):
-        return f"{self.user.username} - {self.role_id.name}"
+        return f"{self.user.username} - {self.role.name}"
     
