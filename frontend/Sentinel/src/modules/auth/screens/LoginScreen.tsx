@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
+import styles from "./LoginScreen.styles";
 import {
   View,
   Text,
@@ -9,7 +10,6 @@ import {
   Alert,
 } from "react-native";
 import { Button } from "../../../components/ui/Button";
-import { useAuth } from "../../../hooks/auth/useAuth";
 import { useAppSelector, useAppDispatch } from "../../../redux/hooks";
 import {
   selectLoading,
@@ -17,13 +17,13 @@ import {
 } from "../../../redux/selectors/authSelectors";
 import { setError, setLoading } from "../../../redux/slices/authSlice";
 import * as Device from "expo-device";
+import { useAuth } from "../../../hooks/useAuth";
 
 const LoginScreen: React.FC = () => {
-  const auth = useAuth();
+  const { login } = useAuth();
   const dispatch = useAppDispatch();
-  const loading = useAppSelector(selectLoading);
+  const isLoading = useAppSelector(selectLoading);
   const error = useAppSelector(selectError);
-  const [localLoading, setLocalLoading] = useState(false);
 
   useEffect(() => {
     if (error) {
@@ -33,39 +33,18 @@ const LoginScreen: React.FC = () => {
     }
   }, [error, dispatch]);
 
-  const handleMicrosoftLogin = async () => {
-    try {
-      console.log("Login button pressed");
-
-      // Establecer un timeout de seguridad para resetear loading después de 15 segundos
-      const safetyTimeout = setTimeout(() => {
-        dispatch(setLoading(false));
-      }, 15000);
-
-      const token = await auth.login();
-
-      // Limpiar el timeout si llegamos aquí
-      clearTimeout(safetyTimeout);
-
-      console.log("Login completed, token received:", !!token);
-
-      if (!token) {
-        Alert.alert("Información", "No se completó el inicio de sesión");
-      }
-    } catch (err) {
+  const handleLogin = async () => {
+    login().catch((err) => {
       console.error("Login error caught:", err);
-      // Asegurar que loading se resetea en caso de error
-      dispatch(setLoading(false));
       Alert.alert(
         "Error de Autenticación",
         "Ocurrió un error durante el inicio de sesión: " +
-          (err instanceof Error ? err.message : "Error desconocido")
+        (err instanceof Error ? err.message : "Error desconocido")
       );
-    }
+    }).finally((() => {
+      dispatch(setLoading(false));
+    }));
   };
-
-  // Usar el estado de carga combinado (Redux + local)
-  const isLoading = loading || localLoading;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -83,7 +62,7 @@ const LoginScreen: React.FC = () => {
         <View style={styles.formContainer}>
           <Button
             title="Iniciar Sesión con Microsoft"
-            onPress={handleMicrosoftLogin}
+            onPress={handleLogin}
             loading={isLoading}
             icon="logo-microsoft"
             style={styles.microsoftButton}
@@ -102,56 +81,5 @@ const LoginScreen: React.FC = () => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  content: {
-    flex: 1,
-    padding: 20,
-    justifyContent: "center",
-  },
-  logoContainer: {
-    alignItems: "center",
-    marginBottom: 60,
-  },
-  logo: {
-    width: 120,
-    height: 120,
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#0366d6",
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 18,
-    color: "#666",
-    textAlign: "center",
-  },
-  formContainer: {
-    marginBottom: 40,
-  },
-  microsoftButton: {
-    backgroundColor: "#0078d4",
-    marginBottom: 16,
-  },
-  infoText: {
-    textAlign: "center",
-    color: "#666",
-    fontSize: 14,
-    marginTop: 12,
-  },
-  footer: {
-    textAlign: "center",
-    color: "#999",
-    fontSize: 14,
-    marginTop: "auto",
-  },
-});
 
 export default LoginScreen;

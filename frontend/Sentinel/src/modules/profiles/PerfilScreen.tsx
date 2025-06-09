@@ -4,12 +4,12 @@ import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { logout } from "../../redux/slices/authSlice";
-import { useAuth } from "../../hooks/auth/useAuth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   selectUserName,
   selectUserEmail,
 } from "../../redux/selectors/authSelectors";
+import { useAuth } from "../../hooks/useAuth";
 
 const PerfilScreen = () => {
   const dispatch = useAppDispatch();

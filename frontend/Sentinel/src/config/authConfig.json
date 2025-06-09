@@ -1,0 +1,18 @@
+{
+  "activeProvider": "azure",
+  "providers": {
+    "azure": {
+      "tenantId": "2c20d78c-5383-4c24-8aa5-29bfa6fa8ae2",
+      "clientId": "04c59944-1089-44dd-9a92-da7a05e0881d",
+      "scopes": ["openid", "profile", "email", "offline_access"],
+      "scheme": "sentinel",
+      "path": "auth"
+    },
+    "google": {
+      "clientId": "your-google-client-id",
+      "scopes": ["openid", "profile", "email"],
+      "scheme": "sentinel",
+      "path": "auth"
+    }
+  }
+}

@@ -30,12 +30,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "Sentinel",
   slug: "sentinel",
+  scheme: "sentinel",
   version: "1.0.0",
   orientation: "portrait",
-  icon: "./assets/icon.png",
+  icon: "./src/assets/SENTINEL_LOGO.png",
   userInterfaceStyle: "light",
   splash: {
-    image: "./assets/splash.png",
+    image: "./src/assets/SENTINEL_LOGO.png",
     resizeMode: "contain",
     backgroundColor: "#ffffff",
   },
@@ -45,16 +46,17 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   assetBundlePatterns: ["**/*"],
   ios: {
     supportsTablet: true,
-    bundleIdentifier: "com.yourcompany.sentinel",
+    bundleIdentifier: "com.urbaingenieria.sentinel",
   },
   android: {
     adaptiveIcon: {
-      foregroundImage: "./assets/adaptive-icon.png",
+      foregroundImage: "./src/assets/SENTINEL_LOGO.png",
       backgroundColor: "#FFFFFF",
     },
+    package: "com.urbaingenieria.sentinel",
   },
   web: {
-    favicon: "./assets/favicon.png",
+    favicon: "./src/assets/SENTINEL_LOGO.png",
   },
   extra: {
     apiUrl: getApiUrl(),

@@ -36,7 +36,9 @@
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.yourcompany.sentinel"
@@ -55,13 +57,23 @@
               "scheme": "sentinel"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ],
       "edgeToEdgeEnabled": true
     },
     "web": {
       "bundler": "metro"
+    },
+    "extra": {
+      "apiUrl": "http://localhost:8000/api/",
+      "environment": "development",
+      "eas": {
+        "projectId": "d96d8296-ab75-49bb-9206-6005139d6314"
+      }
     }
   }
 }
