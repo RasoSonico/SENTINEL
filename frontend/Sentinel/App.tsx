@@ -9,6 +9,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { setCredentials } from "./src/redux/slices/authSlice";
 import * as SplashScreen from "expo-splash-screen";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // Mantener la pantalla de splash visible mientras se inicializa la app
 SplashScreen.preventAutoHideAsync();
@@ -87,24 +88,40 @@ export default function App() {
     return null; // No renderizamos nada mientras SplashScreen está visible
   }
 
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: 1,
+        refetchOnWindowFocus: false,
+        staleTime: 30000, // 30 seconds
+      },
+    },
+  });
+
   return (
     <Provider store={store}>
-      <PersistGate
-        loading={
-          <View
-            style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-          >
-            <ActivityIndicator size="large" color="#0366d6" />
-            <Text style={{ marginTop: 12, color: "#666" }}>Cargando...</Text>
-          </View>
-        }
-        persistor={persistor}
-      >
-        <SafeAreaProvider>
-          <StatusBar style="auto" />
-          <RootNavigator />
-        </SafeAreaProvider>
-      </PersistGate>
+      <QueryClientProvider client={queryClient}>
+        <PersistGate
+          loading={
+            <View
+              style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <ActivityIndicator size="large" color="#0366d6" />
+              <Text style={{ marginTop: 12, color: "#666" }}>Cargando...</Text>
+            </View>
+          }
+          persistor={persistor}
+        >
+          <SafeAreaProvider>
+            <StatusBar style="auto" />
+            <RootNavigator />
+          </SafeAreaProvider>
+        </PersistGate>
+      </QueryClientProvider>
     </Provider>
   );
 }
