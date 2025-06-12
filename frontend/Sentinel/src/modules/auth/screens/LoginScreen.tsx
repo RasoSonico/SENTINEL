@@ -3,7 +3,6 @@ import styles from "./LoginScreen.styles";
 import {
   View,
   Text,
-  StyleSheet,
   Image,
   SafeAreaView,
   Platform,

@@ -1,18 +1,22 @@
-// Navegador raíz decide entre Auth y App
-import React from "react";
-import { createStackNavigator } from "@react-navigation/stack";
+import React, { useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { useAppSelector } from "../redux/hooks";
 import { AuthNavigator } from "./AuthNavigator";
 import { AppNavigator } from "./AppNavigator";
 import { RootStackParamList } from "./types";
 import { navigationRef } from "./NavigationService";
+import { createStackNavigator } from "@react-navigation/stack";
+import AuthLoading from "./AuthLoading";
 
 const Stack = createStackNavigator<RootStackParamList>();
 
 export const RootNavigator = () => {
-  // Obtenemos el estado de autenticación desde Redux
   const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const [authChecked, setAuthChecked] = useState(false);
+
+  if (!authChecked) {
+    return <AuthLoading onAuthChecked={() => setAuthChecked(true)} />;
+  }
 
   return (
     <NavigationContainer ref={navigationRef}>

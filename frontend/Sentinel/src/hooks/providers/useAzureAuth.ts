@@ -1,7 +1,6 @@
 import * as AuthSession from "expo-auth-session";
 import { useDispatch } from "react-redux";
 import { useCallback, useEffect } from "react";
-import { setToken } from "../../redux/slices/authSlice";
 import { AuthProvider, AuthProviderConfig } from "src/types/auth";
 
 export const useAzureAuth = (
@@ -33,7 +32,7 @@ export const useAzureAuth = (
   );
 
   const handleAuthResponse = useCallback(
-    async (response: AuthSession.AuthSessionResult): Promise<string | null> => {
+    async (response: AuthSession.AuthSessionResult): Promise<AuthSession.TokenResponse | null> => {
       if (!enabled) return null;
 
       if (response.type === "success" && discovery) {
@@ -53,10 +52,9 @@ export const useAzureAuth = (
             discovery
           );
 
-          const accessToken = tokenResponse.accessToken;
-          dispatch(setToken(accessToken));
-          console.log("Access token:", accessToken);
-          return accessToken;
+          // const accessToken = tokenResponse.accessToken;
+          // dispatch(setToken(accessToken));
+          return tokenResponse;
         } catch (error) {
           console.error("Error exchanging code for tokens:", error);
           return null;
@@ -73,7 +71,7 @@ export const useAzureAuth = (
     }
   }, [response, enabled, handleAuthResponse]);
 
-  const login = async (): Promise<string | null> => {
+  const login = async (): Promise<AuthSession.TokenResponse | null> => {
     if (!enabled) {
       console.warn("Azure auth provider is not enabled");
       return null;
@@ -84,8 +82,8 @@ export const useAzureAuth = (
 
     if (request) {
       const result = await promptAsync();
-      console.log("Result:", result);
       if (result.type === "success") {
+        console.log("Authentication successful");
         return await handleAuthResponse(result);
       } else {
         console.error("Authentication failed or was canceled.");
@@ -101,5 +99,7 @@ export const useAzureAuth = (
     login,
     handleAuthResponse,
     enabled,
+    discovery,
+    clientId,
   };
 };

@@ -2,16 +2,16 @@ import { useDispatch, useSelector } from "react-redux";
 import { useAuthMeQuery } from "./data/query/useAuthQueries";
 import { useEffect } from "react";
 import { QueryClient } from "@tanstack/react-query";
-import * as SecureStore from "expo-secure-store";
 import authConfig from "../config/authConfig.json";
 import { useAzureAuth } from "./providers/useAzureAuth";
 import { selectAuthInfo } from "src/redux/selectors/authSelectors";
 import {
   clearCredentials,
   setCredentials,
-  setToken,
+  setIsAuthenticated,
 } from "src/redux/slices/authSlice";
-import { AuthConfig } from "src/types/auth";
+import { AuthConfig, AuthProvider } from "src/types/auth";
+import { deleteToken, saveTokenResponse } from "src/utils/auth";
 
 export const useAuth = () => {
   const dispatch = useDispatch();
@@ -30,27 +30,8 @@ export const useAuth = () => {
 
   const azureAuth = useAzureAuth(providers.azure, activeProvider === "azure");
 
-  useEffect(() => {
-    const loadToken = async () => {
-      const token = await getToken("auth_token");
-      if (token) {
-        dispatch(setToken(token));
-      }
-    };
-
-    loadToken();
-  }, [dispatch]);
-
-  useEffect(() => {
-    console.group("Auth loaded correctly")
-    console.log("token:", token);
-    console.log("role:", role);
-    console.log("user:", user);
-    console.groupEnd();
-  }, [token, role, user]);
-
   // Get the active provider based on configuration
-  const getActiveProvider = () => {
+  const getActiveProvider = (): AuthProvider => {
     switch (activeProvider) {
       case "azure":
         return azureAuth;
@@ -60,19 +41,14 @@ export const useAuth = () => {
     }
   };
 
-  const login = async (): Promise<string | null> => {
+  const login = async () => {
     const provider = getActiveProvider();
-    const token = await provider.login();
+    const tokenResponse = await provider.login();
 
-    if (token) {
-      await saveToken("auth_token", token);
-      dispatch(setToken(token));
-
-      // Refetch the authenticated user after login
-      refetchAuthUser();
+    if (tokenResponse) {
+      saveTokenResponse(tokenResponse);
+      dispatch(setIsAuthenticated(true));
     }
-
-    return token;
   };
 
   useEffect(() => {
@@ -96,20 +72,8 @@ export const useAuth = () => {
     queryClient.invalidateQueries({
       queryKey: ["authMe"],
     });
-    await revokeToken("auth_token");
+    await deleteToken();
     dispatch(clearCredentials());
-  };
-
-  const saveToken = async (key: string, value: string) => {
-    await SecureStore.setItemAsync(key, value);
-  };
-
-  const getToken = async (key: string) => {
-    return await SecureStore.getItemAsync(key);
-  };
-
-  const revokeToken = async (key: string) => {
-    await SecureStore.deleteItemAsync(key);
   };
 
   return {
@@ -118,11 +82,11 @@ export const useAuth = () => {
     user,
     login,
     logout,
-    saveToken,
-    getToken,
     isAuthUserPending,
     isAuthUserSuccessful,
     isAuthUserError,
     activeProvider,
+    discovery: getActiveProvider().discovery,
+    clientId: getActiveProvider().clientId,
   };
 };

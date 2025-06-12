@@ -1,10 +1,11 @@
-import { AuthSessionResult } from "expo-auth-session";
+import { AuthSessionResult, DiscoveryDocument, TokenResponse } from "expo-auth-session";
 
 export interface AuthProvider {
-  login: () => Promise<string | null>;
-  handleAuthResponse: (response: AuthSessionResult) => Promise<string | null>;
+  login: () => Promise<TokenResponse | null>;
+  handleAuthResponse: (response: AuthSessionResult) => Promise<TokenResponse | null>;
   enabled: boolean;
-  logout: () => Promise<void>;
+  discovery: DiscoveryDocument | null;
+  clientId: string;
 }
 
 export interface AuthProviderConfig {

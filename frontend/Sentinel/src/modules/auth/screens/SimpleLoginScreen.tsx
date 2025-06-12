@@ -25,7 +25,6 @@ const SimpleLoginScreen = () => {
       // Crear datos de prueba para autenticación
       dispatch(
         setCredentials({
-          token: "fake-token-" + Date.now(),
           user: {
             id: "test-user",
             email: "test@example.com",

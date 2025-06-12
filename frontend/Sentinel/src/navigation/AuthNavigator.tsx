@@ -1,12 +1,7 @@
-// Navegación de autenticación
 import React from "react";
 import { createStackNavigator } from "@react-navigation/stack";
 import { AuthStackParamList } from "./types";
 import LoginScreen from "../modules/auth/screens/LoginScreen";
-import SimpleLoginScreen from "src/modules/auth/screens/SimpleLoginScreen";
-
-// Importaremos estas pantallas cuando las creemos
-// Por ahora, usamos componentes de placeholder
 
 const RegisterScreen = () => (
   <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
