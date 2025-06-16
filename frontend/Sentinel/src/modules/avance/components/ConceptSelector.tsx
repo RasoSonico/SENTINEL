@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useDeferredValue } from "react";
 import {
   View,
   Text,
@@ -40,6 +40,7 @@ const ConceptSelector: React.FC<ConceptSelectorProps> = ({
   );
 
   const [searchQuery, setSearchQuery] = useState("");
+  const deferredSearchQuery = useDeferredValue(searchQuery);
   const [workItemFilter, setWorkItemFilter] = useState<string | undefined>(
     undefined
   );
@@ -61,12 +62,18 @@ const ConceptSelector: React.FC<ConceptSelectorProps> = ({
         fetchAvailableConcepts({
           constructionId,
           workItemId: workItemFilter,
-          query: searchQuery,
+          query: deferredSearchQuery,
           page: 1,
         })
       );
     }
-  }, [dispatch, constructionId, workItemFilter, searchQuery, showSelector]);
+  }, [
+    dispatch,
+    constructionId,
+    workItemFilter,
+    deferredSearchQuery,
+    showSelector,
+  ]);
 
   // Transformar conceptos para añadir información de progreso
   useEffect(() => {
