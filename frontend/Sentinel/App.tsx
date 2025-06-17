@@ -7,6 +7,7 @@ import { store, persistor } from "./src/redux/store";
 import { RootNavigator } from "./src/navigation/RootNagivator";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { PaperProvider } from "react-native-paper";
 
 export default function App() {
   const queryClient = new QueryClient({
@@ -37,10 +38,12 @@ export default function App() {
           }
           persistor={persistor}
         >
-          <SafeAreaProvider>
-            <StatusBar style="auto" />
-            <RootNavigator />
-          </SafeAreaProvider>
+          <PaperProvider>
+            <SafeAreaProvider>
+              <StatusBar style="auto" />
+              <RootNavigator />
+            </SafeAreaProvider>
+          </PaperProvider>
         </PersistGate>
       </QueryClientProvider>
     </Provider>
