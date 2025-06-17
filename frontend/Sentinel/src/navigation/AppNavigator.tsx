@@ -17,26 +17,31 @@ const HomeScreen = () => (
 
 const Tab = createBottomTabNavigator<AppTabParamList>();
 
+function getTabBarIconName(routeName: string, focused: boolean) {
+  switch (routeName) {
+    case "Home":
+      return focused ? "home" : "home-outline";
+    case "Obras":
+      return focused ? "business" : "business-outline";
+    case "Catalogos":
+      return focused ? "list" : "list-outline";
+    case "Cronogramas":
+      return focused ? "calendar" : "calendar-outline";
+    case "Avances":
+      return focused ? "trending-up" : "trending-up-outline";
+    case "Perfil":
+      return focused ? "person" : "person-outline";
+    default:
+      return "ellipse-outline";
+  }
+}
+
 export const AppNavigator = () => {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
-          let iconName: any;
-
-          if (route.name === "Home") {
-            iconName = focused ? "home" : "home-outline";
-          } else if (route.name === "Obras") {
-            iconName = focused ? "business" : "business-outline";
-          } else if (route.name === "Catalogos") {
-            iconName = focused ? "list" : "list-outline";
-          } else if (route.name === "Cronogramas") {
-            iconName = focused ? "calendar" : "calendar-outline";
-          } else if (route.name === "Avances") {
-            iconName = focused ? "trending-up" : "trending-up-outline";
-          } else if (route.name === "Perfil") {
-            iconName = focused ? "person" : "person-outline";
-          }
+          const iconName = getTabBarIconName(route.name, focused);
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
