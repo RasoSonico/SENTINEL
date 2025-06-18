@@ -5,49 +5,33 @@ import {
   Platform,
   ScrollView,
   Alert,
-  findNodeHandle, // <-- add this import
 } from "react-native";
-import { useForm, Controller } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 
-import PhotoCapture from "../components/PhotoCapture";
 import OfflineIndicator from "../components/OfflineIndicator";
-import { Concept } from "../../../types/entities";
-import { usePhotoCapture } from "../../../hooks/avance/usePhotoCapture";
-import { useGeolocation } from "../../../hooks/avance/useGeolocation";
+import { useAdvancePhotoSync } from "../../../hooks/avance/useAdvancePhotoSync";
+import { useAdvanceLocation } from "../../../hooks/avance/useAdvanceLocation";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
   setCurrentAdvanceData,
   setCurrentAdvancePhotos,
-  registerAdvance,
   selectCurrentAdvance,
   selectOfflineSync,
 } from "../../../redux/slices/advanceSlice";
-import LabeledDropdown from "../components/LabeledDropdown";
-import QuantityInput from "../components/QuantityInput";
-import CompletionSwitch from "../components/CompletionSwitch";
-import StatusSection from "../components/StatusSection";
-import NotesInput from "../components/NotesInput";
-import LocationInfo from "../components/LocationInfo";
+import AdvancePhotoSection from "./components/AdvancePhotoSection";
+import AdvanceLocationSection from "./components/AdvanceLocationSection";
 import SubmitButton from "../components/SubmitButton";
 import styles from "./styles/AdvanceForm.styles";
+import AdvanceFormFields from "./components/AdvanceFormFields";
+import {
+  advanceFormDefaultValues,
+  advanceFormSchema,
+} from "./util/advanceFormValidation";
+import z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-// Zod schema for form validation
-const advanceFormSchema = z.object({
-  catalog: z.string().min(1, "Selecciona un catálogo"),
-  partida: z.string().min(1, "Selecciona una partida"),
-  concept: z.string().min(1, "Selecciona un concepto"),
-  quantity: z
-    .string()
-    .refine((val) => !!val && !isNaN(Number(val)) && Number(val) > 0, {
-      message: "Ingresa una cantidad válida mayor a cero",
-    }),
-  notes: z.string().optional(),
-  isCompleted: z.boolean().optional(),
-});
-
-type AdvanceFormFields = z.infer<typeof advanceFormSchema>;
+// Move type definition here so it's in scope
+export type AdvanceFormFieldsZod = z.infer<typeof advanceFormSchema>;
 
 interface AdvanceFormProps {
   constructionId: string;
@@ -69,20 +53,15 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
     takePhoto,
     pickImage,
     removePhoto,
-  } = usePhotoCapture({
+  } = useAdvancePhotoSync({
     maxPhotos: 5,
     includeLocation: true,
   });
 
-  const {
-    location,
-    loading: loadingLocation,
-    getCurrentLocation,
-  } = useGeolocation({
+  const { location, loading: loadingLocation } = useAdvanceLocation({
     requestPermissionOnMount: true,
   });
 
-  // react-hook-form setup
   const {
     control,
     handleSubmit,
@@ -91,17 +70,10 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
     trigger,
     formState: { errors, isValid },
     reset,
-  } = useForm<AdvanceFormFields>({
+  } = useForm<AdvanceFormFieldsZod>({
     resolver: zodResolver(advanceFormSchema),
     mode: "onChange",
-    defaultValues: {
-      catalog: "",
-      partida: "",
-      concept: "",
-      quantity: "",
-      notes: "",
-      isCompleted: false,
-    },
+    defaultValues: advanceFormDefaultValues,
   });
 
   // Watchers for dependent logic
@@ -145,20 +117,6 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
     }
   }, [photos, dispatch]);
 
-  // Efecto para obtener ubicación al montar
-  useEffect(() => {
-    const fetchLocation = async () => {
-      try {
-        await getCurrentLocation();
-      } catch (error) {
-        console.error("Error al obtener ubicación:", error);
-        // setHasLocationError(true);
-      }
-    };
-
-    fetchLocation();
-  }, []);
-
   // Manejar selección de concepto
   const handleConceptSelect = (conceptId: string) => {
     setValue("concept", conceptId, { shouldValidate: true });
@@ -175,7 +133,7 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
   };
 
   // Manejar el envío del formulario
-  const onFormSubmit = async (data: AdvanceFormFields) => {
+  const onFormSubmit = async (data: AdvanceFormFieldsZod) => {
     // You may want to map concept string to Concept object if needed for executedQuantity, etc.
     // For now, keep executedQuantity logic as is.
     try {
@@ -216,10 +174,6 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
 
   // Refs for scrolling to fields
   const scrollViewRef = useRef<ScrollView>(null);
-  const catalogRef = useRef<View>(null) as React.RefObject<View>;
-  const partidaRef = useRef<View>(null) as React.RefObject<View>;
-  const conceptRef = useRef<View>(null) as React.RefObject<View>;
-  const quantityRef = useRef<View>(null) as React.RefObject<View>;
 
   // On submit with error, scroll to top if any error
   const scrollToTopIfError = () => {
@@ -237,30 +191,6 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
       scrollToTopIfError();
     }
   };
-
-  const mockCatalogItems: string[] = [
-    "Catalogo 1",
-    "Catalogo 2",
-    "Catalogo 3",
-    "Catalogo 4",
-    "Catalogo 5",
-  ];
-
-  const mockPartidaitems: string[] = [
-    "Partida 1",
-    "Partida 2",
-    "Partida 3",
-    "Partida 4",
-    "Partida 5",
-  ];
-
-  const mockConceptItems: string[] = [
-    "Concepto 1",
-    "Concepto 2",
-    "Concepto 3",
-    "Concepto 4",
-    "Concepto 5",
-  ];
 
   return (
     <KeyboardAvoidingView
@@ -284,109 +214,37 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
           }
         />
         <View style={styles.formSection}>
-          <View ref={catalogRef as any}>
-            <Controller
-              control={control}
-              name="catalog"
-              render={({ field: { value } }) => (
-                <LabeledDropdown
-                  label="Catálogo"
-                  items={mockCatalogItems}
-                  selected={value}
-                  onSelect={handleCatalogSelect}
-                  error={errors.catalog?.message}
-                />
-              )}
-            />
-          </View>
-          <View ref={partidaRef as any}>
-            <Controller
-              control={control}
-              name="partida"
-              render={({ field: { value } }) => (
-                <LabeledDropdown
-                  label="Partida"
-                  items={mockPartidaitems}
-                  selected={value}
-                  onSelect={handlePartidaSelect}
-                  error={errors.partida?.message}
-                />
-              )}
-            />
-          </View>
-          <View ref={conceptRef as any}>
-            <Controller
-              control={control}
-              name="concept"
-              render={({ field: { value } }) => (
-                <LabeledDropdown
-                  label="Concepto"
-                  items={mockConceptItems}
-                  selected={value}
-                  onSelect={handleConceptSelect}
-                  error={errors.concept?.message}
-                />
-              )}
-            />
-          </View>
-          <View ref={quantityRef as any}>
-            <Controller
-              control={control}
-              name="quantity"
-              render={({ field: { value, onChange } }) => (
-                <QuantityInput
-                  quantity={value}
-                  onChange={onChange}
-                  unit={""}
-                  error={errors.quantity?.message ?? null}
-                />
-              )}
-            />
-          </View>
-          {/* Cantidad ejecutada y controles avanzados */}
-          <Controller
+          <AdvanceFormFields
             control={control}
-            name="isCompleted"
-            render={({ field: { value, onChange } }) => (
-              <CompletionSwitch value={!!value} onValueChange={onChange} />
-            )}
+            errors={errors}
+            isCompleted={isCompleted}
+            handleCatalogSelect={handleCatalogSelect}
+            handlePartidaSelect={handlePartidaSelect}
+            handleConceptSelect={handleConceptSelect}
           />
-          {/* Use a mock quantity value for status calculation since selectedConceptMock is a string */}
-          <StatusSection status={isCompleted ? "completed" : "onSchedule"} />
-          {/* Captura de fotos */}
-          <View style={styles.photoSection}>
-            <PhotoCapture
-              photos={photos}
-              loading={loadingPhotos}
-              onTakePhoto={takePhoto}
-              onPickImage={pickImage}
-              onRemovePhoto={removePhoto}
-            />
-          </View>
-          {/* Notas */}
-          <Controller
-            control={control}
-            name="notes"
-            render={({ field: { value, onChange } }) => (
-              <NotesInput value={value || ""} onChange={onChange} />
-            )}
+          <AdvancePhotoSection
+            photos={photos}
+            loading={loadingPhotos}
+            onTakePhoto={takePhoto}
+            onPickImage={pickImage}
+            onRemovePhoto={removePhoto as any} // Accept string id for now
+            style={styles.photoSection}
           />
-          {/* Información de ubicación */}
-          <LocationInfo
+          <AdvanceLocationSection
             loading={loadingLocation}
             location={
               location
                 ? {
                     latitude: location.latitude,
                     longitude: location.longitude,
-                    accuracy: location.accuracy,
+                    accuracy: location.accuracy ?? undefined,
                   }
                 : null
             }
             error={false}
           />
         </View>
-        {/* Botón de envío */}
+
         <SubmitButton
           loading={currentAdvance.loading}
           disabled={currentAdvance.loading}
