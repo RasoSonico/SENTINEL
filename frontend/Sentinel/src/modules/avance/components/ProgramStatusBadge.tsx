@@ -1,6 +1,7 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import styles from "./styles/ProgramStatusBadge.styles";
 
 type StatusType =
   | "onSchedule"
@@ -84,31 +85,5 @@ const ProgramStatusBadge: React.FC<ProgramStatusBadgeProps> = ({
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    alignSelf: "flex-start",
-  },
-  compactContainer: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  icon: {
-    marginRight: 4,
-  },
-  label: {
-    fontWeight: "600",
-    fontSize: 14,
-  },
-  compactLabel: {
-    fontSize: 12,
-  },
-});
 
 export default ProgramStatusBadge;
