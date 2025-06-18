@@ -68,7 +68,7 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
     setValue,
     watch,
     trigger,
-    formState: { errors, isValid },
+    formState: { errors },
     reset,
   } = useForm<AdvanceFormFieldsZod>({
     resolver: zodResolver(advanceFormSchema),
@@ -177,8 +177,11 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
 
   // On submit with error, scroll to top if any error
   const scrollToTopIfError = () => {
-    if (errors.catalog || errors.partida || errors.concept || errors.quantity) {
-      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+    if (Object.keys(errors).length > 0) {
+      scrollViewRef.current?.scrollTo({
+        y: 0,
+        animated: true,
+      });
     }
   };
 

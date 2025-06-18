@@ -1,30 +1,29 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useGeolocation } from "./useGeolocation";
 
 export function useAdvanceLocation(
-  options: Parameters<typeof useGeolocation>[0]
+  options?: Parameters<typeof useGeolocation>[0]
 ) {
   const geo = useGeolocation(options);
-  const { getCurrentLocation, errorMsg } = geo;
+  const { getCurrentLocation } = geo;
+  const hasFetched = useRef(false);
 
   useEffect(() => {
-    if(errorMsg) {
-      // Handle error globally or log it
-      console.error("Error in useAdvanceLocation:", errorMsg);
-      return;
+    if (options?.requestPermissionOnMount && !hasFetched.current) {
+      hasFetched.current = true;
+      const fetchLocation = async () => {
+        try {
+          await getCurrentLocation();
+        } catch (error) {
+          // Optionally handle error globally
+          console.error("Error al obtener ubicación:", error);
+        }
+      };
+      fetchLocation();
     }
-
-    const fetchLocation = async () => {
-      try {
-        await getCurrentLocation();
-      } catch (error) {
-        // Optionally handle error globally
-        console.error("Error al obtener ubicación:", error);
-      }
-    };
-    fetchLocation();
-  }, [getCurrentLocation, errorMsg]);
-    
+    // Only run on mount or if requestPermissionOnMount changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [options?.requestPermissionOnMount]);
 
   return geo;
 }
