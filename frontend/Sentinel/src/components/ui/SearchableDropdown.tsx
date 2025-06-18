@@ -1,7 +1,7 @@
-import React, { useMemo, useState } from 'react';
-import { View, FlatList, StyleSheet } from 'react-native';
-import { TextInput, List, Portal, Modal } from 'react-native-paper';
-import { useDebounce } from 'src/hooks/utils/useDebounce';
+import React, { useMemo, useState } from "react";
+import { View, FlatList, StyleSheet } from "react-native";
+import { TextInput, List, Portal, Modal } from "react-native-paper";
+import { useDebounce } from "src/hooks/utils/useDebounce";
 
 interface SearchableDropdownProps {
   label: string;
@@ -9,6 +9,7 @@ interface SearchableDropdownProps {
   items: string[];
   onSelect: (value: string) => void;
   selected?: string;
+  disabled?: boolean;
 }
 
 const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
@@ -16,26 +17,25 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
   searchLabel,
   items,
   onSelect,
-  selected = '',
+  selected = "",
+  disabled = false,
 }) => {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const [visible, setVisible] = useState(false);
-  const [value, setValue] = useState(selected);
 
   const debouncedQuery = useDebounce(query, 200);
 
   const filtered = useMemo(
     () =>
-      items.filter(item =>
+      items.filter((item) =>
         item.toLowerCase().includes(debouncedQuery.toLowerCase())
       ),
     [debouncedQuery, items]
   );
 
   const handleSelect = (item: string) => {
-    setValue(item);
     setVisible(false);
-    setQuery('');
+    setQuery("");
     onSelect(item);
   };
 
@@ -43,12 +43,15 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
     <View>
       <TextInput
         label={label}
-        value={value}
+        value={selected}
         onFocus={() => setVisible(true)}
         editable
-        right={<TextInput.Icon icon="menu-down" onPress={() => setVisible(true)} />}
-        theme={{ colors: { primary: '#009BE1' } }}
-        style={{ backgroundColor: 'white', borderRadius: 8 }}
+        right={
+          <TextInput.Icon icon="menu-down" onPress={() => setVisible(true)} />
+        }
+        theme={{ colors: { primary: "#009BE1" } }}
+        style={{ backgroundColor: "white", borderRadius: 8 }}
+        disabled={disabled}
       />
 
       <Portal>
@@ -58,9 +61,9 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
           contentContainerStyle={styles.modal}
         >
           <TextInput
-            style={{ backgroundColor: 'white', borderRadius: 8 }}
-            theme={{ colors: { primary: '#009BE1' } }}
-            label={searchLabel || 'Buscar...'}
+            style={{ backgroundColor: "white", borderRadius: 8 }}
+            theme={{ colors: { primary: "#009BE1" } }}
+            label={searchLabel || "Buscar..."}
             value={query}
             onChangeText={setQuery}
             autoFocus
@@ -69,10 +72,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
             data={filtered}
             keyExtractor={(item) => item}
             renderItem={({ item }) => (
-              <List.Item
-                title={item}
-                onPress={() => handleSelect(item)}
-              />
+              <List.Item title={item} onPress={() => handleSelect(item)} />
             )}
           />
         </Modal>
@@ -84,7 +84,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
 const styles = StyleSheet.create({
   modal: {
     margin: 20,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     padding: 20,
     borderRadius: 4,
   },

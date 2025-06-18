@@ -9,6 +9,7 @@ interface LabeledDropdownProps {
   selected: string | null;
   onSelect: (item: string) => void;
   error?: string | null;
+  disabled?: boolean;
 }
 
 const LabeledDropdown: React.FC<LabeledDropdownProps> = ({
@@ -17,6 +18,7 @@ const LabeledDropdown: React.FC<LabeledDropdownProps> = ({
   selected,
   onSelect,
   error,
+  disabled = false,
 }) => (
   <View style={styles.container}>
     <Text style={styles.label}>{label}</Text>
@@ -26,6 +28,7 @@ const LabeledDropdown: React.FC<LabeledDropdownProps> = ({
       items={items}
       onSelect={onSelect}
       selected={selected ? selected : ""}
+      disabled={disabled}
     />
     {error ? <Text style={{ color: "red", marginTop: 4 }}>{error}</Text> : null}
   </View>

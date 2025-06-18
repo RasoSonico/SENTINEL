@@ -29,6 +29,7 @@ import {
 } from "./util/advanceFormValidation";
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useNavigation } from "@react-navigation/native";
 
 // Move type definition here so it's in scope
 export type AdvanceFormFieldsZod = z.infer<typeof advanceFormSchema>;
@@ -45,6 +46,7 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
   const dispatch = useAppDispatch();
   const currentAdvance = useAppSelector(selectCurrentAdvance);
   const offlineSyncState = useAppSelector(selectOfflineSync);
+  const navigation = useNavigation();
 
   // Hooks personalizados
   const {
@@ -69,7 +71,7 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
     watch,
     trigger,
     formState: { errors },
-    reset,
+    reset: resetFormFields,
   } = useForm<AdvanceFormFieldsZod>({
     resolver: zodResolver(advanceFormSchema),
     mode: "onChange",
@@ -153,13 +155,28 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
       //     photos: photos,
       //   })
       // ).unwrap();
-      reset();
-      // setExecutedQuantity(0);
+      resetFormFields();
       if (onSuccess) onSuccess();
       Alert.alert(
         "Avance registrado",
         "El avance ha sido registrado exitosamente.",
-        [{ text: "Aceptar", style: "default" }]
+        [
+          {
+            text: "Registrar otro avance",
+            style: "default",
+            onPress: () => {
+              // Just reset the form, already done above
+              scrollToTop();
+            },
+          },
+          {
+            text: "Ir al inicio",
+            style: "default",
+            onPress: () => {
+              navigation.goBack();
+            },
+          },
+        ]
       );
     } catch (error) {
       Alert.alert(
@@ -176,13 +193,11 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
   const scrollViewRef = useRef<ScrollView>(null);
 
   // On submit with error, scroll to top if any error
-  const scrollToTopIfError = () => {
-    if (Object.keys(errors).length > 0) {
-      scrollViewRef.current?.scrollTo({
-        y: 0,
-        animated: true,
-      });
-    }
+  const scrollToTop = () => {
+    scrollViewRef.current?.scrollTo({
+      y: 0,
+      animated: true,
+    });
   };
 
   // Custom submit handler to always scroll to top if error
@@ -190,8 +205,8 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
     const valid = await trigger();
     if (valid) {
       handleSubmit(onFormSubmit)();
-    } else {
-      scrollToTopIfError();
+    } else if (Object.keys(errors).length > 0) {
+      scrollToTop();
     }
   };
 
@@ -221,9 +236,11 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
             control={control}
             errors={errors}
             isCompleted={isCompleted}
-            handleCatalogSelect={handleCatalogSelect}
-            handlePartidaSelect={handlePartidaSelect}
-            handleConceptSelect={handleConceptSelect}
+            onCatalogSelect={handleCatalogSelect}
+            onPartidaSelect={handlePartidaSelect}
+            onConceptSelect={handleConceptSelect}
+            disablePartida={!selectedCatalog}
+            disableConcept={!selectedPartida}
           />
           <AdvancePhotoSection
             photos={photos}

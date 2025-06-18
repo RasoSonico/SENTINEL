@@ -12,9 +12,11 @@ interface AdvanceFormFieldsProps {
   control: Control<AdvanceFormFieldsZod>;
   errors: FieldErrors<AdvanceFormFieldsZod>;
   isCompleted: boolean | undefined;
-  handleCatalogSelect: (catalogId: string) => void;
-  handlePartidaSelect: (partidaId: string) => void;
-  handleConceptSelect: (conceptId: string) => void;
+  onCatalogSelect: (catalogId: string) => void;
+  onPartidaSelect: (partidaId: string) => void;
+  onConceptSelect: (conceptId: string) => void;
+  disablePartida?: boolean;
+  disableConcept?: boolean;
 }
 
 const mockCatalogItems: string[] = [
@@ -45,9 +47,11 @@ const AdvanceFormFields: React.FC<AdvanceFormFieldsProps> = ({
   control,
   errors,
   isCompleted,
-  handleCatalogSelect,
-  handlePartidaSelect,
-  handleConceptSelect,
+  onCatalogSelect,
+  onPartidaSelect,
+  onConceptSelect,
+  disablePartida = false,
+  disableConcept = false,
 }) => (
   <>
     <View>
@@ -59,7 +63,7 @@ const AdvanceFormFields: React.FC<AdvanceFormFieldsProps> = ({
             label="Catálogo"
             items={mockCatalogItems}
             selected={value}
-            onSelect={handleCatalogSelect}
+            onSelect={onCatalogSelect}
             error={errors.catalog?.message}
           />
         )}
@@ -74,8 +78,9 @@ const AdvanceFormFields: React.FC<AdvanceFormFieldsProps> = ({
             label="Partida"
             items={mockPartidaitems}
             selected={value}
-            onSelect={handlePartidaSelect}
+            onSelect={onPartidaSelect}
             error={errors.partida?.message}
+            disabled={disablePartida}
           />
         )}
       />
@@ -89,8 +94,9 @@ const AdvanceFormFields: React.FC<AdvanceFormFieldsProps> = ({
             label="Concepto"
             items={mockConceptItems}
             selected={value}
-            onSelect={handleConceptSelect}
+            onSelect={onConceptSelect}
             error={errors.concept?.message}
+            disabled={disableConcept}
           />
         )}
       />
