@@ -120,10 +120,10 @@ const AdvanceListScreen: React.FC = () => {
 
   // Manejar la navegación al formulario de registro de avance
   const handleAddAdvance = () => {
-    if (assignedConstruction) {
+    if (!assignedConstruction) {
       navigation.navigate("AvanceRegistration", {
-        constructionId: assignedConstruction.construction_details.id,
-        constructionName: assignedConstruction.construction_details.name,
+        constructionId: assignedConstruction?.construction_details?.id ?? 1,
+        constructionName: assignedConstruction?.construction_details?.name ?? "Obra sin nombre",
       });
     } else {
       Alert.alert(
