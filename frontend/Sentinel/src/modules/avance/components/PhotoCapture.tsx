@@ -79,7 +79,7 @@ const PhotoCapture: React.FC<PhotoCaptureProps> = ({
   };
 
   return (
-    <View style={styles.container}>
+    <View>
       <View style={styles.headerContainer}>
         <Text style={styles.title}>Evidencia fotográfica</Text>
         <Text style={styles.subtitle}>
@@ -152,9 +152,6 @@ const PhotoCapture: React.FC<PhotoCaptureProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
-    marginBottom: 16,
-  },
   headerContainer: {
     flexDirection: "row",
     justifyContent: "space-between",

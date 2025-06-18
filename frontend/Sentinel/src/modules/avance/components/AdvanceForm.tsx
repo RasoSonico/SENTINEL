@@ -31,6 +31,7 @@ import {
   // Añadir un selector para obtener los avances físicos si existe
   // selectPhysicalAdvances,
 } from "../../../redux/slices/advanceSlice";
+import SearchableDropdown from "src/components/ui/SearchableDropdown";
 
 interface AdvanceFormProps {
   constructionId: string;
@@ -245,6 +246,7 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
       dispatch(setCurrentAdvanceData(advanceData));
 
       // Registrar el avance
+      // Handle edge cases where either the advance or photos endpoint is offline or returns an error
       await dispatch(
         registerAdvance({
           advance: advanceData,
@@ -280,6 +282,47 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
       );
     }
   };
+
+  const mockCatalogItems: string[] = [
+    "Catalogo 1",
+    "Catalogo 2",
+    "Catalogo 3",
+    "Catalogo 4",
+    "Catalogo 5",
+  ];
+
+  const mockPartidaitems: string[] = [
+    "Partida 1",
+    "Partida 2",
+    "Partida 3",
+    "Partida 4",
+    "Partida 5",
+  ];
+
+  const mockConceptItems: string[] = [
+    "Concepto 1",
+    "Concepto 2",
+    "Concepto 3",
+    "Concepto 4",
+    "Concepto 5",
+  ];
+
+  const [selectedCatalog, setSelectedCatalog] = useState<string | null>(null);
+  const [selectedPartida, setSelectedPartida] = useState<string | null>(null);
+  const [selectedConceptMock, setSelectedConceptMock] = useState<string | null>(null);
+
+  const handleCatalogSelect = (item: string) => {
+    setSelectedCatalog(item);
+  }
+
+  const handlePartidaSelect = (item: string) => {
+    setSelectedPartida(item);
+  };
+
+  const handleConceptSelectMock = (item: string) => {
+    setSelectedConcept(item);
+  };
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -298,72 +341,118 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
           }
         />
 
-        {/* Selector de concepto */}
         <View style={styles.formGroup}>
-          <Text style={styles.label}>Concepto</Text>
-          <ConceptSelector
-            constructionId={constructionId}
-            onSelectConcept={handleConceptSelect}
-            selectedConcept={selectedConcept}
-          />
-        </View>
+          <View style={styles.formField}>
+            <Text style={styles.label}>Catálogo</Text>
+            <SearchableDropdown
+              label="Selecciona una opción"
+              searchLabel="Busca y selecciona un catálogo"
+              items={mockCatalogItems}
+              onSelect={handleCatalogSelect}
+              selected={selectedCatalog ? selectedCatalog : ""}
+            />
+          </View>
 
-        {/* Cantidad ejecutada */}
-        {selectedConcept && (
-          <View style={styles.formGroup}>
-            <View style={styles.labelContainer}>
-              <Text style={styles.label}>
-                Cantidad ejecutada ({selectedConcept.unit})
-              </Text>
-              {quantityError && (
-                <Text style={styles.errorText}>{quantityError}</Text>
-              )}
-            </View>
-            <View
-              style={[
-                styles.inputContainer,
-                { borderColor: quantityError ? "#e74c3c" : "#ddd" },
-              ]}
-            >
+          <View style={styles.formField}>
+            <Text style={styles.label}>Partida</Text>
+            <SearchableDropdown
+              label="Selecciona una opción"
+              searchLabel="Busca y selecciona una partida"
+              items={mockPartidaitems}
+              onSelect={handlePartidaSelect}
+              selected={selectedPartida ? selectedPartida : ""}
+            />
+          </View>
+
+          <View style={styles.formField}>
+            <Text style={styles.label}>Concepto</Text>
+            <SearchableDropdown
+              label="Selecciona una opción"
+              searchLabel="Busca y selecciona un concepto"
+              items={mockConceptItems}
+              onSelect={handleConceptSelectMock}
+              selected={selectedConceptMock ? selectedConceptMock : ""}
+            />
+          </View>
+
+          <View style={styles.formField}>
+            <Text style={styles.label}>Volumen ejecutado</Text>
+            <View style={styles.volumeContainer}>
               <TextInput
-                style={styles.input}
-                placeholder={`Ingresa cantidad en ${selectedConcept.unit}`}
+                style={styles.volumeInput}
+                placeholder="Volumen"
                 value={quantity}
                 onChangeText={handleQuantityChange}
                 keyboardType="numeric"
-                autoCapitalize="none"
               />
-              {quantityError && (
-                <Ionicons
-                  name="alert-circle"
-                  size={20}
-                  color="#e74c3c"
-                  style={styles.inputIcon}
+              <TextInput
+                style={styles.disabledInput}
+                placeholder="Unidad"
+                value={selectedConcept ? selectedConcept.unit : ""}
+                editable={false}
+              />
+            </View>
+          </View>
+
+
+
+          {/* Cantidad ejecutada */}
+          {selectedConcept && (
+            <View style={styles.formGroup}>
+              <View style={styles.formField}>
+                <Text style={styles.label}>
+                  Cantidad ejecutada ({selectedConcept.unit})
+                </Text>
+                {quantityError && (
+                  <Text style={styles.errorText}>{quantityError}</Text>
+                )}
+
+                <View
+                  style={[
+                    styles.inputContainer,
+                    { borderColor: quantityError ? "#e74c3c" : "#ddd" },
+                  ]}
+                >
+                  <TextInput
+                    style={styles.input}
+                    placeholder={`Ingresa cantidad en ${selectedConcept.unit}`}
+                    value={quantity}
+                    onChangeText={handleQuantityChange}
+                    keyboardType="numeric"
+                    autoCapitalize="none"
+                  />
+                  {quantityError && (
+                    <Ionicons
+                      name="alert-circle"
+                      size={20}
+                      color="#e74c3c"
+                      style={styles.inputIcon}
+                    />
+                  )}
+                </View>
+              </View>
+
+              {/* Checkbox para marcar como completado */}
+              <View style={styles.completedContainer}>
+                <Text style={styles.completedLabel}>
+                  Marcar concepto como completado
+                </Text>
+                <Switch
+                  value={isCompleted}
+                  onValueChange={setIsCompleted}
+                  trackColor={{ false: "#ecf0f1", true: "#2ecc7180" }}
+                  thumbColor={isCompleted ? "#2ecc71" : "#bdc3c7"}
                 />
-              )}
-            </View>
+              </View>
 
-            {/* Checkbox para marcar como completado */}
-            <View style={styles.completedContainer}>
-              <Text style={styles.completedLabel}>
-                Marcar concepto como completado
-              </Text>
-              <Switch
-                value={isCompleted}
-                onValueChange={setIsCompleted}
-                trackColor={{ false: "#ecf0f1", true: "#2ecc7180" }}
-                thumbColor={isCompleted ? "#2ecc71" : "#bdc3c7"}
-              />
-            </View>
-
-            {/* Estado respecto al programa */}
-            <View style={styles.statusContainer}>
-              <Text style={styles.statusLabel}>Estado del avance:</Text>
-              <ProgramStatusBadge
-                status={
-                  isCompleted
-                    ? "completed"
-                    : /*
+              {/* Estado respecto al programa */}
+              <View style={styles.statusContainer}>
+                <Text style={styles.statusLabel}>Estado del avance:</Text>
+                <ProgramStatusBadge
+                  status={
+                    isCompleted
+                      ? "completed"
+                      : /*
                      * Como no tenemos programmed_quantity, usaremos un cálculo basado
                      * en el porcentaje de avance respecto a la cantidad total.
                      * Podemos considerar:
@@ -371,88 +460,90 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
                      * - 'delayed': cuando se completa menos del 25% con este avance
                      * - 'onSchedule': para valores entre 25% y 75%
                      */
-                    (parseFloat(quantity || "0") + executedQuantity) /
+                      (parseFloat(quantity || "0") + executedQuantity) /
                         selectedConcept.quantity >
-                      0.75
-                    ? "ahead"
-                    : (parseFloat(quantity || "0") + executedQuantity) /
-                        selectedConcept.quantity <
-                      0.25
-                    ? "delayed"
-                    : "onSchedule"
-                }
-              />
-            </View>
-          </View>
-        )}
-
-        {/* Captura de fotos */}
-        <View style={styles.formGroup}>
-          <PhotoCapture
-            photos={photos}
-            loading={loadingPhotos}
-            onTakePhoto={takePhoto}
-            onPickImage={pickImage}
-            onRemovePhoto={removePhoto}
-          />
-        </View>
-
-        {/* Notas */}
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Notas (opcional)</Text>
-          <View style={styles.textareaContainer}>
-            <TextInput
-              style={styles.textarea}
-              placeholder="Escribe cualquier observación relevante..."
-              value={notes}
-              onChangeText={setNotes}
-              multiline
-              numberOfLines={4}
-              textAlignVertical="top"
-            />
-          </View>
-        </View>
-
-        {/* Información de ubicación */}
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Ubicación</Text>
-          {loadingLocation ? (
-            <View style={styles.locationLoading}>
-              <ActivityIndicator size="small" color="#3498db" />
-              <Text style={styles.locationLoadingText}>
-                Obteniendo ubicación...
-              </Text>
-            </View>
-          ) : location ? (
-            <View style={styles.locationInfo}>
-              <Ionicons
-                name="location"
-                size={20}
-                color="#3498db"
-                style={styles.locationIcon}
-              />
-              <Text style={styles.locationText}>
-                Lat: {location.latitude.toFixed(6)}, Lon:{" "}
-                {location.longitude.toFixed(6)}
-                {location.accuracy
-                  ? ` • Precisión: ${location.accuracy.toFixed(1)}m`
-                  : ""}
-              </Text>
-            </View>
-          ) : (
-            <View style={styles.locationError}>
-              <Ionicons
-                name="warning"
-                size={20}
-                color="#e67e22"
-                style={styles.locationIcon}
-              />
-              <Text style={styles.locationErrorText}>
-                No se pudo obtener la ubicación. El avance se registrará sin
-                coordenadas geográficas.
-              </Text>
+                        0.75
+                        ? "ahead"
+                        : (parseFloat(quantity || "0") + executedQuantity) /
+                          selectedConcept.quantity <
+                          0.25
+                          ? "delayed"
+                          : "onSchedule"
+                  }
+                />
+              </View>
             </View>
           )}
+
+
+          {/* Captura de fotos */}
+          <View style={styles.formGroup}>
+            <PhotoCapture
+              photos={photos}
+              loading={loadingPhotos}
+              onTakePhoto={takePhoto}
+              onPickImage={pickImage}
+              onRemovePhoto={removePhoto}
+            />
+          </View>
+
+          {/* Notas */}
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Notas (opcional)</Text>
+            <View style={styles.textareaContainer}>
+              <TextInput
+                style={styles.textarea}
+                placeholder="Escribe cualquier observación relevante..."
+                value={notes}
+                onChangeText={setNotes}
+                multiline
+                numberOfLines={4}
+                textAlignVertical="top"
+              />
+            </View>
+          </View>
+
+          {/* Información de ubicación */}
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Ubicación</Text>
+            {loadingLocation ? (
+              <View style={styles.locationLoading}>
+                <ActivityIndicator size="small" color="#3498db" />
+                <Text style={styles.locationLoadingText}>
+                  Obteniendo ubicación...
+                </Text>
+              </View>
+            ) : location ? (
+              <View style={styles.locationInfo}>
+                <Ionicons
+                  name="location"
+                  size={20}
+                  color="#3498db"
+                  style={styles.locationIcon}
+                />
+                <Text style={styles.locationText}>
+                  Lat: {location.latitude.toFixed(6)}, Lon:{" "}
+                  {location.longitude.toFixed(6)}
+                  {location.accuracy
+                    ? ` • Precisión: ${location.accuracy.toFixed(1)}m`
+                    : ""}
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.locationError}>
+                <Ionicons
+                  name="warning"
+                  size={20}
+                  color="#e67e22"
+                  style={styles.locationIcon}
+                />
+                <Text style={styles.locationErrorText}>
+                  No se pudo obtener la ubicación. El avance se registrará sin
+                  coordenadas geográficas.
+                </Text>
+              </View>
+            )}
+          </View>
         </View>
 
         {/* Botón de envío */}
@@ -488,7 +579,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   formGroup: {
-    marginBottom: 24,
+    flex: 1,
+    gap: 4,
+    marginBottom: 16,
+  },
+  formField: {
+    gap: 4,
+    marginBottom: 8
   },
   labelContainer: {
     flexDirection: "row",
@@ -499,7 +596,6 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: "600",
-    marginBottom: 8,
   },
   errorText: {
     color: "#e74c3c",
@@ -514,6 +610,33 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     backgroundColor: "#fff",
+  },
+  volumeContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  volumeInput: {
+    flexGrow: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    backgroundColor: "#fff",
+    height: 48,
+    fontSize: 16,
+  },
+  disabledInput: {
+    color: "#7f8c8d",
+    backgroundColor: "#ecf0f1",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    width: 120,
+    height: 48,
+    fontSize: 16,
   },
   input: {
     flex: 1,
@@ -536,20 +659,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   completedContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 16,
-    paddingHorizontal: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   completedLabel: {
     fontSize: 14,
     color: "#333",
   },
   statusContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   statusLabel: {
     fontSize: 14,
