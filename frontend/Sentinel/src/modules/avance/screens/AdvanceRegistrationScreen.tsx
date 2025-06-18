@@ -3,7 +3,6 @@ import {
   View,
   StyleSheet,
   SafeAreaView,
-  ScrollView,
   Text,
   Alert,
   ActivityIndicator,
@@ -12,7 +11,7 @@ import { RouteProp, useRoute, useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import NetInfo from "@react-native-community/netinfo";
 import { Ionicons } from "@expo/vector-icons";
-import AdvanceForm from "../components/AdvanceForm";
+import AdvanceForm from "../forms/AdvanceForm";
 import { AvanceStackParamList } from "../../../navigation/types";
 import { useAppDispatch } from "../../../redux/hooks";
 import {

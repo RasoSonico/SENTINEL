@@ -5,6 +5,7 @@ import { useDebounce } from 'src/hooks/utils/useDebounce';
 
 interface SearchableDropdownProps {
   label: string;
+  searchLabel?: string;
   items: string[];
   onSelect: (value: string) => void;
   selected?: string;
@@ -12,6 +13,7 @@ interface SearchableDropdownProps {
 
 const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
   label,
+  searchLabel,
   items,
   onSelect,
   selected = '',
@@ -38,12 +40,15 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
   };
 
   return (
-    <View style={styles.container}>
+    <View>
       <TextInput
         label={label}
         value={value}
         onFocus={() => setVisible(true)}
         editable
+        right={<TextInput.Icon icon="menu-down" onPress={() => setVisible(true)} />}
+        theme={{ colors: { primary: '#009BE1' } }}
+        style={{ backgroundColor: 'white', borderRadius: 8 }}
       />
 
       <Portal>
@@ -53,7 +58,9 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
           contentContainerStyle={styles.modal}
         >
           <TextInput
-            label="Search"
+            style={{ backgroundColor: 'white', borderRadius: 8 }}
+            theme={{ colors: { primary: '#009BE1' } }}
+            label={searchLabel || 'Buscar...'}
             value={query}
             onChangeText={setQuery}
             autoFocus
@@ -75,9 +82,6 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-  },
   modal: {
     margin: 20,
     backgroundColor: 'white',
