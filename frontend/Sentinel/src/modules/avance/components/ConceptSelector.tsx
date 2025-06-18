@@ -1,11 +1,17 @@
-import React, { useState, useEffect, useDeferredValue } from "react";
+import React, {
+  useState,
+  useEffect,
+  useDeferredValue,
+  useCallback,
+  useMemo,
+} from "react";
+import debounce from "lodash.debounce";
 import {
   View,
   Text,
   TouchableOpacity,
   FlatList,
   TextInput,
-  StyleSheet,
   ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -15,6 +21,7 @@ import {
   fetchAvailableConcepts,
   selectAvailableConcepts,
 } from "../../../redux/slices/advanceSlice";
+import styles from "./ConceptSelector.styles";
 
 // Interfaz extendida para información adicional que necesitamos en la UI
 interface ConceptWithProgress extends Concept {
@@ -45,8 +52,6 @@ const ConceptSelector: React.FC<ConceptSelectorProps> = ({
     undefined
   );
   const [showSelector, setShowSelector] = useState(false);
-
-  // Estado local para almacenar información de progreso
   const [conceptsWithProgress, setConceptsWithProgress] = useState<
     ConceptWithProgress[]
   >([]);
@@ -57,7 +62,8 @@ const ConceptSelector: React.FC<ConceptSelectorProps> = ({
 
   // Cargar conceptos disponibles al montar el componente o cuando cambian los filtros
   useEffect(() => {
-    if (showSelector) {
+    if (!showSelector) return;
+    const debouncedFetch = debounce(() => {
       dispatch(
         fetchAvailableConcepts({
           constructionId,
@@ -66,7 +72,11 @@ const ConceptSelector: React.FC<ConceptSelectorProps> = ({
           page: 1,
         })
       );
-    }
+    }, 300);
+
+    debouncedFetch();
+
+    return () => debouncedFetch.cancel();
   }, [
     dispatch,
     constructionId,
@@ -79,7 +89,7 @@ const ConceptSelector: React.FC<ConceptSelectorProps> = ({
   useEffect(() => {
     // Función que podría llamar a una API para obtener el progreso
     // En este caso simulamos datos
-    const getProgressInfo = async (concepts: Concept[]) => {
+    const getProgressInfo = (concepts: Concept[]) => {
       // Aquí deberías hacer una llamada API para obtener el progreso real
       // Por ahora simulamos datos de progreso
       return concepts.map((concept) => ({
@@ -90,13 +100,12 @@ const ConceptSelector: React.FC<ConceptSelectorProps> = ({
     };
 
     if (items.length > 0) {
-      getProgressInfo(items).then((conceptsWithInfo) => {
-        setConceptsWithProgress(conceptsWithInfo);
-      });
+      setConceptsWithProgress(getProgressInfo(items));
+    } else {
+      setConceptsWithProgress([]);
     }
   }, [items]);
 
-  // Actualizar información de progreso cuando se selecciona un concepto
   useEffect(() => {
     if (selectedConcept) {
       // Aquí deberías hacer una llamada API para obtener el progreso real
@@ -109,9 +118,8 @@ const ConceptSelector: React.FC<ConceptSelectorProps> = ({
   }, [selectedConcept]);
 
   // Cargar más conceptos al llegar al final de la lista
-  const handleLoadMore = () => {
+  const handleLoadMore = useCallback(() => {
     if (loading || page >= pages) return;
-
     dispatch(
       fetchAvailableConcepts({
         constructionId,
@@ -120,69 +128,82 @@ const ConceptSelector: React.FC<ConceptSelectorProps> = ({
         page: page + 1,
       })
     );
-  };
+  }, [
+    loading,
+    page,
+    pages,
+    dispatch,
+    constructionId,
+    workItemFilter,
+    searchQuery,
+  ]);
 
   // Manejar la selección de un concepto
-  const handleSelectConcept = (concept: Concept) => {
-    onSelectConcept(concept);
-    setShowSelector(false);
-  };
+  const handleSelectConcept = useCallback(
+    (concept: Concept) => {
+      onSelectConcept(concept);
+      setShowSelector(false);
+    },
+    [onSelectConcept]
+  );
 
   // Renderizar un elemento de la lista de conceptos
-  const renderConceptItem = ({ item }: { item: ConceptWithProgress }) => {
-    // Encontrar el progreso para este concepto
-    const executed = item.executed_quantity || 0;
-    const remaining = item.quantity - executed;
-    const progressPercentage = (executed / item.quantity) * 100;
+  const renderConceptItem = useCallback(
+    ({ item }: { item: ConceptWithProgress }) => {
+      const executed = item.executed_quantity || 0;
+      const remaining = item.quantity - executed;
+      const progressPercentage = (executed / item.quantity) * 100;
+      return (
+        <TouchableOpacity
+          style={styles.conceptItem}
+          onPress={() => handleSelectConcept(item)}
+          accessible
+          accessibilityLabel={`Seleccionar concepto ${item.code} ${item.description}`}
+        >
+          <View style={styles.conceptInfo}>
+            <Text style={styles.conceptCode}>{item.code}</Text>
+            <Text style={styles.conceptName}>{item.description}</Text>
+            <Text style={styles.conceptDetails}>
+              {item.work_item_name} • {item.unit} • Restante: {remaining}
+            </Text>
+          </View>
+          <View style={styles.progressContainer}>
+            <View
+              style={[
+                styles.progressBar,
+                {
+                  width: `${Math.min(progressPercentage, 100)}%`,
+                  backgroundColor:
+                    progressPercentage >= 90 ? "#e74c3c" : "#3498db",
+                },
+              ]}
+            />
+          </View>
+        </TouchableOpacity>
+      );
+    },
+    [handleSelectConcept]
+  );
 
-    return (
-      <TouchableOpacity
-        style={styles.conceptItem}
-        onPress={() => handleSelectConcept(item)}
-      >
-        <View style={styles.conceptInfo}>
-          <Text style={styles.conceptCode}>{item.code}</Text>
-          <Text style={styles.conceptName}>{item.description}</Text>
-          {/* Usar description en lugar de name */}
-          <Text style={styles.conceptDetails}>
-            {item.work_item_name} • {item.unit} • Restante: {remaining}
-          </Text>
-        </View>
+  // Separador
+  const renderSeparator = useCallback(
+    () => <View style={styles.separator} />,
+    []
+  );
 
-        <View style={styles.progressContainer}>
-          <View
-            style={[
-              styles.progressBar,
-              {
-                width: `${Math.min(progressPercentage, 100)}%`,
-                backgroundColor:
-                  progressPercentage >= 90 ? "#e74c3c" : "#3498db",
-              },
-            ]}
-          />
-        </View>
-      </TouchableOpacity>
-    );
-  };
-
-  // Renderizar el separador entre elementos
-  const renderSeparator = () => <View style={styles.separator} />;
-
-  // Renderizar el indicador de carga al final de la lista
-  const renderFooter = () => {
+  // Footer
+  const renderFooter = useCallback(() => {
     if (!loading || page === 1) return null;
-
     return (
       <View style={styles.footerLoader}>
         <ActivityIndicator size="small" color="#3498db" />
       </View>
     );
-  };
+  }, [loading, page]);
 
-  // Renderizar el indicador de lista vacía
-  const renderEmpty = () => {
+  // Empty
+  const renderEmpty = useCallback(() => {
     if (loading && page === 1) return null;
-
     return (
       <View style={styles.emptyContainer}>
         <Ionicons name="search-outline" size={48} color="#bdc3c7" />
@@ -194,7 +215,33 @@ const ConceptSelector: React.FC<ConceptSelectorProps> = ({
         </Text>
       </View>
     );
-  };
+  }, [loading, page]);
+
+  // Error feedback
+  const renderError = useCallback(() => {
+    if (!error) return null;
+    return (
+      <View
+        style={{
+          padding: 12,
+          backgroundColor: "#fdecea",
+          borderRadius: 8,
+          margin: 8,
+        }}
+      >
+        <Text style={{ color: "#e74c3c", fontWeight: "600" }}>
+          Error: {error}
+        </Text>
+      </View>
+    );
+  }, [error]);
+
+  // Memoize contentContainerStyle
+  const contentContainerStyle = useMemo(
+    () =>
+      conceptsWithProgress.length === 0 ? { flex: 1 } : styles.listContent,
+    [conceptsWithProgress.length]
+  );
 
   return (
     <View style={styles.container}>
@@ -224,6 +271,8 @@ const ConceptSelector: React.FC<ConceptSelectorProps> = ({
           <TouchableOpacity
             style={styles.changeButton}
             onPress={() => setShowSelector(true)}
+            accessible
+            accessibilityLabel="Cambiar concepto seleccionado"
           >
             <Text style={styles.changeButtonText}>Cambiar</Text>
           </TouchableOpacity>
@@ -235,6 +284,8 @@ const ConceptSelector: React.FC<ConceptSelectorProps> = ({
             <TouchableOpacity
               style={styles.selectButton}
               onPress={() => setShowSelector(true)}
+              accessible
+              accessibilityLabel="Seleccionar concepto"
             >
               <Ionicons name="construct-outline" size={20} color="#3498db" />
               <Text style={styles.selectButtonText}>Seleccionar concepto</Text>
@@ -251,6 +302,19 @@ const ConceptSelector: React.FC<ConceptSelectorProps> = ({
                   value={searchQuery}
                   onChangeText={setSearchQuery}
                   autoCapitalize="none"
+                  accessible
+                  accessibilityLabel="Buscar concepto"
+                  returnKeyType="search"
+                  onSubmitEditing={() => {
+                    dispatch(
+                      fetchAvailableConcepts({
+                        constructionId,
+                        workItemId: workItemFilter,
+                        query: searchQuery,
+                        page: 1,
+                      })
+                    );
+                  }}
                 />
                 <TouchableOpacity
                   style={styles.searchButton}
@@ -264,6 +328,8 @@ const ConceptSelector: React.FC<ConceptSelectorProps> = ({
                       })
                     );
                   }}
+                  accessible
+                  accessibilityLabel="Buscar"
                 >
                   <Ionicons name="search" size={20} color="#fff" />
                 </TouchableOpacity>
@@ -275,6 +341,8 @@ const ConceptSelector: React.FC<ConceptSelectorProps> = ({
                 <TouchableOpacity
                   style={styles.workItemFilterButton}
                   onPress={() => setWorkItemFilter(undefined)}
+                  accessible
+                  accessibilityLabel="Filtrar por partida"
                 >
                   <Text style={styles.workItemFilterText}>
                     {workItemFilter
@@ -284,7 +352,7 @@ const ConceptSelector: React.FC<ConceptSelectorProps> = ({
                   <Ionicons name="chevron-down" size={16} color="#3498db" />
                 </TouchableOpacity>
               </View>
-
+              {renderError()}
               {/* Lista de conceptos */}
               {loading && page === 1 ? (
                 <View style={styles.loaderContainer}>
@@ -301,11 +369,8 @@ const ConceptSelector: React.FC<ConceptSelectorProps> = ({
                   ListEmptyComponent={renderEmpty}
                   onEndReached={handleLoadMore}
                   onEndReachedThreshold={0.3}
-                  contentContainerStyle={
-                    conceptsWithProgress.length === 0
-                      ? { flex: 1 }
-                      : styles.listContent
-                  }
+                  contentContainerStyle={contentContainerStyle}
+                  accessibilityLabel="Lista de conceptos"
                 />
               )}
 
@@ -313,6 +378,8 @@ const ConceptSelector: React.FC<ConceptSelectorProps> = ({
               <TouchableOpacity
                 style={styles.closeButton}
                 onPress={() => setShowSelector(false)}
+                accessible
+                accessibilityLabel="Cancelar selección"
               >
                 <Text style={styles.closeButtonText}>Cancelar</Text>
               </TouchableOpacity>
@@ -323,214 +390,5 @@ const ConceptSelector: React.FC<ConceptSelectorProps> = ({
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    marginBottom: 16,
-  },
-
-  // Estilos para el concepto seleccionado
-  selectedConceptContainer: {
-    flexDirection: "row",
-    backgroundColor: "#f9f9f9",
-    borderRadius: 8,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: "#3498db",
-  },
-  selectedConceptInfo: {
-    flex: 1,
-  },
-  selectedConceptCode: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#3498db",
-    marginBottom: 4,
-  },
-  selectedConceptName: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 4,
-  },
-  selectedConceptDetails: {
-    fontSize: 14,
-    color: "#555",
-    marginBottom: 8,
-  },
-  quantityContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  quantityLabel: {
-    fontSize: 14,
-    color: "#555",
-  },
-  quantityValue: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  changeButton: {
-    justifyContent: "center",
-    paddingLeft: 12,
-  },
-  changeButtonText: {
-    color: "#3498db",
-    fontWeight: "600",
-  },
-
-  // Estilos para el botón de selección
-  selectButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f9f9f9",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderStyle: "dashed",
-    padding: 12,
-    justifyContent: "center",
-  },
-  selectButtonText: {
-    marginLeft: 8,
-    color: "#3498db",
-    fontWeight: "600",
-  },
-
-  // Estilos para el selector desplegado
-  selectorContainer: {
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    overflow: "hidden",
-    maxHeight: 400,
-  },
-  searchContainer: {
-    flexDirection: "row",
-    padding: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
-  searchInput: {
-    flex: 1,
-    height: 40,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 6,
-    paddingHorizontal: 12,
-    backgroundColor: "#f9f9f9",
-  },
-  searchButton: {
-    width: 40,
-    height: 40,
-    backgroundColor: "#3498db",
-    justifyContent: "center",
-    alignItems: "center",
-    marginLeft: 8,
-    borderRadius: 6,
-  },
-  workItemFilterContainer: {
-    padding: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
-  workItemFilterButton: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 8,
-    backgroundColor: "#f9f9f9",
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: "#ddd",
-  },
-  workItemFilterText: {
-    color: "#3498db",
-  },
-
-  // Estilos para los elementos de la lista
-  listContent: {
-    paddingBottom: 8,
-  },
-  conceptItem: {
-    padding: 12,
-  },
-  conceptInfo: {
-    marginBottom: 8,
-  },
-  conceptCode: {
-    fontSize: 12,
-    color: "#7f8c8d",
-    marginBottom: 2,
-  },
-  conceptName: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginBottom: 4,
-  },
-  conceptDetails: {
-    fontSize: 12,
-    color: "#7f8c8d",
-  },
-  progressContainer: {
-    height: 4,
-    backgroundColor: "#ecf0f1",
-    borderRadius: 2,
-    overflow: "hidden",
-  },
-  progressBar: {
-    height: "100%",
-  },
-  separator: {
-    height: 1,
-    backgroundColor: "#f0f0f0",
-    marginHorizontal: 12,
-  },
-
-  // Estilos para estados de carga y vacío
-  loaderContainer: {
-    padding: 24,
-    alignItems: "center",
-  },
-  loaderText: {
-    marginTop: 8,
-    color: "#7f8c8d",
-  },
-  footerLoader: {
-    paddingVertical: 12,
-    alignItems: "center",
-  },
-  emptyContainer: {
-    flex: 1,
-    padding: 24,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  emptyText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#7f8c8d",
-    textAlign: "center",
-    marginTop: 12,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: "#95a5a6",
-    textAlign: "center",
-    marginTop: 4,
-  },
-
-  // Botón para cerrar el selector
-  closeButton: {
-    padding: 12,
-    alignItems: "center",
-    borderTopWidth: 1,
-    borderTopColor: "#eee",
-  },
-  closeButtonText: {
-    color: "#e74c3c",
-    fontWeight: "600",
-  },
-});
 
 export default ConceptSelector;
