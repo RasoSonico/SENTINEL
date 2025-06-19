@@ -188,7 +188,7 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
     const valid = await trigger();
     if (valid) {
       handleSubmit(onFormSubmit)();
-    } else if (Object.keys(errors).length > 0) {
+    } else {
       scrollToTop();
     }
   };
