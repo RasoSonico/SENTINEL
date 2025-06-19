@@ -1,12 +1,14 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   Alert,
+  Dimensions,
 } from "react-native";
 import { useForm } from "react-hook-form";
+import { Ionicons } from "@expo/vector-icons";
 
 import OfflineIndicator from "../components/OfflineIndicator";
 import { useAdvancePhotoSync } from "../../../hooks/avance/useAdvancePhotoSync";
@@ -30,6 +32,7 @@ import {
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigation } from "@react-navigation/native";
+import AdvanceSuccessModal from "../components/AdvanceSuccessModal";
 
 // Move type definition here so it's in scope
 export type AdvanceFormFieldsZod = z.infer<typeof advanceFormSchema>;
@@ -157,27 +160,7 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
       // ).unwrap();
       resetFormFields();
       if (onSuccess) onSuccess();
-      Alert.alert(
-        "Avance registrado",
-        "El avance ha sido registrado exitosamente.",
-        [
-          {
-            text: "Registrar otro avance",
-            style: "default",
-            onPress: () => {
-              // Just reset the form, already done above
-              scrollToTop();
-            },
-          },
-          {
-            text: "Ir al inicio",
-            style: "default",
-            onPress: () => {
-              navigation.goBack();
-            },
-          },
-        ]
-      );
+      setSuccessModalVisible(true);
     } catch (error) {
       Alert.alert(
         "Error",
@@ -209,6 +192,8 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
       scrollToTop();
     }
   };
+
+  const [successModalVisible, setSuccessModalVisible] = useState(false);
 
   return (
     <KeyboardAvoidingView
@@ -271,6 +256,18 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
           onPress={handleCustomSubmit}
         />
       </ScrollView>
+      <AdvanceSuccessModal
+        visible={successModalVisible}
+        onRegisterAnother={() => {
+          setSuccessModalVisible(false);
+          scrollToTop();
+        }}
+        onGoHome={() => {
+          setSuccessModalVisible(false);
+          navigation.goBack();
+        }}
+        onClose={() => setSuccessModalVisible(false)}
+      />
     </KeyboardAvoidingView>
   );
 };
