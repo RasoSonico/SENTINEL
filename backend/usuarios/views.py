@@ -25,20 +25,19 @@ else:
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [PermissionClass] #Pruebas
-    # permission_classes = [IsSameUserOrAdmin] Desarrollo
+    permission_classes = [permissions.IsAuthenticated] #Pruebas
     
-    def get_permissions(self):
-        if settings.DEBUG:
-            return [AllowAnyInDev()]
+    # def get_permissions(self):
+    #     if settings.DEBUG:
+    #         return [AllowAnyInDev()]
         
-        if self.action in ['create', 'azure_login', 'azure_token']:
-            return [AllowAny()]
-        return super().get_permissions()
+    #     if self.action in ['create', 'azure_login', 'azure_token']:
+    #         return [AllowAny()]
+    #     return super().get_permissions()
         
-        # if self.action == 'create':
-        #     return [IsAdminUser()]
-        # return super().get_permissions()
+    #     # if self.action == 'create':
+    #     #     return [IsAdminUser()]
+    #     # return super().get_permissions()
     
     @action(detail=False, methods=['post'], permission_classes=[permissions.AllowAny])
     def login(self, request):
