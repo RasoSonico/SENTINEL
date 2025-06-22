@@ -32,7 +32,7 @@ export const getConcepts = async () =>
     return response.results ?? [];
   });
 
-export const submitAdvance = async (advance: SubmitAdvance) => 
+export const submitAdvance = async (advance: SubmitAdvance) =>
   await apiRequest<SubmitAvanceResponse>(
     "post",
     API_CONFIG.endpoints.submitAdvance,
