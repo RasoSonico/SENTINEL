@@ -33,7 +33,7 @@ export default StyleSheet.create({
     textAlign: "center",
   },
   registerButton: {
-    backgroundColor: "#1976D2",
+    backgroundColor: "#3498db",
     borderRadius: 8,
     paddingVertical: 12,
     paddingHorizontal: 32,

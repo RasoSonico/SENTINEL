@@ -5,10 +5,8 @@ import {
   Platform,
   ScrollView,
   Alert,
-  Dimensions,
 } from "react-native";
 import { useForm } from "react-hook-form";
-import { Ionicons } from "@expo/vector-icons";
 
 import OfflineIndicator from "../components/OfflineIndicator";
 import { useAdvancePhotoSync } from "../../../hooks/avance/useAdvancePhotoSync";
@@ -27,15 +25,14 @@ import styles from "./styles/AdvanceForm.styles";
 import AdvanceFormFields from "./components/AdvanceFormFields";
 import {
   advanceFormDefaultValues,
+  AdvanceFormFieldsZod,
   advanceFormSchema,
 } from "./util/advanceFormValidation";
-import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigation } from "@react-navigation/native";
 import AdvanceSuccessModal from "../components/AdvanceSuccessModal";
+import ConfirmSendModal from "../components/ConfirmSendModal";
 
-// Move type definition here so it's in scope
-export type AdvanceFormFieldsZod = z.infer<typeof advanceFormSchema>;
 
 interface AdvanceFormProps {
   constructionId: string;
@@ -51,7 +48,6 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
   const offlineSyncState = useAppSelector(selectOfflineSync);
   const navigation = useNavigation();
 
-  // Hooks personalizados
   const {
     photos,
     loading: loadingPhotos,
@@ -85,9 +81,7 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
   const selectedCatalog = watch("catalog");
   const selectedPartida = watch("partida");
   const selectedConcept = watch("concept");
-  const quantity = watch("quantity");
   const isCompleted = watch("isCompleted");
-  const notes = watch("notes");
 
   // Efecto para cargar la cantidad ejecutada cuando se selecciona un concepto
   useEffect(() => {
@@ -123,17 +117,17 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
   }, [photos, dispatch]);
 
   // Manejar selección de concepto
-  const handleConceptSelect = (conceptId: string) => {
+  const handleConceptSelect = (conceptId: number) => {
     setValue("concept", conceptId, { shouldValidate: true });
   };
 
   // Manejar selección de catálogo
-  const handleCatalogSelect = (catalogId: string) => {
+  const handleCatalogSelect = (catalogId: number) => {
     setValue("catalog", catalogId, { shouldValidate: true });
   };
 
   // Manejar selección de partida
-  const handlePartidaSelect = (partidaId: string) => {
+  const handlePartidaSelect = (partidaId: number) => {
     setValue("partida", partidaId, { shouldValidate: true });
   };
 
@@ -183,17 +177,33 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
     });
   };
 
-  // Custom submit handler to always scroll to top if error
-  const handleCustomSubmit = async () => {
+  const [successModalVisible, setSuccessModalVisible] = useState(false);
+  const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+
+  const handleEditConfirmSendModal = () => {
+    setConfirmModalVisible(false);
+    scrollToTop();
+  };
+
+  const handleConfirmSendModal = async () => {
+    setConfirmModalVisible(false);
+
     const valid = await trigger();
     if (valid) {
       handleSubmit(onFormSubmit)();
     } else {
       scrollToTop();
     }
-  };
+  }
 
-  const [successModalVisible, setSuccessModalVisible] = useState(false);
+  const handleCustomSubmit = async () => {
+    const valid = await trigger();
+    if (valid) {
+      setConfirmModalVisible(true);
+    } else {
+      scrollToTop();
+    }
+  };
 
   return (
     <KeyboardAvoidingView
@@ -226,6 +236,8 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
             onConceptSelect={handleConceptSelect}
             disablePartida={!selectedCatalog}
             disableConcept={!selectedPartida}
+            setFormValue={setValue}
+            watchFormValue={watch}
           />
           <AdvancePhotoSection
             photos={photos}
@@ -240,10 +252,10 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
             location={
               location
                 ? {
-                    latitude: location.latitude,
-                    longitude: location.longitude,
-                    accuracy: location.accuracy ?? undefined,
-                  }
+                  latitude: location.latitude,
+                  longitude: location.longitude,
+                  accuracy: location.accuracy ?? undefined,
+                }
                 : null
             }
             error={false}
@@ -268,6 +280,21 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
         }}
         onClose={() => setSuccessModalVisible(false)}
       />
+      <ConfirmSendModal
+        visible={confirmModalVisible}
+        onEdit={handleEditConfirmSendModal}
+        onConfirm={handleConfirmSendModal}
+        onClose={() => setConfirmModalVisible(false)}
+        summary={{
+          catalogo: "",
+          partida: "",
+          concepto: "",
+          volumen: "",
+          actividades: "",
+        }}
+
+      />
+
     </KeyboardAvoidingView>
   );
 };
