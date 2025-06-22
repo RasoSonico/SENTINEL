@@ -3,12 +3,17 @@ import { View, FlatList, StyleSheet } from "react-native";
 import { TextInput, List, Portal, Modal } from "react-native-paper";
 import { useDebounce } from "src/hooks/utils/useDebounce";
 
+export interface DropdownItemType {
+  value: number;
+  label: string;
+}
+
 interface SearchableDropdownProps {
   label: string;
   searchLabel?: string;
-  items: string[];
-  onSelect: (value: string) => void;
-  selected?: string;
+  items: DropdownItemType[];
+  onSelect: (valueId: number) => void;
+  selected?: string | number;
   disabled?: boolean;
 }
 
@@ -28,22 +33,31 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
   const filtered = useMemo(
     () =>
       items.filter((item) =>
-        item.toLowerCase().includes(debouncedQuery.toLowerCase())
+        item.label.toLowerCase().includes(debouncedQuery.toLowerCase())
       ),
     [debouncedQuery, items]
   );
 
-  const handleSelect = (item: string) => {
+  const value = useMemo(
+    () => {
+      const selectedIndex = items.findIndex(item => item.value === selected);
+
+      return items[selectedIndex]?.label || '';
+    },
+    [selected, items]
+  );
+
+  const handleSelect = (item: DropdownItemType) => {
     setVisible(false);
     setQuery("");
-    onSelect(item);
+    onSelect(item.value);
   };
 
   return (
     <View>
       <TextInput
         label={label}
-        value={selected}
+        value={value}
         onFocus={() => setVisible(true)}
         editable
         right={
@@ -51,6 +65,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
         }
         theme={{ colors: { primary: "#009BE1" } }}
         style={{ backgroundColor: "white", borderRadius: 8 }}
+        multiline
         disabled={disabled}
       />
 
@@ -70,9 +85,9 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
           />
           <FlatList
             data={filtered}
-            keyExtractor={(item) => item}
+            keyExtractor={(item) => item.value.toString()}
             renderItem={({ item }) => (
-              <List.Item title={item} onPress={() => handleSelect(item)} />
+              <List.Item title={item.label} onPress={() => handleSelect(item)} />
             )}
           />
         </Modal>
