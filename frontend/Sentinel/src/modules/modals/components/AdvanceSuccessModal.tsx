@@ -1,9 +1,9 @@
 import React from "react";
 import { Modal, View, Text, TouchableOpacity, Dimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import styles from "./AdvanceSuccessModal.styles";
+import styles from "./styles/AdvanceSuccessModal.styles";
 
-interface AdvanceSuccessModalProps {
+export interface AdvanceSuccessModalProps {
   visible: boolean;
   onRegisterAnother: () => void;
   onGoHome: () => void;

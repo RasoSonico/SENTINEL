@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import {
   View,
   KeyboardAvoidingView,
@@ -30,9 +30,8 @@ import {
 } from "./util/advanceFormValidation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigation } from "@react-navigation/native";
-import AdvanceSuccessModal from "../components/AdvanceSuccessModal";
-import ConfirmSendModal from "../components/ConfirmSendModal";
-
+import { useModal } from "src/modules/modals/ModalContext";
+import { ModalEnum } from "src/modules/modals/modalTypes";
 
 interface AdvanceFormProps {
   constructionId: string;
@@ -154,7 +153,16 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
       // ).unwrap();
       resetFormFields();
       if (onSuccess) onSuccess();
-      setSuccessModalVisible(true);
+      openModal(ModalEnum.AdvanceSuccess, {
+        onRegisterAnother: () => {
+          closeModal();
+          scrollToTop();
+        },
+        onGoHome: () => {
+          closeModal();
+          navigation.goBack();
+        },
+      });
     } catch (error) {
       Alert.alert(
         "Error",
@@ -177,29 +185,36 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
     });
   };
 
-  const [successModalVisible, setSuccessModalVisible] = useState(false);
-  const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+  const { openModal, closeModal } = useModal();
 
   const handleEditConfirmSendModal = () => {
-    setConfirmModalVisible(false);
+    closeModal();
     scrollToTop();
   };
 
   const handleConfirmSendModal = async () => {
-    setConfirmModalVisible(false);
-
     const valid = await trigger();
     if (valid) {
       handleSubmit(onFormSubmit)();
     } else {
       scrollToTop();
     }
-  }
+  };
 
   const handleCustomSubmit = async () => {
     const valid = await trigger();
     if (valid) {
-      setConfirmModalVisible(true);
+      openModal(ModalEnum.ConfirmSend, {
+        onEdit: handleEditConfirmSendModal,
+        onConfirm: handleConfirmSendModal,
+        summary: {
+          catalogo: selectedCatalog.toString() || "",
+          partida: selectedPartida.toString() || "",
+          concepto: selectedConcept.toString() || "",
+          volumen: watch("quantity") || "0",
+          actividades: watch("notes") || "",
+        },
+      });
     } else {
       scrollToTop();
     }
@@ -252,10 +267,10 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
             location={
               location
                 ? {
-                  latitude: location.latitude,
-                  longitude: location.longitude,
-                  accuracy: location.accuracy ?? undefined,
-                }
+                    latitude: location.latitude,
+                    longitude: location.longitude,
+                    accuracy: location.accuracy ?? undefined,
+                  }
                 : null
             }
             error={false}
@@ -268,33 +283,6 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
           onPress={handleCustomSubmit}
         />
       </ScrollView>
-      <AdvanceSuccessModal
-        visible={successModalVisible}
-        onRegisterAnother={() => {
-          setSuccessModalVisible(false);
-          scrollToTop();
-        }}
-        onGoHome={() => {
-          setSuccessModalVisible(false);
-          navigation.goBack();
-        }}
-        onClose={() => setSuccessModalVisible(false)}
-      />
-      <ConfirmSendModal
-        visible={confirmModalVisible}
-        onEdit={handleEditConfirmSendModal}
-        onConfirm={handleConfirmSendModal}
-        onClose={() => setConfirmModalVisible(false)}
-        summary={{
-          catalogo: "",
-          partida: "",
-          concepto: "",
-          volumen: "",
-          actividades: "",
-        }}
-
-      />
-
     </KeyboardAvoidingView>
   );
 };
