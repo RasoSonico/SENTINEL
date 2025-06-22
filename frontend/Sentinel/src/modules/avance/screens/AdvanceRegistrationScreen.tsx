@@ -17,7 +17,7 @@ import { useAppDispatch } from "../../../redux/hooks";
 import {
   setOnlineStatus,
   clearCurrentAdvance,
-} from "../../../redux/slices/advanceSlice";
+} from "../../../redux/slices/avance/advanceSlice";
 
 type AdvanceRegistrationScreenRouteProp = RouteProp<
   AvanceStackParamList,

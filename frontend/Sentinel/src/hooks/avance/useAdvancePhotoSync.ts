@@ -4,7 +4,7 @@ import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import {
   setCurrentAdvancePhotos,
   selectCurrentAdvance,
-} from "../../redux/slices/advanceSlice";
+} from "../../redux/slices/avance/advanceSlice";
 
 export function useAdvancePhotoSync(
   options: Parameters<typeof usePhotoCapture>[0]
