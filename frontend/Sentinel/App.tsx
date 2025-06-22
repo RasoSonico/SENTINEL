@@ -6,20 +6,11 @@ import { View, ActivityIndicator, Text } from "react-native";
 import { store, persistor } from "./src/redux/store";
 import { RootNavigator } from "./src/navigation/RootNagivator";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
+import queryClient from "./src/lib/queryClient";
 import { PaperProvider } from "react-native-paper";
 
 export default function App() {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: 1,
-        refetchOnWindowFocus: false,
-        staleTime: 30000, // 30 seconds
-      },
-    },
-  });
-
   return (
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
