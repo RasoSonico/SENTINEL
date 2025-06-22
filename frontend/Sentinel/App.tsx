@@ -9,6 +9,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { QueryClientProvider } from "@tanstack/react-query";
 import queryClient from "./src/lib/queryClient";
 import { PaperProvider } from "react-native-paper";
+import { ModalProvider } from "src/modules/modals/ModalContext";
 
 export default function App() {
   return (
@@ -31,8 +32,10 @@ export default function App() {
         >
           <PaperProvider>
             <SafeAreaProvider>
-              <StatusBar style="auto" />
-              <RootNavigator />
+              <ModalProvider>
+                <StatusBar style="auto" />
+                <RootNavigator />
+              </ModalProvider>
             </SafeAreaProvider>
           </PaperProvider>
         </PersistGate>

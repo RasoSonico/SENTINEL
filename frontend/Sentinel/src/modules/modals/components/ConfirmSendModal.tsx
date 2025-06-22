@@ -9,12 +9,11 @@ import {
 } from "react-native";
 import { Checkbox } from "react-native-paper";
 import styles from "./styles/ConfirmSendModal.styles";
+import { BaseModalProps } from "../modalTypes";
 
-interface ConfirmSendModalProps {
-  visible: boolean;
+export interface ConfirmSendModalProps extends BaseModalProps {
   onEdit: () => void;
   onConfirm: () => void;
-  onClose: () => void;
   summary: {
     catalogo: string;
     partida: string;
@@ -25,7 +24,6 @@ interface ConfirmSendModalProps {
 }
 
 const ConfirmSendModal: React.FC<ConfirmSendModalProps> = ({
-  visible,
   onEdit,
   onConfirm,
   onClose,
@@ -35,12 +33,7 @@ const ConfirmSendModal: React.FC<ConfirmSendModalProps> = ({
   const [checked, setChecked] = useState(false);
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
-    >
+    <Modal visible transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={[styles.modalContainer, { width }]}>
           <View style={styles.header}>
@@ -64,10 +57,9 @@ const ConfirmSendModal: React.FC<ConfirmSendModalProps> = ({
               <Text style={styles.summaryValue}>{summary.actividades}</Text>
             </ScrollView>
           </View>
-          <View style={styles.checkboxContainer}>
+          <View style={styles.checkboxContainer} onTouchEnd={() => setChecked(!checked)}>
             <Checkbox
               status={checked ? "checked" : "unchecked"}
-              onPress={() => setChecked(!checked)}
               color="#3498db"
             />
             <Text style={styles.checkboxLabel}>
