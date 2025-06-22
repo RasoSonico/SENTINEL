@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   KeyboardAvoidingView,
@@ -17,7 +17,7 @@ import {
   setCurrentAdvancePhotos,
   selectCurrentAdvance,
   selectOfflineSync,
-} from "../../../redux/slices/advanceSlice";
+} from "../../../redux/slices/avance/advanceSlice";
 import AdvancePhotoSection from "./components/AdvancePhotoSection";
 import AdvanceLocationSection from "./components/AdvanceLocationSection";
 import SubmitButton from "../components/SubmitButton";
@@ -32,6 +32,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigation } from "@react-navigation/native";
 import { useModal } from "src/modules/modals/ModalContext";
 import { ModalEnum } from "src/modules/modals/modalTypes";
+import {
+  selectCatalogNameById,
+  useCatalogNameById,
+  useConceptDescriptionById,
+  usePartidaNameById,
+} from "src/redux/selectors/avance/avanceFormDataSelectors";
 
 interface AdvanceFormProps {
   constructionId: string;
@@ -77,14 +83,21 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
   });
 
   // Watchers for dependent logic
-  const selectedCatalog = watch("catalog");
-  const selectedPartida = watch("partida");
-  const selectedConcept = watch("concept");
+  const selectedCatalogId = watch("catalog");
+  const selectedPartidaId = watch("partida");
+  const selectedConceptId = watch("concept");
   const isCompleted = watch("isCompleted");
+  const selectedNotes = watch("notes");
+  const selectedVolume = watch("quantity");
+
+  // Get names/descriptions for summary modal
+  const catalogName = useCatalogNameById(selectedCatalogId);
+  const partidaName = usePartidaNameById(selectedPartidaId);
+  const conceptDescription = useConceptDescriptionById(selectedConceptId);
 
   // Efecto para cargar la cantidad ejecutada cuando se selecciona un concepto
   useEffect(() => {
-    if (selectedConcept) {
+    if (selectedConceptId) {
       // Aquí deberíamos cargar la cantidad ya ejecutada para este concepto
       // De manera temporal, lo inicializamos en 0
       // En una implementación real, haríamos una llamada a la API o usaríamos datos en redux
@@ -103,7 +116,7 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
 
       dispatch(setCurrentAdvancePhotos(photos)); // Por ahora usamos 0 como valor temporal
     }
-  }, [selectedConcept]);
+  }, [selectedConceptId]);
 
   // Sincronizar estado del slice con el estado local
   useEffect(() => {
@@ -208,11 +221,11 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
         onEdit: handleEditConfirmSendModal,
         onConfirm: handleConfirmSendModal,
         summary: {
-          catalogo: selectedCatalog.toString() || "",
-          partida: selectedPartida.toString() || "",
-          concepto: selectedConcept.toString() || "",
-          volumen: watch("quantity") || "0",
-          actividades: watch("notes") || "",
+          catalog: catalogName,
+          partida: partidaName,
+          concept: conceptDescription,
+          volume: selectedVolume || "0",
+          notes: selectedNotes || "",
         },
       });
     } else {
@@ -249,8 +262,8 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
             onCatalogSelect={handleCatalogSelect}
             onPartidaSelect={handlePartidaSelect}
             onConceptSelect={handleConceptSelect}
-            disablePartida={!selectedCatalog}
-            disableConcept={!selectedPartida}
+            disablePartida={!selectedCatalogId}
+            disableConcept={!selectedPartidaId}
             setFormValue={setValue}
             watchFormValue={watch}
           />
@@ -267,10 +280,10 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
             location={
               location
                 ? {
-                    latitude: location.latitude,
-                    longitude: location.longitude,
-                    accuracy: location.accuracy ?? undefined,
-                  }
+                  latitude: location.latitude,
+                  longitude: location.longitude,
+                  accuracy: location.accuracy ?? undefined,
+                }
                 : null
             }
             error={false}

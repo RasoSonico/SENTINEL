@@ -4,11 +4,11 @@ import {
   Concept,
   PhysicalAdvance,
   PhysicalAdvanceSummary,
-} from "../../types/entities";
-import advanceService from "../../modules/avance/services/advanceService";
-import photoService from "../../modules/avance/services/photoService";
-import { Photo } from "../../hooks/avance/usePhotoCapture";
-import { RootState } from "../../redux/store";
+} from "../../../types/entities";
+import advanceService from "../../../modules/avance/services/advanceService";
+import photoService from "../../../modules/avance/services/photoService";
+import { Photo } from "../../../hooks/avance/usePhotoCapture";
+import { RootState } from "../../store";
 
 // Interfaces para el estado
 interface AdvanceState {
