@@ -15,11 +15,11 @@ export interface ConfirmSendModalProps extends BaseModalProps {
   onEdit: () => void;
   onConfirm: () => void;
   summary: {
-    catalogo: string;
+    catalog: string;
     partida: string;
-    concepto: string;
-    volumen: string;
-    actividades: string;
+    concept: string;
+    volume: string;
+    notes: string;
   };
 }
 
@@ -46,15 +46,19 @@ const ConfirmSendModal: React.FC<ConfirmSendModalProps> = ({
           <View style={styles.summaryBox}>
             <ScrollView>
               <Text style={styles.summaryLabel}>Catalogo</Text>
-              <Text style={styles.summaryValue}>{summary.catalogo}</Text>
+              <Text style={styles.summaryValue}>{summary.catalog}</Text>
               <Text style={styles.summaryLabel}>Partida</Text>
               <Text style={styles.summaryValue}>{summary.partida}</Text>
               <Text style={styles.summaryLabel}>Concepto</Text>
-              <Text style={styles.summaryValue}>{summary.concepto}</Text>
+              <Text style={styles.summaryValue}>{summary.concept}</Text>
               <Text style={styles.summaryLabel}>Volumen</Text>
-              <Text style={styles.summaryValue}>{summary.volumen}</Text>
-              <Text style={styles.summaryLabel}>Actividades</Text>
-              <Text style={styles.summaryValue}>{summary.actividades}</Text>
+              <Text style={styles.summaryValue}>{summary.volume}</Text>
+              {summary.notes !== "" && (
+                <>
+                  <Text style={styles.summaryLabel}>Notas</Text>
+                  <Text style={styles.summaryValue}>{summary.notes}</Text>
+                </>
+              )}
             </ScrollView>
           </View>
           <View style={styles.checkboxContainer} onTouchEnd={() => setChecked(!checked)}>

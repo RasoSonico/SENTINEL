@@ -55,6 +55,8 @@ export default StyleSheet.create({
     marginHorizontal: 16,
     padding: 16,
     marginBottom: 18,
+    maxHeight: "50%",
+    overflow: "hidden",
   },
   summaryLabel: {
     fontWeight: "600",

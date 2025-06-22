@@ -1,18 +1,34 @@
 import React, { useEffect, useState } from "react";
 import { View } from "react-native";
-import { Controller, Control, FieldErrors, UseFormWatch, UseFormSetValue } from "react-hook-form";
+import {
+  Controller,
+  Control,
+  FieldErrors,
+  UseFormWatch,
+  UseFormSetValue,
+} from "react-hook-form";
 import LabeledDropdown from "../../components/LabeledDropdown";
 import QuantityInput from "../../components/QuantityInput";
 import CompletionSwitch from "../../components/CompletionSwitch";
 import StatusSection from "../../components/StatusSection";
 import NotesInput from "../../components/NotesInput";
 import { AdvanceFormFieldsZod } from "../util/advanceFormValidation";
-import { useFetchCatalogs, useFetchConcepts, useFetchPartidas } from "src/hooks/data/query/useAvanceQueries";
+import {
+  useFetchCatalogs,
+  useFetchConcepts,
+  useFetchPartidas,
+} from "src/hooks/data/query/useAvanceQueries";
 import { CatalogoItem } from "src/types/catalogo";
 import { DropdownItemType } from "src/components/ui/SearchableDropdown";
 import { ConceptoItem } from "src/types/concepto";
 import { Concept } from "src/types/entities";
 import { PartidaItem } from "src/types/partida";
+import { useDispatch } from "react-redux";
+import {
+  setCatalogsById,
+  setPartidasById,
+  setConceptsById,
+} from "src/redux/slices/avance/avanceFormDataSlice";
 
 interface AdvanceFormFieldsProps {
   control: Control<AdvanceFormFieldsZod>;
@@ -27,14 +43,6 @@ interface AdvanceFormFieldsProps {
   watchFormValue: UseFormWatch<AdvanceFormFieldsZod>;
 }
 
-const mockPartidaitems: string[] = [
-  "Partida 1",
-  "Partida 2",
-  "Partida 3",
-  "Partida 4",
-  "Partida 5",
-];
-
 const AdvanceFormFields: React.FC<AdvanceFormFieldsProps> = ({
   control,
   errors,
@@ -45,8 +53,9 @@ const AdvanceFormFields: React.FC<AdvanceFormFieldsProps> = ({
   disablePartida = false,
   disableConcept = false,
   setFormValue,
-  watchFormValue
+  watchFormValue,
 }) => {
+  const dispatch = useDispatch();
   const {
     data: catalogs,
     isLoading: isLoadingCatalogs,
@@ -65,20 +74,39 @@ const AdvanceFormFields: React.FC<AdvanceFormFieldsProps> = ({
     data: concepts,
     isLoading: isLoadingConcepts,
     error: conceptsError,
-    isError: isConceptsError
+    isError: isConceptsError,
   } = useFetchConcepts();
 
   const selectedConcept = watchFormValue("concept");
-  const [unit, setUnit] = useState('');
+  const [unit, setUnit] = useState("");
+
+  useEffect(() => {
+    if (catalogs) {
+      dispatch(setCatalogsById(catalogs));
+    }
+  }, [catalogs, dispatch]);
+
+  useEffect(() => {
+    if (partidas) {
+      dispatch(setPartidasById(partidas));
+    }
+  }, [partidas, dispatch]);
 
   useEffect(() => {
     if (concepts) {
-      const conceptIndex = concepts?.findIndex(concept => concept.id === selectedConcept);
+      dispatch(setConceptsById(concepts));
+    }
+  }, [concepts, dispatch]);
+
+  useEffect(() => {
+    if (concepts) {
+      const conceptIndex = concepts?.findIndex(
+        (concept) => concept.id === selectedConcept
+      );
       const concept = concepts[conceptIndex];
 
       setUnit(concept?.unit);
     }
-
   }, [selectedConcept]);
 
   const getCatalogsList = (catalogs: CatalogoItem[]): DropdownItemType[] =>
@@ -90,14 +118,14 @@ const AdvanceFormFields: React.FC<AdvanceFormFieldsProps> = ({
   const getPartidasList = (partidas: PartidaItem[]): DropdownItemType[] =>
     partidas?.map((partida: PartidaItem) => ({
       value: partida.id,
-      label: partida.name
-    }))
+      label: partida.name,
+    }));
 
   const getConceptsList = (concepts: ConceptoItem[]): DropdownItemType[] =>
     concepts?.map((concept: ConceptoItem) => ({
       value: concept.id,
-      label: concept.description
-    }))
+      label: concept.description,
+    }));
 
   return (
     <>
