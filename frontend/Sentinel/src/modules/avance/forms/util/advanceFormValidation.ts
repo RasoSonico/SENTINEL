@@ -1,10 +1,9 @@
 import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
 
 export const advanceFormSchema = z.object({
-  catalog: z.string().min(1, "Selecciona un catálogo"),
-  partida: z.string().min(1, "Selecciona una partida"),
-  concept: z.string().min(1, "Selecciona un concepto"),
+  catalog: z.number({ required_error: "Selecciona un catálogo"}),
+  partida: z.number({ required_error: "Selecciona una partida"}),
+  concept: z.number({ required_error: "Selecciona un concepto"}),
   quantity: z
     .string()
     .refine((val) => !!val && !isNaN(Number(val)) && Number(val) > 0, {
@@ -15,9 +14,9 @@ export const advanceFormSchema = z.object({
 });
 
 export const advanceFormDefaultValues = {
-  catalog: "",
-  partida: "",
-  concept: "",
+  catalog: 0,
+  partida: 0,
+  concept: 0,
   quantity: "",
   notes: "",
   isCompleted: false,

@@ -1,31 +1,31 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View } from "react-native";
-import { Controller, Control, FieldErrors } from "react-hook-form";
+import { Controller, Control, FieldErrors, UseFormWatch, UseFormSetValue } from "react-hook-form";
 import LabeledDropdown from "../../components/LabeledDropdown";
 import QuantityInput from "../../components/QuantityInput";
 import CompletionSwitch from "../../components/CompletionSwitch";
 import StatusSection from "../../components/StatusSection";
 import NotesInput from "../../components/NotesInput";
-import { AdvanceFormFieldsZod } from "../AdvanceForm";
+import { AdvanceFormFieldsZod } from "../util/advanceFormValidation";
+import { useFetchCatalogs, useFetchConcepts, useFetchPartidas } from "src/hooks/data/query/useAvanceQueries";
+import { CatalogoItem } from "src/types/catalogo";
+import { DropdownItemType } from "src/components/ui/SearchableDropdown";
+import { ConceptoItem } from "src/types/concepto";
+import { Concept } from "src/types/entities";
+import { PartidaItem } from "src/types/partida";
 
 interface AdvanceFormFieldsProps {
   control: Control<AdvanceFormFieldsZod>;
   errors: FieldErrors<AdvanceFormFieldsZod>;
   isCompleted: boolean | undefined;
-  onCatalogSelect: (catalogId: string) => void;
-  onPartidaSelect: (partidaId: string) => void;
-  onConceptSelect: (conceptId: string) => void;
+  onCatalogSelect: (catalogId: number) => void;
+  onPartidaSelect: (partidaId: number) => void;
+  onConceptSelect: (conceptId: number) => void;
   disablePartida?: boolean;
   disableConcept?: boolean;
+  setFormValue: UseFormSetValue<AdvanceFormFieldsZod>;
+  watchFormValue: UseFormWatch<AdvanceFormFieldsZod>;
 }
-
-const mockCatalogItems: string[] = [
-  "Catalogo 1",
-  "Catalogo 2",
-  "Catalogo 3",
-  "Catalogo 4",
-  "Catalogo 5",
-];
 
 const mockPartidaitems: string[] = [
   "Partida 1",
@@ -33,14 +33,6 @@ const mockPartidaitems: string[] = [
   "Partida 3",
   "Partida 4",
   "Partida 5",
-];
-
-const mockConceptItems: string[] = [
-  "Concepto 1",
-  "Concepto 2",
-  "Concepto 3",
-  "Concepto 4",
-  "Concepto 5",
 ];
 
 const AdvanceFormFields: React.FC<AdvanceFormFieldsProps> = ({
@@ -52,85 +44,147 @@ const AdvanceFormFields: React.FC<AdvanceFormFieldsProps> = ({
   onConceptSelect,
   disablePartida = false,
   disableConcept = false,
-}) => (
-  <>
-    <View>
+  setFormValue,
+  watchFormValue
+}) => {
+  const {
+    data: catalogs,
+    isLoading: isLoadingCatalogs,
+    error: catalogsError,
+    isError: isCatalogsError,
+  } = useFetchCatalogs();
+
+  const {
+    data: partidas,
+    isLoading: isLoadingPartidas,
+    error: partidasError,
+    isError: isPartidasError,
+  } = useFetchPartidas();
+
+  const {
+    data: concepts,
+    isLoading: isLoadingConcepts,
+    error: conceptsError,
+    isError: isConceptsError
+  } = useFetchConcepts();
+
+  const selectedConcept = watchFormValue("concept");
+  const [unit, setUnit] = useState('');
+
+  useEffect(() => {
+    if (concepts) {
+      const conceptIndex = concepts?.findIndex(concept => concept.id === selectedConcept);
+      const concept = concepts[conceptIndex];
+
+      setUnit(concept?.unit);
+    }
+
+  }, [selectedConcept]);
+
+  const getCatalogsList = (catalogs: CatalogoItem[]): DropdownItemType[] =>
+    catalogs?.map((catalog: CatalogoItem) => ({
+      value: catalog.id,
+      label: catalog.name,
+    }));
+
+  const getPartidasList = (partidas: PartidaItem[]): DropdownItemType[] =>
+    partidas?.map((partida: PartidaItem) => ({
+      value: partida.id,
+      label: partida.name
+    }))
+
+  const getConceptsList = (concepts: ConceptoItem[]): DropdownItemType[] =>
+    concepts?.map((concept: ConceptoItem) => ({
+      value: concept.id,
+      label: concept.description
+    }))
+
+  return (
+    <>
+      <View>
+        <Controller
+          control={control}
+          name="catalog"
+          render={({ field: { value } }) => (
+            <LabeledDropdown
+              label="Catálogo"
+              items={getCatalogsList(catalogs || [])}
+              selected={value}
+              onSelect={onCatalogSelect}
+              error={errors.catalog?.message}
+              isLoading={isLoadingCatalogs}
+              loadingLabel="Cargando Catálogos"
+            />
+          )}
+        />
+      </View>
+      <View>
+        <Controller
+          control={control}
+          name="partida"
+          render={({ field: { value } }) => (
+            <LabeledDropdown
+              label="Partida"
+              items={getPartidasList(partidas || [])}
+              selected={value}
+              onSelect={onPartidaSelect}
+              error={errors.partida?.message}
+              disabled={disablePartida}
+              isLoading={isLoadingPartidas}
+              loadingLabel="Cargando Partidas"
+            />
+          )}
+        />
+      </View>
+      <View>
+        <Controller
+          control={control}
+          name="concept"
+          render={({ field: { value } }) => (
+            <LabeledDropdown
+              label="Concepto"
+              items={getConceptsList(concepts || [])}
+              selected={value}
+              onSelect={onConceptSelect}
+              error={errors.concept?.message}
+              disabled={disableConcept}
+              isLoading={isLoadingConcepts}
+              loadingLabel="Cargando Conceptos"
+            />
+          )}
+        />
+      </View>
+      <View>
+        <Controller
+          control={control}
+          name="quantity"
+          render={({ field: { value, onChange } }) => (
+            <QuantityInput
+              quantity={value}
+              onChange={onChange}
+              unit={unit}
+              error={errors.quantity?.message ?? null}
+            />
+          )}
+        />
+      </View>
       <Controller
         control={control}
-        name="catalog"
-        render={({ field: { value } }) => (
-          <LabeledDropdown
-            label="Catálogo"
-            items={mockCatalogItems}
-            selected={value}
-            onSelect={onCatalogSelect}
-            error={errors.catalog?.message}
-          />
-        )}
-      />
-    </View>
-    <View>
-      <Controller
-        control={control}
-        name="partida"
-        render={({ field: { value } }) => (
-          <LabeledDropdown
-            label="Partida"
-            items={mockPartidaitems}
-            selected={value}
-            onSelect={onPartidaSelect}
-            error={errors.partida?.message}
-            disabled={disablePartida}
-          />
-        )}
-      />
-    </View>
-    <View>
-      <Controller
-        control={control}
-        name="concept"
-        render={({ field: { value } }) => (
-          <LabeledDropdown
-            label="Concepto"
-            items={mockConceptItems}
-            selected={value}
-            onSelect={onConceptSelect}
-            error={errors.concept?.message}
-            disabled={disableConcept}
-          />
-        )}
-      />
-    </View>
-    <View>
-      <Controller
-        control={control}
-        name="quantity"
+        name="isCompleted"
         render={({ field: { value, onChange } }) => (
-          <QuantityInput
-            quantity={value}
-            onChange={onChange}
-            unit={""}
-            error={errors.quantity?.message ?? null}
-          />
+          <CompletionSwitch value={!!value} onValueChange={onChange} />
         )}
       />
-    </View>
-    <Controller
-      control={control}
-      name="isCompleted"
-      render={({ field: { value, onChange } }) => (
-        <CompletionSwitch value={!!value} onValueChange={onChange} />
-      )}
-    />
-    <StatusSection status={isCompleted ? "completed" : "onSchedule"} />
-    <Controller
-      control={control}
-      name="notes"
-      render={({ field: { value, onChange } }) => (
-        <NotesInput value={value || ""} onChange={onChange} />
-      )}
-    />
-  </>
-);
+      <StatusSection status={isCompleted ? "completed" : "onSchedule"} />
+      <Controller
+        control={control}
+        name="notes"
+        render={({ field: { value, onChange } }) => (
+          <NotesInput value={value || ""} onChange={onChange} />
+        )}
+      />
+    </>
+  );
+};
 
 export default AdvanceFormFields;

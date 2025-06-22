@@ -9,6 +9,17 @@ const labeledDropdownStyles = StyleSheet.create({
     fontWeight: "600",
     marginBottom: 4,
   },
+  loadingContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 8
+  },
+  loadingText: {
+    fontSize: 16,
+    color: "#7f8c8d",
+  },
 });
 
 export default labeledDropdownStyles;
