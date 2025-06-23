@@ -110,22 +110,28 @@ const AdvanceFormFields: React.FC<AdvanceFormFieldsProps> = ({
   }, [selectedConcept]);
 
   const getCatalogsList = (catalogs: CatalogoItem[]): DropdownItemType[] =>
-    catalogs?.map((catalog: CatalogoItem) => ({
-      value: catalog.id,
-      label: catalog.name,
-    }));
+    catalogs && catalogs.length > 0
+      ? catalogs.map((catalog: CatalogoItem) => ({
+          value: catalog.id,
+          label: catalog.name,
+        }))
+      : [];
 
   const getPartidasList = (partidas: PartidaItem[]): DropdownItemType[] =>
-    partidas?.map((partida: PartidaItem) => ({
-      value: partida.id,
-      label: partida.name,
-    }));
+    partidas && partidas.length > 0
+      ? partidas.map((partida: PartidaItem) => ({
+          value: partida.id,
+          label: partida.name,
+        }))
+      : [];
 
   const getConceptsList = (concepts: ConceptoItem[]): DropdownItemType[] =>
-    concepts?.map((concept: ConceptoItem) => ({
-      value: concept.id,
-      label: concept.description,
-    }));
+    concepts && concepts.length > 0
+      ? concepts.map((concept: ConceptoItem) => ({
+          value: concept.id,
+          label: concept.description,
+        }))
+      : [];
 
   return (
     <>
