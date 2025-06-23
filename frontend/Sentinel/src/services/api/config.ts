@@ -4,15 +4,15 @@ import Constants from "expo-constants";
 const API_URL = Constants.expoConfig?.extra?.apiUrl;
 export const isDevelopment =
   Constants.expoConfig?.extra?.environment === "development";
-const baseURL = API_URL || "http://localhost:8000/api/";
+const baseURL = "https://sentinel-backend-app-bcbjhve6fcd6f4fz.mexicocentral-01.azurewebsites.net";
 
 export const API_CONFIG = {
   baseURL,
   endpoints: {
     auth: "/auth",
-    catalogs: "/catalogs",
-    partidas: "/partidas",
-    concepts: "/concepts",
+    catalogs: "/api/catalogo/catalog",
+    partidas: "/api/catalogo/workitem",
+    concepts: "/api/catalogo/concept",
   },
   azureBlobUrl: "https://sentinel.blob.core.windows.net",
 };
