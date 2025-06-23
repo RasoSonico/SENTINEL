@@ -38,14 +38,11 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
     [debouncedQuery, items]
   );
 
-  const value = useMemo(
-    () => {
-      const selectedIndex = items.findIndex(item => item.value === selected);
+  const value = useMemo(() => {
+    const selectedIndex = items.findIndex((item) => item.value === selected);
 
-      return items[selectedIndex]?.label || '';
-    },
-    [selected, items]
-  );
+    return items[selectedIndex]?.label || "";
+  }, [selected, items]);
 
   const handleSelect = (item: DropdownItemType) => {
     setVisible(false);
@@ -83,13 +80,26 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
             onChangeText={setQuery}
             autoFocus
           />
-          <FlatList
-            data={filtered}
-            keyExtractor={(item) => item.value.toString()}
-            renderItem={({ item }) => (
-              <List.Item title={item.label} onPress={() => handleSelect(item)} />
-            )}
-          />
+          {filtered.length === 0 ? (
+            <View style={{ padding: 16 }}>
+              <List.Item
+                title="No hay opciones disponibles"
+                titleStyle={{ color: "#888", textAlign: "center" }}
+                disabled
+              />
+            </View>
+          ) : (
+            <FlatList
+              data={filtered}
+              keyExtractor={(item) => item.value.toString()}
+              renderItem={({ item }) => (
+                <List.Item
+                  title={item.label}
+                  onPress={() => handleSelect(item)}
+                />
+              )}
+            />
+          )}
         </Modal>
       </Portal>
     </View>
