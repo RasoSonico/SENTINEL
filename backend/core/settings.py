@@ -49,11 +49,10 @@ INSTALLED_APPS = [
     'obra',
     'cronograma',
     'django_filters',
-    'drf_yasg',
-
-    
+    'drf_yasg',   
 ]
 
+#Middleware
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -160,6 +159,18 @@ AZURE_AUTHORITY = config('AZURE_AUTHORITY', default=f'https://login.microsoftonl
 AZURE_REDIRECT_URI = config('AZURE_REDIRECT_URI', default='')
 AZURE_SCOPE = config('AZURE_SCOPE', default='openid profile email')
 
+# Azure Blob Storage settings
+AZURE_STORAGE_ACCOUNT_NAME = config('AZURE_STORAGE_ACCOUNT_NAME', default='sentinelfilenphotos')
+AZURE_BLOB_STORAGE_CONNECTION_STRING = config('AZURE_BLOB_STORAGE_CONNECTION_STRING', default='')
+AZURE_PHOTOS_CONTAINER = config('AZURE_PHOTOS_CONTAINER', default='photos')
+
+# Photo settings
+PHOTO_MAX_SIZE = 5 * 1024 * 1024  # 5MB
+PHOTO_ALLOWED_FORMATS = ['jpg', 'jpeg', 'png', 'heic']
+PHOTO_THUMBNAIL_SIZE = (300, 300)  # Thumbnail dimensions
+PHOTO_MAX_DIMENSION = 1920  # Max width/height for uploaded photos
+PHOTO_JPEG_QUALITY = 85  # JPEG compression quality
+
 # REST Framework settings
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
@@ -227,7 +238,7 @@ if not DEBUG:
     # CORS más restrictivo en producción
     CORS_ALLOW_ALL_ORIGINS = False
     CORS_ALLOWED_ORIGINS = [
-        "https://tu-app.azurewebsites.net",  # Actualizaremos esto después
+        "sentinel-backend-app-bcbjhve6fcd6f4fz.eastus2-01.azurewebsites.net",  # Actualizaremos esto después
     ]
 
 # Logging para Azure
