@@ -8,7 +8,7 @@ from .photo_views.photo_views import (
     PhotoViewSet,
     PhotoAnalyticsAPIView
 )
-
+from .debug_views.debug_views import BlobDebugAPIView
 router = DefaultRouter()
 router.register(r'planning', views.EstimationPlanningViewSet)
 router.register(r'commitment-tracking', views.CommitmentTrackingViewSet)
@@ -33,6 +33,7 @@ urlpatterns = [
     path('photos/confirm-upload/', PhotoConfirmUploadAPIView.as_view(), name='photo-confirm-upload'),
     path('photos/bulk-upload/', PhotoBulkUploadAPIView.as_view(), name='photo-bulk-upload'),
     path('photos/analytics/', PhotoAnalyticsAPIView.as_view(), name='photo-analytics'),
+    path('photos/debug/', BlobDebugAPIView.as_view(), name='photo-debug'),
     
     # Dashboard
     path('dashboard/', views.ProgressDashboardView.as_view(), name='progress-dashboard'),

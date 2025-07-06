@@ -104,12 +104,25 @@ class AzureBlobService:
                 blob_name=blob_path,
                 account_key=self._get_account_key(),
                 permission=sas_permissions,
-                expiry=expiry_time
+                expiry=expiry_time,
+                start=timezone.now(),  # Agregar tiempo de inicio
+                protocol='https'  # Forzar HTTPS
             )
             
             # Construir la URL completa
             blob_url = f"https://{self.account_name}.blob.core.windows.net/{self.container_name}/{blob_path}"
             upload_url = f"{blob_url}?{sas_token}"
+            
+            # Logging detallado para debug
+            logger.info(f"🔍 SAS Token Debug:")
+            logger.info(f"   Account: {self.account_name}")
+            logger.info(f"   Container: {self.container_name}")
+            logger.info(f"   Blob path: {blob_path}")
+            logger.info(f"   SAS token length: {len(sas_token)}")
+            logger.info(f"   SAS token preview: {sas_token[:50]}...")
+            logger.info(f"   Upload URL: {upload_url}")
+            logger.info(f"   URL contains ?sv=: {'?sv=' in upload_url}")
+            logger.info(f"   URL contains &sig=: {'&sig=' in upload_url}")
             
             return {
                 'upload_url': upload_url,
@@ -253,9 +266,14 @@ class AzureBlobService:
             # Parse del connection string para extraer AccountKey
             parts = self.connection_string.split(';')
             for part in parts:
+                part = part.strip()  # Quitar espacios
                 if part.startswith('AccountKey='):
-                    return part.split('=', 1)[1]
+                    account_key = part.split('=', 1)[1]
+                    logger.info(f"Account key extraída exitosamente (longitud: {len(account_key)})")
+                    return account_key
             
+            # Logging adicional para debug
+            logger.error(f"Connection string parts: {parts}")
             raise ValueError("AccountKey no encontrada en connection string")
             
         except Exception as e:

@@ -181,8 +181,8 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         # Azure primero
         'usuarios.authentication.AzureExternalIDAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
+        #'rest_framework.authentication.SessionAuthentication', #En un futuro para AdminWeb
+        #'rest_framework.authentication.BasicAuthentication',
 
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
