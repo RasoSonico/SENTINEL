@@ -1,18 +1,38 @@
-import { AuthResponse, getMockAuthResponse } from "src/services/api/mockData";
+import { AxiosError } from "axios";
 import apiClient from "../../../services/api/apiClient";
-import { applyAuthInterceptors } from "../../../services/api/interceptors/authInterceptor";
+import { User } from "src/types/auth";
 
-// Apply auth-specific interceptors
-applyAuthInterceptors(apiClient);
-
-export const authMe = async (): Promise<AuthResponse> => {
+export const authMe = async (): Promise<User> => {
   try {
-    // const response = await apiClient.get<AuthResponse>("/auth/me");
-    // Create a mock response for testing purposes
-
-    return getMockAuthResponse();
+    const response = await apiClient.get<User>("/api/usuarios/me");
+    return response.data;
   } catch (error) {
-    console.error("Error authenticating user:", error);
-    throw new Error("Authentication failed");
+    console.log("authMe | Error fetching user data:", error);
+    // Normalize error for React Query consumers
+    if (error && typeof error === "object" && "response" in error) {
+      const axiosError = error as AxiosError;
+      const status = axiosError.response?.status;
+      if (status === 500) {
+        throw {
+          message: "Internal server error. Please try again later.",
+          status: 500,
+          data: axiosError.response?.data,
+          isAxiosError: true,
+        };
+      }
+      throw {
+        message: axiosError.message,
+        status,
+        data: axiosError.response?.data,
+        isAxiosError: true,
+      };
+    }
+    // Fallback for non-Axios errors
+    throw {
+      message: (error as Error)?.message || "Unknown error",
+      status: undefined,
+      data: undefined,
+      isAxiosError: false,
+    };
   }
 };

@@ -79,20 +79,24 @@ export const useAzureAuth = (
 
     console.group("Azure Login");
     console.log("Starting Azure login process...");
+    let result;
 
     if (request) {
-      const result = await promptAsync();
+      result = await promptAsync();
       if (result.type === "success") {
         console.log("Authentication successful");
-        return await handleAuthResponse(result);
+        result = await handleAuthResponse(result);
       } else {
         console.error("Authentication failed or was canceled.");
-        return null;
+        result = null;
       }
     } else {
       console.error("Authentication request is not ready yet.");
-      return null;
+      result = null;
     }
+    console.groupEnd();
+
+    return result;
   };
 
   return {
