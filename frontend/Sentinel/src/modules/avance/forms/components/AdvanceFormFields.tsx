@@ -52,7 +52,6 @@ const AdvanceFormFields: React.FC<AdvanceFormFieldsProps> = ({
   onConceptSelect,
   disablePartida = false,
   disableConcept = false,
-  setFormValue,
   watchFormValue,
 }) => {
   const dispatch = useDispatch();
@@ -145,9 +144,10 @@ const AdvanceFormFields: React.FC<AdvanceFormFieldsProps> = ({
               items={getCatalogsList(catalogs || [])}
               selected={value}
               onSelect={onCatalogSelect}
-              error={errors.catalog?.message}
+              error={errors.catalog?.message || catalogsError?.message}
               isLoading={isLoadingCatalogs}
               loadingLabel="Cargando Catálogos"
+              disabled={isCatalogsError}
             />
           )}
         />
@@ -162,8 +162,8 @@ const AdvanceFormFields: React.FC<AdvanceFormFieldsProps> = ({
               items={getPartidasList(partidas || [])}
               selected={value}
               onSelect={onPartidaSelect}
-              error={errors.partida?.message}
-              disabled={disablePartida}
+              error={errors.partida?.message || partidasError?.message}
+              disabled={disablePartida || isPartidasError}
               isLoading={isLoadingPartidas}
               loadingLabel="Cargando Partidas"
             />
@@ -180,8 +180,8 @@ const AdvanceFormFields: React.FC<AdvanceFormFieldsProps> = ({
               items={getConceptsList(concepts || [])}
               selected={value}
               onSelect={onConceptSelect}
-              error={errors.concept?.message}
-              disabled={disableConcept}
+              error={errors.concept?.message || conceptsError?.message}
+              disabled={disableConcept || isConceptsError}
               isLoading={isLoadingConcepts}
               loadingLabel="Cargando Conceptos"
             />

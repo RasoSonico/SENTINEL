@@ -26,7 +26,7 @@ import {
   selectAdvances,
   selectAdvanceSummary,
   selectOfflineSync,
-} from "../../../redux/slices/advanceSlice";
+} from "../../../redux/slices/avance/advanceSlice";
 import { PhysicalAdvance, UserConstruction } from "../../../types/entities";
 import { constructionService } from "../../../services/api/constructionService";
 

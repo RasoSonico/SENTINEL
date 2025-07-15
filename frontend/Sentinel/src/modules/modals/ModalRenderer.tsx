@@ -1,8 +1,14 @@
 import React, { Suspense } from "react";
-import { ModalEnum, ModalPropsMap } from "./modalTypes";
+import { ModalEnum } from "./modalTypes";
 
 const AdvanceSuccessModal = React.lazy(
   () => import("./components/AdvanceSuccessModal")
+);
+const AdvanceFailureModal = React.lazy(
+  () => import("./components/AdvanceFailureModal")
+);
+const AdvancePendingModal = React.lazy(
+  () => import("./components/AdvancePendingModal")
 );
 const ConfirmSendModal = React.lazy(
   () => import("./components/ConfirmSendModal")
@@ -10,6 +16,8 @@ const ConfirmSendModal = React.lazy(
 
 const MODAL_MAP = {
   [ModalEnum.AdvanceSuccess]: AdvanceSuccessModal,
+  [ModalEnum.AdvancePending]: AdvancePendingModal,
+  [ModalEnum.AdvanceFailure]: AdvanceFailureModal,
   [ModalEnum.ConfirmSend]: ConfirmSendModal,
 };
 
@@ -25,7 +33,7 @@ export default function ModalRenderer({
   if (!ModalComponent) return null;
 
   // Always inject onClose to allow closing from modal
-  const props = { ...modal.props, onClose: onClose, visible: true };
+  const props = { ...modal.props, onClose: onClose };
 
   return (
     <Suspense fallback={null}>
