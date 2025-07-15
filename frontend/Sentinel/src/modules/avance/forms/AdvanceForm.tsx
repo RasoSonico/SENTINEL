@@ -1,10 +1,9 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import {
   View,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
 } from "react-native";
 import { useForm } from "react-hook-form";
 
@@ -13,10 +12,10 @@ import { useAdvancePhotoSync } from "../../../hooks/avance/useAdvancePhotoSync";
 import { useAdvanceLocation } from "../../../hooks/avance/useAdvanceLocation";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
-  setCurrentAdvanceData,
   setCurrentAdvancePhotos,
   selectCurrentAdvance,
   selectOfflineSync,
+  registerAdvance,
 } from "../../../redux/slices/avance/advanceSlice";
 import AdvancePhotoSection from "./components/AdvancePhotoSection";
 import AdvanceLocationSection from "./components/AdvanceLocationSection";
@@ -33,11 +32,12 @@ import { useNavigation } from "@react-navigation/native";
 import { useModal } from "src/modules/modals/ModalContext";
 import { ModalEnum } from "src/modules/modals/modalTypes";
 import {
-  selectCatalogNameById,
   useCatalogNameById,
   useConceptDescriptionById,
   usePartidaNameById,
 } from "src/redux/selectors/avance/avanceFormDataSelectors";
+import { AdvanceRegistration } from "src/types/entities";
+import { useSubmitAdvance } from "src/hooks/data/query/useAvanceQueries";
 
 interface AdvanceFormProps {
   constructionId: string;
@@ -81,6 +81,14 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
     mode: "onChange",
     defaultValues: advanceFormDefaultValues,
   });
+
+  const {
+    mutate: submitAdvance,
+    isPending: submitAdvanceIsPending,
+    isSuccess: submitAdvanceWasSuccessful,
+    isError: submitAdvanceHadError,
+    error: submitAdvanceError,
+  } = useSubmitAdvance();
 
   // Watchers for dependent logic
   const selectedCatalogId = watch("catalog");
@@ -143,29 +151,37 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
     setValue("partida", partidaId, { shouldValidate: true });
   };
 
-  // Manejar el envío del formulario
   const onFormSubmit = async (data: AdvanceFormFieldsZod) => {
-    // You may want to map concept string to Concept object if needed for executedQuantity, etc.
-    // For now, keep executedQuantity logic as is.
     try {
-      const advanceData = {
-        construction_id: constructionId,
-        concept_id: data.concept, // If you need the id, map it here
-        quantity: parseFloat(data.quantity),
-        is_completed: data.isCompleted || false,
-        notes: data.notes?.trim() || "",
-        latitude: location?.latitude,
-        longitude: location?.longitude,
-      };
-      dispatch(setCurrentAdvanceData(advanceData));
-      // await dispatch(
-      //   registerAdvance({
-      //     advance: advanceData,
-      //     photos: photos,
-      //   })
-      // ).unwrap();
+      submitAdvance({
+        concept: data.concept,
+        volume: Number(data.quantity),
+        comments: data.notes ?? ""
+      })
+    } catch (error) {
+      openModal(ModalEnum.AdvanceFailure)
+    }
+  };
+
+
+  useEffect(() => {
+    if (submitAdvanceIsPending) {
+      openModal(ModalEnum.AdvancePending)
+    }
+  }, [submitAdvanceIsPending])
+
+  useEffect(() => {
+    if(submitAdvanceHadError) {
+      openModal(ModalEnum.AdvanceFailure)
+    }
+  }, [submitAdvanceHadError, submitAdvanceError])
+
+  useEffect(() => {
+    if (submitAdvanceWasSuccessful) {
       resetFormFields();
-      if (onSuccess) onSuccess();
+
+      onSuccess?.();
+
       openModal(ModalEnum.AdvanceSuccess, {
         onRegisterAnother: () => {
           closeModal();
@@ -176,16 +192,8 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
           navigation.goBack();
         },
       });
-    } catch (error) {
-      Alert.alert(
-        "Error",
-        error instanceof Error
-          ? error.message
-          : "No se pudo registrar el avance.",
-        [{ text: "Entendido", style: "default" }]
-      );
     }
-  };
+  }, [submitAdvanceWasSuccessful])
 
   // Refs for scrolling to fields
   const scrollViewRef = useRef<ScrollView>(null);

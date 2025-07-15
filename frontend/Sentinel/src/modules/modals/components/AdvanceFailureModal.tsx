@@ -2,20 +2,17 @@ import React from "react";
 import { Modal, View, Text, TouchableOpacity, Dimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import styles from "./styles/AdvanceSuccessModal.styles";
-import { BaseModalProps } from "../modalTypes";
+import { useTheme } from "react-native-paper";
 
-export interface AdvanceSuccessModalProps extends BaseModalProps {
-  onRegisterAnother: () => void;
-  onGoHome: () => void;
+export interface AdvanceFailureModalProps {
   onClose: () => void;
 }
 
-const AdvanceSuccessModal: React.FC<AdvanceSuccessModalProps> = ({
-  onRegisterAnother,
-  onGoHome,
+const AdvanceFailureModal: React.FC<AdvanceFailureModalProps> = ({
   onClose,
 }) => {
   const width = Dimensions.get("window").width * 0.8;
+  const theme = useTheme();
 
   return (
     <Modal
@@ -29,21 +26,18 @@ const AdvanceSuccessModal: React.FC<AdvanceSuccessModalProps> = ({
           <Ionicons
             name="checkmark-circle"
             size={64}
-            color="#4BB543"
+            color={theme.colors.error}
             style={styles.icon}
           />
-          <Text style={styles.title}>¡Avance registrado!</Text>
+          <Text style={styles.title}>Hubo un error</Text>
           <Text style={styles.subtitle}>
-            El avance ha sido registrado exitosamente.
+            El avanze no pudo guardarse correctamente, intente mas tarde.
           </Text>
           <TouchableOpacity
             style={styles.registerButton}
-            onPress={onRegisterAnother}
+            onPress={onClose}
           >
-            <Text style={styles.registerButtonText}>Registrar otro avance</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.homeButton} onPress={onGoHome}>
-            <Text style={styles.homeButtonText}>Ir al inicio</Text>
+            <Text style={styles.registerButtonText}>Cerrar</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -51,4 +45,4 @@ const AdvanceSuccessModal: React.FC<AdvanceSuccessModalProps> = ({
   );
 };
 
-export default AdvanceSuccessModal;
+export default AdvanceFailureModal;
