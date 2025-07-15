@@ -10,7 +10,7 @@ type ModalState = {
 type ModalContextType = {
   openModal: <T extends ModalEnum>(
     type: T,
-    props: Omit<ModalPropsMap[T], "onClose" | "visible">
+    props?: Omit<ModalPropsMap[T], "onClose">
   ) => void;
   closeModal: () => void;
 };
@@ -26,7 +26,7 @@ export const useModal = () => {
 export const ModalProvider = ({ children }: { children: ReactNode }) => {
   const [modal, setModal] = useState<ModalState>({ type: null, props: null });
 
-  const openModal = (type: ModalEnum, props: any) => {
+  const openModal = (type: ModalEnum, props?: any) => {
     setModal({ type, props });
   };
 

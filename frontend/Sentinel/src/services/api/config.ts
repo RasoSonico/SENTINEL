@@ -13,6 +13,7 @@ export const API_CONFIG = {
     catalogs: "/api/catalogo/catalog",
     partidas: "/api/catalogo/workitem",
     concepts: "/api/catalogo/concept",
+    submitAdvance: "/api/avance/physical",
   },
   azureBlobUrl: "https://sentinel.blob.core.windows.net",
 };

@@ -44,6 +44,7 @@ export const useAuth = () => {
   const login = async () => {
     const provider = getActiveProvider();
     const tokenResponse = await provider.login();
+    console.log(tokenResponse);
 
     if (tokenResponse) {
       saveTokenResponse(tokenResponse);

@@ -1,13 +1,9 @@
 import { apiRequest } from "src/services/api/apiClient";
 import { API_CONFIG } from "src/services/api/config";
 import { CatalogoApiResponse } from "src/types/catalogo";
-import {
-  catalogsMockData,
-  conceptoMockData,
-  partidaMockData,
-} from "../mocks/avanceMockData";
 import { PartidaApiResponse } from "src/types/partida";
 import { ConceptoApiResponse } from "src/types/concepto";
+import { SubmitAdvance, SubmitAvanceResponse } from "src/types/avance";
 
 export const getCatalogs = async () =>
   await apiRequest<CatalogoApiResponse>(
@@ -35,6 +31,14 @@ export const getConcepts = async () =>
   ).then((response) => {
     return response.results ?? [];
   });
+
+export const submitAdvance = async (advance: SubmitAdvance) => 
+  await apiRequest<SubmitAvanceResponse>(
+    "post",
+    API_CONFIG.endpoints.submitAdvance,
+    "Hubo un error al enviar el formulario de avance, inténtelo de nuevo más tarde.",
+    advance
+  );
 
 // export const getCatalogs = async () => Promise.resolve(catalogsMockData.results ?? []);
 //
