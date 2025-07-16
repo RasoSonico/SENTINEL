@@ -69,7 +69,7 @@
       "bundler": "metro"
     },
     "extra": {
-      "apiUrl": "http://localhost:8000/api/",
+      "apiUrl": "https://sentinel-backend-app-bcbjhve6fcd6f4fz.mexicocentral-01.azurewebsites.net",
       "environment": "development",
       "eas": {
         "projectId": "d96d8296-ab75-49bb-9206-6005139d6314"

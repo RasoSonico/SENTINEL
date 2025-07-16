@@ -17,14 +17,13 @@ import ConceptSelector from "./ConceptSelector";
 import PhotoCapture from "./PhotoCapture";
 import ProgramStatusBadge from "./ProgramStatusBadge";
 import OfflineIndicator from "./OfflineIndicator";
-import { Concept, Physical } from "../../../types/entities";
-import { usePhotoCapture, Photo } from "../../../hooks/avance/usePhotoCapture";
+import { Concept } from "../../../types/entities";
+import { usePhotoCapture } from "../../../hooks/avance/usePhotoCapture";
 import { useGeolocation } from "../../../hooks/avance/useGeolocation";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
   setCurrentAdvanceData,
   setCurrentAdvancePhotos,
-  removePhotoFromCurrentAdvance,
   registerAdvance,
   selectCurrentAdvance,
   selectOfflineSync,

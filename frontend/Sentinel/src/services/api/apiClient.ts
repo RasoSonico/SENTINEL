@@ -1,6 +1,7 @@
 import Constants from "expo-constants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios, { InternalAxiosRequestConfig } from "axios";
+import { getTokenResponse } from "src/utils/auth";
 
 // Get API URL from Expo config
 const API_URL = Constants.expoConfig?.extra?.apiUrl;
@@ -28,9 +29,9 @@ apiClient.interceptors.request.use(
       console.log(`Making request to: ${config.baseURL}${config.url}`);
     }
 
-    const token = await AsyncStorage.getItem("token");
+    const token = await getTokenResponse();
     if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers.Authorization = `Bearer ${token?.accessToken}`;
     }
     return config;
   },

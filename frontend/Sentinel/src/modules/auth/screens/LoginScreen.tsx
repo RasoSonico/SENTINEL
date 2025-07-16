@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import styles from "./LoginScreen.styles";
 import {
   View,
@@ -7,6 +7,8 @@ import {
   SafeAreaView,
   Platform,
   Alert,
+  Modal,
+  Pressable,
 } from "react-native";
 import { Button } from "../../../components/ui/Button";
 import { useAppSelector, useAppDispatch } from "../../../redux/hooks";
@@ -17,36 +19,56 @@ import {
 import { setError, setLoading } from "../../../redux/slices/authSlice";
 import * as Device from "expo-device";
 import { useAuth } from "../../../hooks/useAuth";
+import ServerErrorModal from "src/components/ServerErrorModal";
 
 const LoginScreen: React.FC = () => {
-  const { login } = useAuth();
+  const { login, isAuthUserError, isAuthUserPending, authUserError } =
+    useAuth();
   const dispatch = useAppDispatch();
-  const isLoading = useAppSelector(selectLoading);
+  const isLoading = useAppSelector(selectLoading) || isAuthUserPending;
   const error = useAppSelector(selectError);
+  const [serverErrorVisible, setServerErrorVisible] = useState(false);
+
+  useEffect(() => {
+    if (
+      isAuthUserError &&
+      typeof authUserError === "object" &&
+      authUserError !== null &&
+      "status" in authUserError &&
+      (authUserError as any).status === 500
+    ) {
+      setServerErrorVisible(true);
+    }
+  }, [isAuthUserError, authUserError]);
 
   useEffect(() => {
     if (error) {
       Alert.alert("Error de Autenticación", error);
-      // Limpiar el error después de mostrarlo
       dispatch(setError(null));
     }
   }, [error, dispatch]);
 
   const handleLogin = async () => {
-    login().catch((err) => {
-      console.error("Login error caught:", err);
-      Alert.alert(
-        "Error de Autenticación",
-        "Ocurrió un error durante el inicio de sesión: " +
-        (err instanceof Error ? err.message : "Error desconocido")
-      );
-    }).finally((() => {
-      dispatch(setLoading(false));
-    }));
+    login()
+      .catch((err) => {
+        console.error("Login error caught:", err);
+        Alert.alert(
+          "Error de Autenticación",
+          "Ocurrió un error durante el inicio de sesión: " +
+            (err instanceof Error ? err.message : "Error desconocido")
+        );
+      })
+      .finally(() => {
+        dispatch(setLoading(false));
+      });
   };
 
   return (
     <SafeAreaView style={styles.container}>
+      <ServerErrorModal
+        visible={serverErrorVisible}
+        onClose={() => setServerErrorVisible(false)}
+      />
       <View style={styles.content}>
         <View style={styles.logoContainer}>
           <Image

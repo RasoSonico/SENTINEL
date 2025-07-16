@@ -18,6 +18,11 @@ export type AppTabParamList = {
   Cronogramas: undefined;
   Avances: undefined;
   Perfil: undefined;
+  Dashboard: undefined;
+  Aprobacion: undefined;
+  Estatus: undefined;
+  Problematicas: undefined;
+  Financiero: undefined;
 };
 
 // Parámetros para el navegador de Obras

@@ -1,7 +1,7 @@
 import { useDispatch, useSelector } from "react-redux";
 import { useAuthMeQuery } from "./data/query/useAuthQueries";
 import { useEffect } from "react";
-import { QueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import authConfig from "../config/authConfig.json";
 import { useAzureAuth } from "./providers/useAzureAuth";
 import { selectAuthInfo } from "src/redux/selectors/authSelectors";
@@ -21,9 +21,9 @@ export const useAuth = () => {
     isSuccess: isAuthUserSuccessful,
     isPending: isAuthUserPending,
     isError: isAuthUserError,
-    refetch: refetchAuthUser,
-  } = useAuthMeQuery(true);
-  const queryClient = new QueryClient();
+    error: authUserError,
+  } = useAuthMeQuery(!!user);
+  const queryClient = useQueryClient();
 
   const activeProvider = (authConfig as AuthConfig).activeProvider;
   const providers = (authConfig as AuthConfig).providers;
@@ -36,7 +36,9 @@ export const useAuth = () => {
       case "azure":
         return azureAuth;
       default:
-        console.error(`Unsupported auth provider: ${activeProvider}`);
+        console.debug(
+          `[useAuth] Unsupported auth provider: ${activeProvider}, defaulting to Azure`
+        );
         return azureAuth; // Default to Azure
     }
   };
@@ -53,22 +55,31 @@ export const useAuth = () => {
 
   useEffect(() => {
     if (isAuthUserSuccessful) {
-      const { user, role } = authUser;
       dispatch(
         setCredentials({
-          user,
-          role,
+          user: authUser,
         })
       );
     }
 
-    if (isAuthUserError) {
-      console.error("Error authenticating user");
-      dispatch(clearCredentials());
+    if (
+      isAuthUserError &&
+      authUserError &&
+      (authUserError as any).status === 401
+    ) {
+      console.warn("[useAuth] Unauthorized access, logging out");
+      logout();
     }
-  }, [isAuthUserSuccessful, isAuthUserError, authUser, dispatch]);
+  }, [
+    isAuthUserSuccessful,
+    isAuthUserError,
+    authUserError,
+    authUser,
+    dispatch,
+  ]);
 
   const logout = async () => {
+    console.debug("[useAuth] Logging out user");
     queryClient.invalidateQueries({
       queryKey: ["authMe"],
     });
@@ -85,6 +96,7 @@ export const useAuth = () => {
     isAuthUserPending,
     isAuthUserSuccessful,
     isAuthUserError,
+    authUserError,
     activeProvider,
     discovery: getActiveProvider().discovery,
     clientId: getActiveProvider().clientId,
