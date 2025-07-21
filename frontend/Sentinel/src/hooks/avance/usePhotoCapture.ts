@@ -9,6 +9,7 @@ export interface Photo {
   uri: string;
   localUri: string; // Uri para almacenamiento local
   timestamp: number;
+  filename: string; // Nombre personalizable de la foto
   location?: {
     latitude: number;
     longitude: number;
@@ -21,6 +22,8 @@ interface UsePhotoCaptureProps {
   compressionQuality?: number;
   includeLocation?: boolean;
   locationData?: { latitude: number; longitude: number } | null;
+  partidaName?: string;
+  conceptName?: string;
 }
 
 /**
@@ -31,10 +34,23 @@ export const usePhotoCapture = ({
   compressionQuality = 0.7,
   includeLocation = true,
   locationData = null,
+  partidaName = "",
+  conceptName = "",
 }: UsePhotoCaptureProps = {}) => {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+
+  /**
+   * Genera un nombre automático para la foto basado solo en partida
+   */
+  const generateAutoFilename = (photoIndex: number): string => {
+    // Limpiar nombre de partida para que sea seguro para archivos
+    const cleanPartida = partidaName.replace(/[^a-zA-Z0-9]/g, "") || "Partida";
+    const numero = String(photoIndex + 1).padStart(2, "0");
+
+    return `${cleanPartida}_${numero}.jpg`;
+  };
 
   // Solicitar permisos al montar el componente
   useEffect(() => {
@@ -134,6 +150,7 @@ export const usePhotoCapture = ({
           uri: optimizedUri,
           localUri,
           timestamp: Date.now(),
+          filename: generateAutoFilename(photos.length),
           synced: false,
         };
 
@@ -192,6 +209,7 @@ export const usePhotoCapture = ({
           uri: optimizedUri,
           localUri,
           timestamp: Date.now(),
+          filename: generateAutoFilename(photos.length),
           synced: false,
         };
 
@@ -244,6 +262,20 @@ export const usePhotoCapture = ({
     );
   };
 
+  /**
+   * Actualiza el nombre de una foto
+   */
+  const updatePhotoFilename = (photoId: string, newFilename: string) => {
+    // Sanitizar el nuevo nombre
+    const sanitizedFilename = newFilename.replace(/[^a-zA-Z0-9._-]/g, "_");
+
+    setPhotos((prevPhotos) =>
+      prevPhotos.map((photo) =>
+        photo.id === photoId ? { ...photo, filename: sanitizedFilename } : photo
+      )
+    );
+  };
+
   return {
     photos,
     loading,
@@ -253,5 +285,6 @@ export const usePhotoCapture = ({
     removePhoto,
     clearPhotos,
     markPhotoAsSynced,
+    updatePhotoFilename,
   };
 };

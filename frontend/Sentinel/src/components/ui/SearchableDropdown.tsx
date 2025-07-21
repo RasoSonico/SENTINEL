@@ -27,6 +27,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
 }) => {
   const [query, setQuery] = useState("");
   const [visible, setVisible] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
 
   const debouncedQuery = useDebounce(query, 200);
 
@@ -47,6 +48,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
   const handleSelect = (item: DropdownItemType) => {
     setVisible(false);
     setQuery("");
+    setSearchFocused(false);
     onSelect(item.value);
   };
 
@@ -55,8 +57,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
       <TextInput
         label={label}
         value={value}
-        onFocus={() => setVisible(true)}
-        editable
+        editable={false}
         right={
           <TextInput.Icon icon="menu-down" onPress={() => setVisible(true)} />
         }
@@ -64,12 +65,17 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
         style={{ backgroundColor: "white", borderRadius: 8 }}
         multiline
         disabled={disabled}
+        onTouchStart={() => setVisible(true)}
       />
 
       <Portal>
         <Modal
           visible={visible}
-          onDismiss={() => setVisible(false)}
+          onDismiss={() => {
+            setVisible(false);
+            setSearchFocused(false);
+            setQuery("");
+          }}
           contentContainerStyle={styles.modal}
         >
           <TextInput
@@ -78,7 +84,8 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
             label={searchLabel || "Buscar..."}
             value={query}
             onChangeText={setQuery}
-            autoFocus
+            onFocus={() => setSearchFocused(true)}
+            autoFocus={searchFocused}
           />
           {filtered.length === 0 ? (
             <View style={{ padding: 16 }}>
@@ -98,6 +105,8 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
                   onPress={() => handleSelect(item)}
                 />
               )}
+              style={styles.list}
+              showsVerticalScrollIndicator={true}
             />
           )}
         </Modal>
@@ -112,6 +121,11 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     padding: 20,
     borderRadius: 4,
+    maxHeight: "70%", // Limitar altura para permitir scroll
+  },
+  list: {
+    maxHeight: 300, // Altura máxima para la lista
+    marginTop: 10,
   },
 });
 

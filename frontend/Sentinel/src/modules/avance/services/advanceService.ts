@@ -1,11 +1,11 @@
 import { BaseService } from "../../../services/api/baseService";
-import apiClient from "../../../services/api/apiClient";
-import { AxiosRequestConfig } from "axios";
+import apiClient, { apiRequest } from "../../../services/api/apiClient";
 import {
   AdvanceRegistration,
   Concept,
   PhysicalAdvance,
   PhysicalAdvanceSummary,
+  PhysicalAdvanceResponse,
 } from "../../../types/entities";
 
 /**
@@ -36,24 +36,30 @@ class AdvanceService extends BaseService<PhysicalAdvance> {
     pages: number;
   }> {
     try {
-      const config: AxiosRequestConfig = {
-        params: {
-          construction_id: constructionId,
-          work_item_id: params?.workItemId,
-          search: params?.query,
-          page: params?.page || 1,
-          page_size: params?.pageSize || 20,
-        },
-      };
+      const queryParams = new URLSearchParams({
+        construction_id: constructionId,
+        page: (params?.page || 1).toString(),
+        page_size: (params?.pageSize || 20).toString(),
+      });
 
-      const response = await apiClient.get(
-        "/catalogo/concept/available-for-advance/",
-        config
+      if (params?.workItemId)
+        queryParams.append("work_item_id", params.workItemId);
+      if (params?.query) queryParams.append("search", params.query);
+
+      const response = await apiRequest<{
+        results: Concept[];
+        count: number;
+        total_pages: number;
+      }>(
+        "get",
+        `/catalogo/concept/available-for-advance/?${queryParams.toString()}`,
+        "Error al obtener conceptos disponibles"
       );
+
       return {
-        concepts: response.data.results,
-        total: response.data.count,
-        pages: response.data.total_pages,
+        concepts: response.results,
+        total: response.count,
+        pages: response.total_pages,
       };
     } catch (error) {
       console.error("Error al obtener conceptos disponibles:", error);
@@ -70,8 +76,13 @@ class AdvanceService extends BaseService<PhysicalAdvance> {
     advance: AdvanceRegistration
   ): Promise<PhysicalAdvance> {
     try {
-      const response = await apiClient.post("/avance/physical/", advance);
-      return response.data;
+      const response = await apiRequest<PhysicalAdvance>(
+        "post",
+        "/avance/physical/",
+        "Error al registrar avance",
+        advance
+      );
+      return response;
     } catch (error) {
       console.error("Error al registrar avance:", error);
       throw error;
@@ -79,68 +90,82 @@ class AdvanceService extends BaseService<PhysicalAdvance> {
   }
 
   /**
-   * Obtener avances registrados para una construcción
-   * @param constructionId ID de la obra
+   * Obtener avances registrados para un catálogo
+   * @param catalogId ID del catálogo
    * @param params Parámetros adicionales
    * @returns Lista de avances
    */
-  async getAdvancesByConstruction(
-    constructionId: string,
+  async getAdvancesByCatalog(
+    catalogId: number,
     params?: {
       conceptId?: string;
       startDate?: string;
       endDate?: string;
-      status?: "pending" | "approved" | "rejected";
+      status?: "PENDING" | "APPROVED" | "REJECTED";
       page?: number;
       pageSize?: number;
     }
   ): Promise<{
-    advances: PhysicalAdvance[];
+    advances: PhysicalAdvanceResponse[];
     total: number;
     pages: number;
   }> {
     try {
-      const config: AxiosRequestConfig = {
-        params: {
-          construction_id: constructionId,
-          concept_id: params?.conceptId,
-          start_date: params?.startDate,
-          end_date: params?.endDate,
-          status: params?.status,
-          page: params?.page || 1,
-          page_size: params?.pageSize || 20,
-        },
-      };
+      const queryParams = new URLSearchParams({
+        catalog: catalogId.toString(),
+        page: (params?.page || 1).toString(),
+        page_size: (params?.pageSize || 20).toString(),
+      });
 
-      const response = await apiClient.get("/avance/physical/", config);
+      if (params?.conceptId) queryParams.append("concept", params.conceptId);
+      if (params?.startDate) queryParams.append("start_date", params.startDate);
+      if (params?.endDate) queryParams.append("end_date", params.endDate);
+      if (params?.status) queryParams.append("status", params.status);
+
+      const endpoint = `/api/avance/physical/?${queryParams.toString()}`;
+      console.log("🔍 Requesting advances by catalog:", endpoint);
+
+      const response = await apiRequest<{
+        results: PhysicalAdvanceResponse[];
+        count: number;
+        next: string | null;
+        previous: string | null;
+      }>("get", endpoint, "Error al obtener avances por catálogo");
+
+      console.log("📦 Advances response:", {
+        count: response.count,
+        resultsLength: response.results.length,
+        advances: response.results,
+      });
+
       return {
-        advances: response.data.results,
-        total: response.data.count,
-        pages: response.data.total_pages,
+        advances: response.results,
+        total: response.count,
+        pages: Math.ceil(response.count / (params?.pageSize || 20)),
       };
     } catch (error) {
-      console.error("Error al obtener avances por construcción:", error);
+      console.error("❌ Error al obtener avances por catálogo:", error);
       throw error;
     }
   }
 
   /**
-   * Obtener resumen de avances por construcción
-   * @param constructionId ID de la obra
-   * @returns Resumen de avances
+   * Calcular resumen de avances localmente a partir de la lista
+   * @param advances Lista de avances
+   * @returns Resumen calculado
    */
-  async getAdvanceSummary(
-    constructionId: string
-  ): Promise<PhysicalAdvanceSummary> {
-    try {
-      const response = await apiClient.get("/avance/physical/summary/", {
-        params: { construction_id: constructionId },
-      });
-      return response.data;
-    } catch (error) {
-      console.error("Error al obtener resumen de avances:", error);
-      throw error;
-    }
+  calculateAdvanceSummary(
+    advances: PhysicalAdvanceResponse[]
+  ): Partial<PhysicalAdvanceSummary> {
+    const summary = {
+      total_advances: advances.length,
+      pending_advances: advances.filter((a) => a.status === "PENDING").length,
+      approved_advances: advances.filter((a) => a.status === "APPROVED").length,
+      rejected_advances: advances.filter((a) => a.status === "REJECTED").length,
+    };
+
+    console.log("📊 Calculated summary:", summary);
+    return summary;
   }
 
   /**

@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Photo } from "../../../hooks/avance/usePhotoCapture";
+import PhotoNameEditor from "./PhotoNameEditor";
 import styles from "./styles/PhotoCapture.styles";
 
 interface PhotoCaptureProps {
@@ -19,6 +20,8 @@ interface PhotoCaptureProps {
   onTakePhoto: () => void;
   onPickImage: () => void;
   onRemovePhoto: (photoId: string) => void;
+  onUpdatePhotoFilename?: (photoId: string, newFilename: string) => void;
+  partidaName?: string;
 }
 
 const PhotoCapture: React.FC<PhotoCaptureProps> = ({
@@ -28,6 +31,8 @@ const PhotoCapture: React.FC<PhotoCaptureProps> = ({
   onTakePhoto,
   onPickImage,
   onRemovePhoto,
+  onUpdatePhotoFilename,
+  partidaName = "",
 }) => {
   // Verificar si se alcanzó el límite de fotos
   const hasReachedLimit = photos.length >= maxPhotos;
@@ -101,7 +106,7 @@ const PhotoCapture: React.FC<PhotoCaptureProps> = ({
               {/* Indicador de sincronización */}
               {photo.synced ? (
                 <View style={styles.syncedIndicator}>
-                  <Ionicons name="cloud-done" size={12} color="#fff" />
+                  <Ionicons name="cloud-done" size={10} color="#fff" />
                 </View>
               ) : null}
 
@@ -110,8 +115,20 @@ const PhotoCapture: React.FC<PhotoCaptureProps> = ({
                 style={styles.removeButton}
                 onPress={() => handleRemovePhoto(photo.id)}
               >
-                <Ionicons name="close-circle" size={20} color="#e74c3c" />
+                <Ionicons name="close-circle" size={18} color="#e74c3c" />
               </TouchableOpacity>
+
+              {/* Editor de nombre de foto */}
+              {onUpdatePhotoFilename && (
+                <PhotoNameEditor
+                  filename={photo.filename}
+                  onUpdate={(newFilename) =>
+                    onUpdatePhotoFilename(photo.id, newFilename)
+                  }
+                  disabled={photo.synced}
+                  partidaName={partidaName}
+                />
+              )}
             </View>
           ))}
 
@@ -122,7 +139,7 @@ const PhotoCapture: React.FC<PhotoCaptureProps> = ({
               onPress={handleAddPhoto}
               disabled={loading}
             >
-              <Ionicons name="add" size={32} color="#3498db" />
+              <Ionicons name="add" size={28} color="#3498db" />
             </TouchableOpacity>
           )}
         </ScrollView>

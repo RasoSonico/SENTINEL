@@ -1,4 +1,5 @@
-import apiClient from "../../../services/api/apiClient";
+import { apiRequest } from "../../../services/api/apiClient";
+import apiClient from "../../../services/api/apiClient"; // Necesario para FormData uploads
 import * as FileSystem from "expo-file-system";
 
 // Interfaz para respuesta de carga de imagen
@@ -111,7 +112,11 @@ class PhotoService {
    */
   async deletePhoto(photoId: string): Promise<boolean> {
     try {
-      await apiClient.delete(`/media/photos/${photoId}/`);
+      await apiRequest(
+        "delete",
+        `/media/photos/${photoId}/`,
+        `Error al eliminar foto ${photoId}`
+      );
       return true;
     } catch (error) {
       console.error(`Error al eliminar foto ${photoId}:`, error);

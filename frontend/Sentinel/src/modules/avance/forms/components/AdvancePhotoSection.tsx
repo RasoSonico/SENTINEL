@@ -8,6 +8,8 @@ interface AdvancePhotoSectionProps {
   onTakePhoto: () => void;
   onPickImage: () => void;
   onRemovePhoto: (photoId: string) => void;
+  onUpdatePhotoFilename?: (photoId: string, newFilename: string) => void;
+  partidaName?: string;
   style?: any;
 }
 
@@ -17,6 +19,8 @@ const AdvancePhotoSection: React.FC<AdvancePhotoSectionProps> = ({
   onTakePhoto,
   onPickImage,
   onRemovePhoto,
+  onUpdatePhotoFilename,
+  partidaName,
   style,
 }) => (
   <View style={style}>
@@ -26,6 +30,8 @@ const AdvancePhotoSection: React.FC<AdvancePhotoSectionProps> = ({
       onTakePhoto={onTakePhoto}
       onPickImage={onPickImage}
       onRemovePhoto={onRemovePhoto}
+      onUpdatePhotoFilename={onUpdatePhotoFilename}
+      partidaName={partidaName}
     />
   </View>
 );
