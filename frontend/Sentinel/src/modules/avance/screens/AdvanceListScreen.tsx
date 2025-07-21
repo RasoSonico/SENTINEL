@@ -27,8 +27,13 @@ import {
   selectAdvanceSummary,
   selectOfflineSync,
 } from "../../../redux/slices/avance/advanceSlice";
-import { PhysicalAdvance, UserConstruction } from "../../../types/entities";
+import {
+  PhysicalAdvance,
+  PhysicalAdvanceResponse,
+  Construction,
+} from "../../../types/entities";
 import { constructionService } from "../../../services/api/constructionService";
+import advanceService from "../services/advanceService";
 
 type AdvanceListScreenNavigationProp = StackNavigationProp<
   AvanceStackParamList,
@@ -41,11 +46,20 @@ const AdvanceListScreen: React.FC = () => {
 
   // Estados para almacenar la información de la construcción asignada
   const [assignedConstruction, setAssignedConstruction] =
-    useState<UserConstruction | null>(null);
+    useState<Construction | null>(null);
   const [loadingConstruction, setLoadingConstruction] = useState<boolean>(true);
   const [constructionError, setConstructionError] = useState<string | null>(
     null
   );
+
+  // Estados locales para manejar avances y catálogos
+  const [catalogId, setCatalogId] = useState<number | null>(null);
+  const [localAdvances, setLocalAdvances] = useState<PhysicalAdvanceResponse[]>(
+    []
+  );
+  const [localSummary, setLocalSummary] = useState<any>(null);
+  const [loadingAdvances, setLoadingAdvances] = useState<boolean>(false);
+  const [advancesError, setAdvancesError] = useState<string | null>(null);
 
   // Obtener datos del estado global
   const {
@@ -64,6 +78,73 @@ const AdvanceListScreen: React.FC = () => {
     "all" | "pending" | "approved" | "rejected"
   >("all");
 
+  // Función para cargar catálogos y avances
+  const loadCatalogAndAdvances = async (construction: Construction) => {
+    try {
+      setLoadingAdvances(true);
+      setAdvancesError(null);
+
+      console.log(
+        "🔍 [FLOW] Step 2: Getting catalogs for construction:",
+        construction.id
+      );
+
+      // 1. Obtener catálogos de la construcción
+      const catalogs = await constructionService.getCatalogsByConstruction(
+        parseInt(construction.id)
+      );
+
+      if (catalogs.length === 0) {
+        console.log("⚠️ No catalogs found for construction");
+        setAdvancesError("No se encontraron catálogos para esta obra");
+        return;
+      }
+
+      // 2. Usar el primer catálogo disponible
+      const mainCatalog = catalogs[0];
+      setCatalogId(mainCatalog.id);
+      console.log("✅ [FLOW] Using catalog:", mainCatalog);
+
+      // 3. Obtener avances usando el catalog_id
+      console.log(
+        "🔍 [FLOW] Step 3: Getting advances for catalog:",
+        mainCatalog.id
+      );
+
+      const statusParam =
+        statusFilter !== "all"
+          ? (statusFilter.toUpperCase() as "PENDING" | "APPROVED" | "REJECTED")
+          : undefined;
+
+      const advancesResponse = await advanceService.getAdvancesByCatalog(
+        mainCatalog.id,
+        {
+          status: statusParam,
+          page: 1,
+          pageSize: 20,
+        }
+      );
+
+      // 4. Calcular resumen localmente
+      const summary = advanceService.calculateAdvanceSummary(
+        advancesResponse.advances
+      );
+
+      setLocalAdvances(advancesResponse.advances);
+      setLocalSummary(summary);
+
+      console.log(
+        "✅ [FLOW] Complete! Advances loaded:",
+        advancesResponse.advances.length
+      );
+    } catch (error) {
+      console.error("❌ Error loading catalog and advances:", error);
+      setAdvancesError("Error al cargar avances");
+    } finally {
+      setLoadingAdvances(false);
+    }
+  };
+
   // Cargar la construcción asignada al contratista
   useEffect(() => {
     const loadAssignedConstruction = async () => {
@@ -71,27 +152,41 @@ const AdvanceListScreen: React.FC = () => {
         setLoadingConstruction(true);
         setConstructionError(null);
 
-        // Obtener la construcción asignada al contratista actual
-        const assigned = await constructionService.getAssignedConstruction();
-        setAssignedConstruction(assigned);
+        // DEBUG: Primero obtener todas las construcciones del usuario para ver qué hay
+        console.log(
+          "🔍 [DEBUG] Obteniendo todas las construcciones del usuario..."
+        );
+        const allUserConstructions =
+          await constructionService.getUserConstructions();
+        console.log(
+          "📋 [DEBUG] Todas las construcciones:",
+          allUserConstructions
+        );
 
-        // Si encontramos una construcción asignada, cargar sus avances
-        if (assigned) {
+        // Obtener la construcción asignada al contratista actual
+        console.log(
+          "🔍 [DEBUG] Obteniendo construcción asignada con filtros..."
+        );
+        const assigned = await constructionService.getAssignedConstruction();
+        console.log("🎯 [DEBUG] Construcción asignada (filtrada):", assigned);
+
+        // Si no hay asignación con filtros, usar la primera disponible como fallback
+        const finalAssigned =
+          assigned ||
+          (allUserConstructions.length > 0 ? allUserConstructions[0] : null);
+        console.log("✅ [DEBUG] Construcción final a usar:", finalAssigned);
+
+        setAssignedConstruction(finalAssigned);
+
+        // Si encontramos una construcción asignada, cargar catálogos y avances
+        if (finalAssigned) {
           // Configurar el título de la pantalla con el nombre de la obra
           navigation.setOptions({
-            title: `Avances: ${assigned.construction_details.name}`,
+            title: `Avances: ${finalAssigned.name}`,
           });
 
-          // Cargar los avances y el resumen
-          dispatch(
-            fetchAdvancesByConstruction({
-              constructionId: assigned.construction_details.id,
-              status: statusFilter !== "all" ? statusFilter : undefined,
-              page: 1,
-            })
-          );
-
-          dispatch(fetchAdvanceSummary(assigned.construction_details.id));
+          // Cargar catálogos y avances usando el nuevo flujo
+          await loadCatalogAndAdvances(finalAssigned);
         }
       } catch (error) {
         console.error("Error al cargar construcción asignada:", error);
@@ -103,6 +198,13 @@ const AdvanceListScreen: React.FC = () => {
 
     loadAssignedConstruction();
   }, [dispatch, statusFilter]);
+
+  // Recargar avances cuando cambie el filtro de status
+  useEffect(() => {
+    if (assignedConstruction && catalogId) {
+      loadCatalogAndAdvances(assignedConstruction);
+    }
+  }, [statusFilter]);
 
   // Configurar el título de la pantalla y el botón derecho para agregar avances
   useEffect(() => {
@@ -120,10 +222,10 @@ const AdvanceListScreen: React.FC = () => {
 
   // Manejar la navegación al formulario de registro de avance
   const handleAddAdvance = () => {
-    if (!assignedConstruction) {
+    if (assignedConstruction) {
       navigation.navigate("AvanceRegistration", {
-        constructionId: assignedConstruction?.construction_details?.id ?? 1,
-        constructionName: assignedConstruction?.construction_details?.name ?? "Obra sin nombre",
+        constructionId: assignedConstruction.id,
+        constructionName: assignedConstruction.name,
       });
     } else {
       Alert.alert(
@@ -135,42 +237,28 @@ const AdvanceListScreen: React.FC = () => {
   };
 
   // Refrescar datos
-  const handleRefresh = useCallback(() => {
+  const handleRefresh = useCallback(async () => {
     if (!assignedConstruction) return;
 
     setRefreshing(true);
 
-    Promise.all([
-      dispatch(
-        fetchAdvancesByConstruction({
-          constructionId: assignedConstruction.construction_details.id,
-          status: statusFilter !== "all" ? statusFilter : undefined,
-          page: 1,
-        })
-      ),
-      dispatch(
-        fetchAdvanceSummary(assignedConstruction.construction_details.id)
-      ),
-    ]).finally(() => {
+    try {
+      await loadCatalogAndAdvances(assignedConstruction);
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+    } finally {
       setRefreshing(false);
-    });
-  }, [dispatch, assignedConstruction, statusFilter]);
+    }
+  }, [assignedConstruction, statusFilter]);
 
-  // Cargar más avances
+  // Cargar más avances (simplificado por ahora)
   const handleLoadMore = useCallback(() => {
-    if (!assignedConstruction || loading || page >= pages) return;
-
-    dispatch(
-      fetchAdvancesByConstruction({
-        constructionId: assignedConstruction.construction_details.id,
-        status: statusFilter !== "all" ? statusFilter : undefined,
-        page: page + 1,
-      })
-    );
-  }, [dispatch, assignedConstruction, statusFilter, loading, page, pages]);
+    // TODO: Implementar paginación con el nuevo flujo
+    console.log("Load more functionality - to be implemented");
+  }, []);
 
   // Renderizar un elemento de avance
-  const renderAdvanceItem = ({ item }: { item: PhysicalAdvance }) => (
+  const renderAdvanceItem = ({ item }: { item: PhysicalAdvanceResponse }) => (
     <TouchableOpacity
       style={styles.advanceItem}
       onPress={() => {
@@ -184,17 +272,17 @@ const AdvanceListScreen: React.FC = () => {
     >
       <View style={styles.advanceHeader}>
         <View style={styles.conceptInfo}>
-          <Text style={styles.conceptCode}>{item.concept_code}</Text>
-          <Text style={styles.conceptName}>{item.concept_name}</Text>
+          <Text style={styles.conceptCode}>Concepto #{item.concept}</Text>
+          <Text style={styles.conceptName}>Avance físico</Text>
         </View>
 
         {/* Estatus de aprobación */}
         <View
           style={[
             styles.statusChip,
-            item.status === "approved"
+            item.status === "APPROVED"
               ? styles.approvedChip
-              : item.status === "rejected"
+              : item.status === "REJECTED"
               ? styles.rejectedChip
               : styles.pendingChip,
           ]}
@@ -202,16 +290,16 @@ const AdvanceListScreen: React.FC = () => {
           <Text
             style={[
               styles.statusText,
-              item.status === "approved"
+              item.status === "APPROVED"
                 ? styles.approvedText
-                : item.status === "rejected"
+                : item.status === "REJECTED"
                 ? styles.rejectedText
                 : styles.pendingText,
             ]}
           >
-            {item.status === "approved"
+            {item.status === "APPROVED"
               ? "Aprobado"
-              : item.status === "rejected"
+              : item.status === "REJECTED"
               ? "Rechazado"
               : "Pendiente"}
           </Text>
@@ -220,58 +308,31 @@ const AdvanceListScreen: React.FC = () => {
 
       <View style={styles.advanceDetails}>
         <View style={styles.quantityContainer}>
-          <Text style={styles.quantityLabel}>Cantidad:</Text>
-          <Text style={styles.quantityValue}>
-            {item.quantity} {item.concept_unit}
-          </Text>
+          <Text style={styles.quantityLabel}>Volumen:</Text>
+          <Text style={styles.quantityValue}>{item.volume}</Text>
         </View>
 
         <Text style={styles.dateText}>
-          {format(new Date(item.created_at), "dd MMM yyyy HH:mm", {
+          {format(new Date(item.date), "dd MMM yyyy", {
             locale: es,
           })}
         </Text>
       </View>
 
-      {/* Miniatura de la primera foto */}
-      {item.photos && item.photos.length > 0 && (
-        <View style={styles.photoContainer}>
-          <Image
-            source={{ uri: item.photos[0].url }}
-            style={styles.photoThumbnail}
-          />
-          {item.photos.length > 1 && (
-            <View style={styles.photoCountBadge}>
-              <Text style={styles.photoCountText}>
-                +{item.photos.length - 1}
-              </Text>
-            </View>
-          )}
-        </View>
-      )}
-
-      {/* Notas si existen */}
-      {item.notes && (
+      {/* Comentarios si existen */}
+      {item.comments && (
         <View style={styles.notesContainer}>
-          <Text style={styles.notesLabel}>Notas:</Text>
+          <Text style={styles.notesLabel}>Comentarios:</Text>
           <Text style={styles.notesText} numberOfLines={2}>
-            {item.notes}
+            {item.comments}
           </Text>
         </View>
       )}
 
-      {/* Mostrar estado del programa */}
+      {/* Mostrar estado del programa - simplificado ya que no tenemos estos datos */}
       <View style={styles.programStatusContainer}>
         <ProgramStatusBadge
-          status={
-            item.is_completed
-              ? "completed"
-              : item.program_status === "ahead"
-              ? "ahead"
-              : item.program_status === "delayed"
-              ? "delayed"
-              : "onSchedule"
-          }
+          status={item.status === "APPROVED" ? "completed" : "onSchedule"}
           compact={true}
         />
       </View>
@@ -282,34 +343,40 @@ const AdvanceListScreen: React.FC = () => {
   const renderHeader = () => (
     <View style={styles.headerContainer}>
       {assignedConstruction ? (
-        <Text style={styles.constructionName}>
-          {assignedConstruction.construction_details.name}
-        </Text>
+        <Text style={styles.constructionName}>{assignedConstruction.name}</Text>
       ) : (
         <Text style={styles.constructionName}>Mis Avances</Text>
       )}
 
-      {summaryLoading ? (
+      {loadingAdvances ? (
         <View style={styles.summaryLoading}>
           <ActivityIndicator size="small" color="#3498db" />
           <Text style={styles.summaryLoadingText}>Cargando resumen...</Text>
         </View>
-      ) : summary ? (
+      ) : localSummary ? (
         <View style={styles.summaryContainer}>
           <View style={styles.summaryItem}>
-            <Text style={styles.summaryValue}>{summary.total_advances}</Text>
+            <Text style={styles.summaryValue}>
+              {localSummary.total_advances}
+            </Text>
             <Text style={styles.summaryLabel}>Total</Text>
           </View>
           <View style={styles.summaryItem}>
-            <Text style={styles.summaryValue}>{summary.pending_advances}</Text>
+            <Text style={styles.summaryValue}>
+              {localSummary.pending_advances}
+            </Text>
             <Text style={styles.summaryLabel}>Pendientes</Text>
           </View>
           <View style={styles.summaryItem}>
-            <Text style={styles.summaryValue}>{summary.approved_advances}</Text>
+            <Text style={styles.summaryValue}>
+              {localSummary.approved_advances}
+            </Text>
             <Text style={styles.summaryLabel}>Aprobados</Text>
           </View>
           <View style={styles.summaryItem}>
-            <Text style={styles.summaryValue}>{summary.rejected_advances}</Text>
+            <Text style={styles.summaryValue}>
+              {localSummary.rejected_advances}
+            </Text>
             <Text style={styles.summaryLabel}>Rechazados</Text>
           </View>
         </View>
@@ -403,7 +470,7 @@ const AdvanceListScreen: React.FC = () => {
   // Renderizar la vista de lista vacía o error
   const renderEmpty = () => {
     // Si estamos cargando la construcción o los avances, mostrar indicador de carga
-    if (loadingConstruction || (loading && page === 1)) {
+    if (loadingConstruction || loadingAdvances) {
       return (
         <View style={styles.emptyContainer}>
           <ActivityIndicator size="large" color="#3498db" />
@@ -454,12 +521,12 @@ const AdvanceListScreen: React.FC = () => {
     }
 
     // Si hay error al cargar los avances
-    if (error) {
+    if (advancesError) {
       return (
         <View style={styles.emptyContainer}>
           <Ionicons name="alert-circle-outline" size={64} color="#e74c3c" />
           <Text style={styles.errorTitle}>Error al cargar avances</Text>
-          <Text style={styles.errorSubtitle}>{error}</Text>
+          <Text style={styles.errorSubtitle}>{advancesError}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={handleRefresh}>
             <Text style={styles.retryButtonText}>Reintentar</Text>
           </TouchableOpacity>
@@ -502,9 +569,9 @@ const AdvanceListScreen: React.FC = () => {
       </View>
 
       <FlatList
-        data={advances}
+        data={localAdvances}
         renderItem={renderAdvanceItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id.toString()}
         ListHeaderComponent={renderHeader}
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmpty}
@@ -519,7 +586,9 @@ const AdvanceListScreen: React.FC = () => {
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.1}
         contentContainerStyle={
-          advances.length === 0 ? styles.emptyListContent : styles.listContent
+          localAdvances.length === 0
+            ? styles.emptyListContent
+            : styles.listContent
         }
       />
     </SafeAreaView>

@@ -1,9 +1,15 @@
 import { z } from "zod";
 
 export const advanceFormSchema = z.object({
-  catalog: z.number({ required_error: "Selecciona un catálogo"}),
-  partida: z.number({ required_error: "Selecciona una partida"}),
-  concept: z.number({ required_error: "Selecciona un concepto"}),
+  catalog: z
+    .number({ required_error: "Selecciona un catálogo" })
+    .min(1, "Selecciona un catálogo"),
+  partida: z
+    .number({ required_error: "Selecciona una partida" })
+    .min(1, "Selecciona una partida"),
+  concept: z
+    .number({ required_error: "Selecciona un concepto" })
+    .min(1, "Selecciona un concepto"),
   quantity: z
     .string()
     .refine((val) => !!val && !isNaN(Number(val)) && Number(val) > 0, {

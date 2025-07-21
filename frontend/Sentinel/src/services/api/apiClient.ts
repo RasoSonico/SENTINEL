@@ -1,61 +1,88 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getTokenResponse } from "src/utils/auth";
+import * as SecureStore from "expo-secure-store";
 import axios, {
   AxiosError,
   AxiosInstance,
+  AxiosResponse,
   InternalAxiosRequestConfig,
 } from "axios";
-
-const createClientWithInterceptors = (baseUrl: string) => {
-  const client = axios.create({
-    baseURL: baseUrl,
-  });
-
-  // addTokenToRequestsInterceptor();
-  // responseHandlerInterceptor();
-
-  return client;
-};
+import { getTokenResponse } from "../../utils/auth";
 import { API_CONFIG, isDevelopment } from "./config";
 
-const apiClient = createClientWithInterceptors(API_CONFIG.baseURL);
-
-// Interceptor to add token to requests
-const addTokenToRequestsInterceptor = () =>
-  apiClient.interceptors.request.use(
+// Interceptor to add token to requests - prioritizes SecureStore over AsyncStorage
+const addTokenToRequestsInterceptor = (client: AxiosInstance) =>
+  client.interceptors.request.use(
     async (config: InternalAxiosRequestConfig) => {
       if (isDevelopment) {
         console.log(`Making request to: ${config.baseURL}${config.url}`);
       }
 
-      const token = await getTokenResponse();
-      if (token && config.headers) {
-        config.headers.Authorization = `Bearer ${token?.accessToken}`;
+      let token: string | null = null;
+
+      try {
+        // Priority 1: Try to get token from SecureStore (Azure AD)
+        const tokenResponse = await getTokenResponse();
+        if (tokenResponse?.accessToken) {
+          token = tokenResponse.accessToken;
+          console.log("Using token from SecureStore (Azure AD)");
+        }
+      } catch (error: unknown) {
+        console.log("No token found in SecureStore, trying AsyncStorage...");
       }
+
+      // Priority 2: Fallback to AsyncStorage (legacy auth)
+      if (!token) {
+        try {
+          token = await AsyncStorage.getItem("token");
+          if (token) {
+            console.log("Using token from AsyncStorage (legacy)");
+          }
+        } catch (error: unknown) {
+          console.error("Error getting token from AsyncStorage:", error);
+        }
+      }
+
+      if (token && config.headers) {
+        config.headers.Authorization = `Bearer ${token}`;
+      } else {
+        console.warn("No authentication token found");
+      }
+
       return config;
     },
-    (error) => {
+    (error: unknown) => {
       console.error("Request interceptor error:", error);
       return Promise.reject(error);
     }
   );
 
 // Interceptor to handle responses
-const responseHandlerInterceptor = () =>
-  apiClient.interceptors.response.use(
-    (response) => {
+const responseHandlerInterceptor = (client: AxiosInstance) =>
+  client.interceptors.response.use(
+    (response: AxiosResponse) => {
       if (isDevelopment) {
         console.log(`Successful response from: ${response.config.url}`);
       }
       return response;
     },
-    (error) => {
+    async (error: AxiosError) => {
       if (error.response) {
         console.error("Response error:", {
           status: error.response.status,
           data: error.response.data,
           url: error.config?.url,
         });
+
+        // Handle 401 Unauthorized - clear tokens and redirect to login
+        if (error.response.status === 401) {
+          console.log("401 Unauthorized - clearing tokens");
+          try {
+            await AsyncStorage.removeItem("token");
+            await SecureStore.deleteItemAsync("auth-token");
+          } catch (clearError: unknown) {
+            console.error("Error clearing tokens:", clearError);
+          }
+        }
       } else if (error.request) {
         console.error("Network error - No response:", {
           request: error.request._url || error.config?.url,
@@ -67,6 +94,19 @@ const responseHandlerInterceptor = () =>
       return Promise.reject(error);
     }
   );
+
+const createClientWithInterceptors = (baseUrl: string) => {
+  const client = axios.create({
+    baseURL: baseUrl,
+  });
+
+  addTokenToRequestsInterceptor(client);
+  responseHandlerInterceptor(client);
+
+  return client;
+};
+
+const apiClient = createClientWithInterceptors(API_CONFIG.baseURL);
 
 // Create a custom API error class
 export class ApiError extends Error {
@@ -97,8 +137,6 @@ export const handleGlobalApiError = (
     // Try to extract API error message if available
     if (error.response?.data?.message) {
       errorMessage = error.response.data.message;
-
-      // Handle special case
     }
   }
 
@@ -138,7 +176,7 @@ export const apiRequest = async <T>(
 ): Promise<T> => {
   try {
     return await makeApiRequest(apiClient, method, url, data, options);
-  } catch (error) {
+  } catch (error: unknown) {
     const defaultErrorMsg = `Failed to ${method} data`;
     const errorMsg = errorMessage || defaultErrorMsg;
 
