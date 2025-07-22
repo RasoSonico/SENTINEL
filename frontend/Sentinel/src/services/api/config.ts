@@ -15,6 +15,20 @@ export const API_CONFIG = {
     partidas: "/api/catalogo/workitem",
     concepts: "/api/catalogo/concept",
     submitAdvance: "/api/avance/physical/",
+    photos: {
+      confirmUpload: "/api/avance/photos/confirm-upload",
+      bulkUpload: "/api/avance/photos/bulk-upload/",
+      upload: "/api/avance/photos/upload/",
+    },
+    construction: {
+      catalog: "/api/catalogo/catalog",
+    },
+    obra: {
+      constructions: {
+        myConstructions: "/api/obra/constructions/my_constructions/",
+      },
+    },
+    obraConstructions: "/api/obra/constructions/",
   },
   azureBlobUrl: "https://sentinel.blob.core.windows.net",
 };

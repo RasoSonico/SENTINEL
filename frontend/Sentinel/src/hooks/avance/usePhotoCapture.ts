@@ -23,7 +23,6 @@ interface UsePhotoCaptureProps {
   includeLocation?: boolean;
   locationData?: { latitude: number; longitude: number } | null;
   partidaName?: string;
-  conceptName?: string;
 }
 
 /**
@@ -35,7 +34,6 @@ export const usePhotoCapture = ({
   includeLocation = true,
   locationData = null,
   partidaName = "",
-  conceptName = "",
 }: UsePhotoCaptureProps = {}) => {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState<boolean>(false);

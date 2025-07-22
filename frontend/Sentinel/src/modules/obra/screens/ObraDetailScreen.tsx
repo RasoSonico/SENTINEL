@@ -16,7 +16,7 @@ import {
 } from "../../../navigation/types";
 import { Ionicons } from "@expo/vector-icons";
 import { Construction } from "../../../types/entities";
-import { constructionService } from "../../../services";
+import { getConstruction } from "src/services/api/constructionService";
 
 type ObraDetailRouteProp = RouteProp<ObraStackParamList, "ObraDetail">;
 
@@ -33,7 +33,7 @@ const ObraDetailScreen = () => {
     const fetchObraDetails = async () => {
       try {
         setLoading(true);
-        const data = await constructionService.getById(obraId);
+        const data = await getConstruction(parseInt(obraId));
         setObra(data);
       } catch (err) {
         console.error("Error fetching obra details:", err);

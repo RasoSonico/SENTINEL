@@ -1,10 +1,10 @@
 import { useState } from "react";
-import {
-  photoService,
+import photoService, {
   PhotoUploadRequest,
 } from "../../services/api/photoService";
 import { Photo } from "./usePhotoCapture";
 import { LocationData } from "./useGeolocation";
+import * as Device from "expo-device";
 
 export interface PhotoUploadProgress {
   photoId: string;
@@ -56,7 +56,7 @@ export const usePhotoUpload = ({
       filename,
       file_size: fileSize,
       content_type: "image/jpeg",
-      device_model: photoService.getDeviceInfo(),
+      device_model: Device.modelName ?? "Unknown Device",
       latitude: location?.latitude || photo.location?.latitude,
       longitude: location?.longitude || photo.location?.longitude,
       gps_accuracy: location?.accuracy || undefined,
