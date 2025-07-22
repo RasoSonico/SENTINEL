@@ -8,9 +8,7 @@ import { useAdvanceLocation } from "../../../hooks/avance/useAdvanceLocation";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
   setCurrentAdvancePhotos,
-  selectCurrentAdvance,
   selectOfflineSync,
-  registerAdvance,
 } from "../../../redux/slices/avance/advanceSlice";
 import AdvancePhotoSection from "./components/AdvancePhotoSection";
 import AdvanceLocationSection from "./components/AdvanceLocationSection";
@@ -31,12 +29,10 @@ import {
   useConceptDescriptionById,
   usePartidaNameById,
 } from "../../../redux/selectors/avance/avanceFormDataSelectors";
-import { AdvanceRegistration } from "../../../types/entities";
-import { useSubmitAdvance } from "../../../hooks/data/query/useAvanceQueries";
-import { useAdvanceSubmission } from "../../../hooks/avance/useAdvanceSubmission";
+import useAdvancesSubmission from "src/hooks/avance/useAdvancesSubmission";
 
 interface AdvanceFormProps {
-  constructionId: string;
+  constructionId: number;
   onSuccess?: () => void;
 }
 
@@ -45,7 +41,6 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
   onSuccess,
 }) => {
   const dispatch = useAppDispatch();
-  const currentAdvance = useAppSelector(selectCurrentAdvance);
   const offlineSyncState = useAppSelector(selectOfflineSync);
   const navigation = useNavigation();
 
@@ -68,21 +63,13 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
   });
 
   const {
-    mutate: submitAdvance,
-    isPending: submitAdvanceIsPending,
-    isSuccess: submitAdvanceWasSuccessful,
-    isError: submitAdvanceHadError,
-    error: submitAdvanceError,
-  } = useSubmitAdvance();
-
-  // Nuevo hook para envío completo (avance + fotos)
-  const advanceSubmission = useAdvanceSubmission({
-    constructionId: parseInt(constructionId),
-    onProgress: (progress) => {
-      console.log("Submission progress:", progress);
-      // Aquí podrías mostrar progreso en la UI
+    submitAdvanceWithPhotos,
+    mutation: {
+      isPending: isSubmittingAdvance,
+      isSuccess: isAdvanceSubmitted,
+      isError: isAdvanceSubmissionError,
     },
-  });
+  } = useAdvancesSubmission({ constructionId });
 
   // Watchers for dependent logic
   const selectedCatalogId = watch("catalog");
@@ -110,38 +97,11 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
     maxPhotos: 5,
     includeLocation: true,
     partidaName: partidaName || "",
-    conceptName: "", // Ya no usamos conceptName para generar nombres
   });
 
-  // Efecto para cargar la cantidad ejecutada cuando se selecciona un concepto
   useEffect(() => {
-    if (selectedConceptId) {
-      // Aquí deberíamos cargar la cantidad ya ejecutada para este concepto
-      // De manera temporal, lo inicializamos en 0
-      // En una implementación real, haríamos una llamada a la API o usaríamos datos en redux
-
-      // Ejemplo de API call (reemplazar con tu lógica real):
-      // async function loadExecutedQuantity() {
-      //   try {
-      //     const response = await advanceService.getConceptProgress(selectedConcept.id);
-      //     setExecutedQuantity(response.executed_quantity || 0);
-      //   } catch (error) {
-      //     console.error('Error al cargar progreso del concepto:', error);
-      //     setExecutedQuantity(0);
-      //   }
-      // }
-      // loadExecutedQuantity();
-
-      dispatch(setCurrentAdvancePhotos(photos)); // Por ahora usamos 0 como valor temporal
-    }
-  }, [selectedConceptId]);
-
-  // Sincronizar estado del slice con el estado local
-  useEffect(() => {
-    if (currentAdvance.photos.length > 0) {
-      // Si hay fotos en el estado global, usarlas
-    } else if (photos.length > 0) {
-      // Si hay fotos en el estado local, actualizarlas en el global
+    // Si hay fotos en el estado local, actualizarlas en el global
+    if (photos.length > 0) {
       dispatch(setCurrentAdvancePhotos(photos));
     }
   }, [photos, dispatch]);
@@ -163,80 +123,49 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
 
   const onFormSubmit = async (data: AdvanceFormFieldsZod) => {
     try {
-      // Usar el nuevo hook que maneja avance + fotos
-      const success = await advanceSubmission.submitAdvanceWithPhotos({
+      submitAdvanceWithPhotos({
         concept: data.concept,
         volume: Number(data.quantity),
         comments: data.notes ?? "",
-        photos: photos, // Fotos del hook de captura
-        location: location || undefined, // Ubicación del hook de geolocalización
+        photos,
       });
-
-      if (success) {
-        // Limpiar formulario y fotos
-        resetFormFields();
-        clearPhotos(); // Limpiar fotos del hook
-
-        onSuccess?.();
-
-        openModal(ModalEnum.AdvanceSuccess, {
-          onRegisterAnother: () => {
-            closeModal();
-            scrollToTop();
-            advanceSubmission.resetSubmission();
-          },
-          onGoHome: () => {
-            closeModal();
-            navigation.goBack();
-          },
-        });
-      } else {
-        openModal(ModalEnum.AdvanceFailure);
-      }
     } catch (error) {
       console.error("Error in form submission:", error);
       openModal(ModalEnum.AdvanceFailure);
     }
   };
 
-  // Manejar estados del nuevo hook de submission
   useEffect(() => {
-    if (advanceSubmission.isSubmitting) {
+    if (isSubmittingAdvance) {
       openModal(ModalEnum.AdvancePending);
     }
-  }, [advanceSubmission.isSubmitting]);
+  }, [isSubmittingAdvance]);
 
-  // Comentar los viejos useEffects para evitar conflictos
-  // useEffect(() => {
-  //   if (submitAdvanceIsPending) {
-  //     openModal(ModalEnum.AdvancePending)
-  //   }
-  // }, [submitAdvanceIsPending])
+  useEffect(() => {
+    if (isAdvanceSubmissionError) {
+      openModal(ModalEnum.AdvanceFailure);
+    }
+  }, [isAdvanceSubmissionError]);
 
-  // useEffect(() => {
-  //   if(submitAdvanceHadError) {
-  //     openModal(ModalEnum.AdvanceFailure)
-  //   }
-  // }, [submitAdvanceHadError, submitAdvanceError])
+  useEffect(() => {
+    if (isAdvanceSubmitted) {
+      resetFormFields();
+      clearPhotos();
 
-  // useEffect(() => {
-  //   if (submitAdvanceWasSuccessful) {
-  //     resetFormFields();
+      onSuccess?.();
 
-  //     onSuccess?.();
-
-  //     openModal(ModalEnum.AdvanceSuccess, {
-  //       onRegisterAnother: () => {
-  //         closeModal();
-  //         scrollToTop();
-  //       },
-  //       onGoHome: () => {
-  //         closeModal();
-  //         navigation.goBack();
-  //       },
-  //     });
-  //   }
-  // }, [submitAdvanceWasSuccessful])
+      openModal(ModalEnum.AdvanceSuccess, {
+        onRegisterAnother: () => {
+          closeModal();
+          scrollToTop();
+        },
+        onGoHome: () => {
+          closeModal();
+          navigation.goBack();
+        },
+      });
+    }
+  }, [isAdvanceSubmitted]);
 
   // Refs for scrolling to fields
   const scrollViewRef = useRef<ScrollView>(null);
@@ -265,7 +194,7 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
     }
   };
 
-  const handleCustomSubmit = async () => {
+  const handleSubmitForm = async () => {
     const valid = await trigger();
     if (valid) {
       openModal(ModalEnum.ConfirmSend, {
@@ -344,9 +273,9 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
         </View>
 
         <SubmitButton
-          loading={advanceSubmission.isSubmitting}
-          disabled={advanceSubmission.isSubmitting}
-          onPress={handleCustomSubmit}
+          loading={isSubmittingAdvance}
+          disabled={isSubmittingAdvance}
+          onPress={handleSubmitForm}
         />
       </ScrollView>
     </KeyboardAvoidingView>

@@ -1,4 +1,5 @@
 import { apiRequest } from "./apiClient";
+import { API_CONFIG } from "./config";
 
 // Interfaces para el servicio de fotos
 export interface PhotoUploadRequest {
@@ -72,7 +73,7 @@ class PhotoService {
   ): Promise<PhotoUploadResponse> {
     return await apiRequest<PhotoUploadResponse>(
       "post",
-      "/api/avance/photos/upload/",
+      API_CONFIG.endpoints.photos.upload,
       "Error al solicitar token de subida",
       photoData
     );
@@ -86,7 +87,7 @@ class PhotoService {
   ): Promise<BulkUploadResponse> {
     return await apiRequest<BulkUploadResponse>(
       "post",
-      "/api/avance/photos/bulk-upload/",
+      API_CONFIG.endpoints.photos.bulkUpload,
       "Error al solicitar tokens de subida múltiple",
       photosData
     );
@@ -101,16 +102,21 @@ class PhotoService {
     contentType: string
   ): Promise<boolean> {
     try {
-      const response = await fetch(uploadUrl, {
-        method: "PUT",
-        headers: {
-          "x-ms-blob-type": "BlockBlob",
-          "Content-Type": contentType,
-        },
-        body: fileData,
-      });
+      const response = await apiRequest<Response>(
+        "put",
+        uploadUrl,
+        "Error al subir archivo a Azure Blob",
+        fileData,
+        {
+          headers: {
+            "x-ms-blob-type": "BlockBlob",
+            "Content-Type": contentType,
+          },
+          raw: true,
+        }
+      );
 
-      return response.ok;
+      return response.status === 201; // Verificar si la subida fue exitosa
     } catch (error) {
       console.error("Error uploading to Azure Blob:", error);
       return false;
@@ -125,18 +131,10 @@ class PhotoService {
   ): Promise<ConfirmUploadResponse> {
     return await apiRequest<ConfirmUploadResponse>(
       "post",
-      "/api/avance/photos/confirm-upload/",
+      API_CONFIG.endpoints.photos.confirmUpload,
       "Error al confirmar subida de foto",
       confirmData
     );
-  }
-
-  /**
-   * Obtener información del dispositivo
-   */
-  getDeviceInfo(): string {
-    // En React Native podríamos usar expo-device para obtener info real
-    return "React Native Device"; // Placeholder por ahora
   }
 
   /**
@@ -163,4 +161,6 @@ class PhotoService {
   }
 }
 
-export const photoService = new PhotoService();
+const photoService = new PhotoService();
+
+export default photoService;
