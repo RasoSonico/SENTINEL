@@ -125,7 +125,7 @@ const AdvanceRegistrationScreen: React.FC = () => {
         </View>
 
         <AdvanceForm
-          constructionId={constructionId}
+          constructionId={parseInt(constructionId)}
           onSuccess={handleAdvanceSuccess}
         />
       </View>

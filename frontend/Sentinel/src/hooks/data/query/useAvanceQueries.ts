@@ -1,5 +1,10 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { getCatalogs, getConcepts, getPartidas, submitAdvance } from "../api/avanceApi";
+import {
+  getCatalogs,
+  getConcepts,
+  getPartidas,
+  submitAdvance,
+} from "../api/avanceApi";
 import { AdvanceRegistration } from "src/types/entities";
 import { SubmitAdvance } from "src/types/avance";
 
@@ -24,5 +29,5 @@ export const useFetchConcepts = () =>
 export const useSubmitAdvance = () =>
   useMutation({
     mutationKey: ["submitAdvance"],
-    mutationFn: (advance: SubmitAdvance) => submitAdvance(advance)
+    mutationFn: (advance: SubmitAdvance) => submitAdvance(advance),
   });

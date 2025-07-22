@@ -172,6 +172,7 @@ export const apiRequest = async <T>(
   data?: unknown,
   options?: {
     headers?: unknown;
+    raw?: boolean; // If true, returns the raw Axios response
   }
 ): Promise<T> => {
   try {
