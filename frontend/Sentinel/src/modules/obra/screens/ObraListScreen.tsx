@@ -12,7 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { ObraNavigationProp } from "../../../navigation/types";
 import { Construction } from "../../../types/entities";
-import { constructionService } from "../../../services";
+import { getMyConstructions } from "src/services/api/constructionService";
 
 const ObrasListScreen = () => {
   const navigation = useNavigation<ObraNavigationProp>();
@@ -25,7 +25,7 @@ const ObrasListScreen = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await constructionService.getMyConstructions();
+      const response = await getMyConstructions();
       setObras(response);
     } catch (err) {
       console.error("Error obteniendo obras:", err);

@@ -146,7 +146,7 @@ export interface PhysicalAdvance {
   notes: string;
   latitude: number | null;
   longitude: number | null;
-  status: "pending" | "approved" | "rejected";
+  status: "PENDING" | "APPROVED" | "REJECTED";
   approval_date: string | null;
   rejection_reason: string | null;
   created_at: string;
@@ -170,6 +170,16 @@ export interface PhysicalAdvanceSummary {
   physical_progress_percentage: number;
   financial_progress_percentage: number;
   last_advance_date: string | null;
+}
+
+// Nueva interfaz que coincide con la respuesta real de la API
+export interface PhysicalAdvanceResponse {
+  id: number;
+  concept: number;
+  volume: string;
+  date: string;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  comments: string | null;
 }
 
 // Tipos adicionales para la entidad UserConstruction
