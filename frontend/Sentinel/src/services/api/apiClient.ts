@@ -6,7 +6,7 @@ import axios, {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from "axios";
-import { getTokenResponse } from "../../utils/auth";
+import { deleteToken, getTokenResponse } from "../../utils/auth";
 import { API_CONFIG, isDevelopment } from "./config";
 
 // Interceptor to add token to requests - prioritizes SecureStore over AsyncStorage
@@ -77,8 +77,7 @@ const responseHandlerInterceptor = (client: AxiosInstance) =>
         if (error.response.status === 401) {
           console.log("401 Unauthorized - clearing tokens");
           try {
-            await AsyncStorage.removeItem("token");
-            await SecureStore.deleteItemAsync("auth-token");
+            await deleteToken();
           } catch (clearError: unknown) {
             console.error("Error clearing tokens:", clearError);
           }
