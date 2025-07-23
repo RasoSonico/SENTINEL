@@ -1,3 +1,4 @@
+import { getTokenResponse } from "src/utils/auth";
 import { apiRequest } from "./apiClient";
 import { API_CONFIG } from "./config";
 
@@ -102,6 +103,7 @@ class PhotoService {
     contentType: string
   ): Promise<boolean> {
     try {
+      const token = await getTokenResponse();
       const response = await apiRequest<Response>(
         "put",
         uploadUrl,
@@ -111,6 +113,7 @@ class PhotoService {
           headers: {
             "x-ms-blob-type": "BlockBlob",
             "Content-Type": contentType,
+            "Authorization": `Bearer ${token?.accessToken}`
           },
           raw: true,
         }

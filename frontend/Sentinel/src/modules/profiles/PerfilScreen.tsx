@@ -2,8 +2,7 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { logout } from "../../redux/slices/authSlice";
+import { useAppSelector } from "../../redux/hooks";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   selectUserName,
@@ -12,7 +11,6 @@ import {
 import { useAuth } from "../../hooks/useAuth";
 
 const PerfilScreen = () => {
-  const dispatch = useAppDispatch();
   const auth = useAuth();
   const userName = useAppSelector(selectUserName) || "Usuario";
   const userEmail = useAppSelector(selectUserEmail) || "usuario@ejemplo.com";
@@ -37,9 +35,6 @@ const PerfilScreen = () => {
 
               // Llamamos al logout de auth (si existe)
               await auth.logout();
-
-              // Disparamos la acción de logout en Redux
-              dispatch(logout());
 
               console.log("Sesión cerrada correctamente");
             } catch (error) {

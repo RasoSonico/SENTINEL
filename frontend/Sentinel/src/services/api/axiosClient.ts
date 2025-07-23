@@ -1,6 +1,7 @@
 import { API_URL } from "@env";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios, { InternalAxiosRequestConfig } from "axios";
+import { getTokenResponse } from "src/utils/auth";
 
 // URL base de la API
 export const isDevelopment = process.env.NODE_ENV === "development";
@@ -15,9 +16,9 @@ const apiClient = axios.create({
 // Interceptor para añadir token a las peticiones
 apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
-    const token = await AsyncStorage.getItem("token");
+    const token = await getTokenResponse();
     if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers.Authorization = `Bearer ${token.accessToken}`;
     }
     return config;
   },

@@ -49,7 +49,7 @@ export const useAuth = () => {
     console.log(tokenResponse);
 
     if (tokenResponse) {
-      saveTokenResponse(tokenResponse);
+      await saveTokenResponse(tokenResponse);
       dispatch(setIsAuthenticated(true));
     }
   };

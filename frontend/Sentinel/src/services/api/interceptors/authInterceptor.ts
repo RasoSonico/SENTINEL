@@ -1,8 +1,7 @@
-// src/services/api/interceptors/authInterceptor.ts
 import { AxiosInstance } from "axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { store } from "../../../redux/store";
 import { logout } from "../../../redux/slices/authSlice";
+import { deleteToken } from "src/utils/auth";
 
 export const applyAuthInterceptors = (apiClient: AxiosInstance): void => {
   apiClient.interceptors.response.use(
@@ -11,7 +10,7 @@ export const applyAuthInterceptors = (apiClient: AxiosInstance): void => {
       // Verificar si el error es 401 (Unauthorized)
       if (error.response && error.response.status === 401) {
         // Limpiar token y cerrar sesión
-        await AsyncStorage.removeItem("token");
+        await deleteToken();
         store.dispatch(logout());
       }
 
