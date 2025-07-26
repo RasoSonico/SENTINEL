@@ -27,9 +27,10 @@ import { ModalEnum } from "../../modals/modalTypes";
 import {
   useCatalogNameById,
   useConceptDescriptionById,
+  useConceptUnitById,
   usePartidaNameById,
 } from "../../../redux/selectors/avance/avanceFormDataSelectors";
-import useAdvancesSubmission from "src/hooks/avance/useAdvancesSubmission";
+import { useAdvancesSubmission } from "../../../hooks/avance/useAdvancesSubmission";
 
 interface AdvanceFormProps {
   constructionId: number;
@@ -83,6 +84,7 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
   const catalogName = useCatalogNameById(selectedCatalogId);
   const partidaName = usePartidaNameById(selectedPartidaId);
   const conceptDescription = useConceptDescriptionById(selectedConceptId);
+  const conceptUnit = useConceptUnitById(selectedConceptId);
 
   // Hook de fotos (debe ir después de definir partidaName y conceptDescription)
   const {
@@ -205,6 +207,7 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
           partida: partidaName,
           concept: conceptDescription,
           volume: selectedVolume || "0",
+          unit: conceptUnit,
           notes: selectedNotes || "",
         },
       });
@@ -242,8 +245,6 @@ const AdvanceForm: React.FC<AdvanceFormProps> = ({
             onCatalogSelect={handleCatalogSelect}
             onPartidaSelect={handlePartidaSelect}
             onConceptSelect={handleConceptSelect}
-            disablePartida={!selectedCatalogId}
-            disableConcept={!selectedPartidaId}
             setFormValue={setValue}
             watchFormValue={watch}
           />

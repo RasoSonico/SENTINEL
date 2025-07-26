@@ -4,9 +4,9 @@ import {
   Concept,
   PhysicalAdvance,
   PhysicalAdvanceSummary,
+  PhysicalAdvanceResponse,
 } from "../../../types/entities";
 import advanceService from "../../../modules/avance/services/advanceService";
-import photoService from "../../../modules/avance/services/photoService";
 import { Photo } from "../../../hooks/avance/usePhotoCapture";
 import { RootState } from "../../store";
 
@@ -24,7 +24,7 @@ interface AdvanceState {
 
   // Estado de avances registrados
   advances: {
-    items: PhysicalAdvance[];
+    items: PhysicalAdvanceResponse[];
     loading: boolean;
     error: string | null;
     total: number;
@@ -127,24 +127,24 @@ export const fetchAvailableConcepts = createAsyncThunk(
   }
 );
 
-// Cargar avances registrados
+// Cargar avances registrados por catálogo
 export const fetchAdvancesByConstruction = createAsyncThunk(
   "advance/fetchAdvancesByConstruction",
   async (
     params: {
-      constructionId: string;
+      catalogId: number;
       conceptId?: string;
       startDate?: string;
       endDate?: string;
-      status?: "pending" | "approved" | "rejected";
+      status?: "PENDING" | "APPROVED" | "REJECTED";
       page?: number;
       pageSize?: number;
     },
     { rejectWithValue }
   ) => {
     try {
-      return await advanceService.getAdvancesByConstruction(
-        params.constructionId,
+      return await advanceService.getAdvancesByCatalog(
+        params.catalogId,
         {
           conceptId: params.conceptId,
           startDate: params.startDate,
@@ -162,12 +162,47 @@ export const fetchAdvancesByConstruction = createAsyncThunk(
   }
 );
 
-// Cargar resumen de avances
+// Cargar resumen de avances (calcula desde lista existente)
 export const fetchAdvanceSummary = createAsyncThunk(
   "advance/fetchAdvanceSummary",
-  async (constructionId: string, { rejectWithValue }) => {
+  async (
+    params: {
+      catalogId: number;
+      conceptId?: string;
+      startDate?: string;
+      endDate?: string;
+    },
+    { rejectWithValue }
+  ) => {
     try {
-      return await advanceService.getAdvanceSummary(constructionId);
+      // Primero obtenemos todos los avances del catálogo
+      const advancesResponse = await advanceService.getAdvancesByCatalog(
+        params.catalogId,
+        {
+          conceptId: params.conceptId,
+          startDate: params.startDate,
+          endDate: params.endDate,
+          page: 1,
+          pageSize: 1000, // Obtener todos para el resumen
+        }
+      );
+      
+      // Luego calculamos el resumen localmente
+      const summary = advanceService.calculateAdvanceSummary(advancesResponse.advances);
+      
+      return {
+        ...summary,
+        construction_id: params.catalogId.toString(),
+        total_concepts: advancesResponse.advances.length,
+        completed_concepts: advancesResponse.advances.filter(a => a.status === "APPROVED").length,
+        physical_progress_percentage: advancesResponse.advances.length > 0 
+          ? (advancesResponse.advances.filter(a => a.status === "APPROVED").length / advancesResponse.advances.length) * 100 
+          : 0,
+        financial_progress_percentage: 0, // Calculado separadamente si es necesario
+        last_advance_date: advancesResponse.advances.length > 0 
+          ? advancesResponse.advances[0].date 
+          : null,
+      } as PhysicalAdvanceSummary;
     } catch (error) {
       return rejectWithValue(
         error instanceof Error
@@ -195,17 +230,11 @@ export const registerAdvance = createAsyncThunk(
       );
 
       // Si hay fotos, las subimos asociadas al avance
+      // NOTE: Photo upload is now handled by useAdvancesSubmission hook with React Query
+      // This thunk is deprecated in favor of the new pattern
       if (params.photos.length > 0) {
-        const photoUris = params.photos.map((photo) => photo.uri);
-        await photoService.uploadMultiplePhotos(
-          photoUris,
-          "advance",
-          registeredAdvance.id,
-          {
-            construction_id: params.advance.construction_id,
-            concept_id: params.advance.concept_id,
-          }
-        );
+        console.warn("Photo upload via Redux thunk is deprecated. Use useAdvancesSubmission hook instead.");
+        // Photo upload should be handled by usePhotoUpload hook
       }
 
       return registeredAdvance;
@@ -396,7 +425,8 @@ const advanceSlice = createSlice({
       .addCase(registerAdvance.fulfilled, (state, action) => {
         state.currentAdvance.loading = false;
         state.currentAdvance.success = true;
-        state.advances.items = [action.payload, ...state.advances.items];
+        // Note: registerAdvance returns PhysicalAdvance but state expects PhysicalAdvanceResponse[]
+        // In practice, this thunk is deprecated in favor of useAdvancesSubmission
         state.advances.total += 1;
       })
       .addCase(registerAdvance.rejected, (state, action) => {
@@ -406,15 +436,33 @@ const advanceSlice = createSlice({
 
     // Manejar approveAdvance
     builder.addCase(approveAdvance.fulfilled, (state, action) => {
+      // approveAdvance returns PhysicalAdvance, but state has PhysicalAdvanceResponse[]
+      // Convert the ID comparison properly
       state.advances.items = state.advances.items.map((item) =>
-        item.id === action.payload.id ? action.payload : item
+        item.id.toString() === action.payload.id ? {
+          id: parseInt(action.payload.id),
+          concept: parseInt(action.payload.concept_id),
+          volume: action.payload.quantity.toString(),
+          date: new Date().toISOString().split('T')[0],
+          status: action.payload.status,
+          comments: action.payload.notes
+        } as PhysicalAdvanceResponse : item
       );
     });
 
     // Manejar rejectAdvance
     builder.addCase(rejectAdvance.fulfilled, (state, action) => {
+      // rejectAdvance returns PhysicalAdvance, but state has PhysicalAdvanceResponse[]
+      // Convert the ID comparison properly
       state.advances.items = state.advances.items.map((item) =>
-        item.id === action.payload.id ? action.payload : item
+        item.id.toString() === action.payload.id ? {
+          id: parseInt(action.payload.id),
+          concept: parseInt(action.payload.concept_id),
+          volume: action.payload.quantity.toString(),
+          date: new Date().toISOString().split('T')[0],
+          status: action.payload.status,
+          comments: action.payload.notes
+        } as PhysicalAdvanceResponse : item
       );
     });
   },
