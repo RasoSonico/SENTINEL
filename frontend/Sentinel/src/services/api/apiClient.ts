@@ -148,19 +148,48 @@ const makeApiRequest = async <T>(
   url: string,
   data?: unknown,
   options?: {
-    headers?: unknown;
+    headers?: Record<string, any>;
     excludeAuth?: boolean;
   }
 ): Promise<T> => {
-  if (options?.headers) {
-    Object.assign(client.defaults.headers, options.headers);
+  if (isDevelopment) {
+    console.log(`🔧 [API] Making ${method.toUpperCase()} request to: ${url}`);
+    if (data) {
+      console.log(`🔧 [API] With data:`, data);
+    }
   }
 
+  let response: AxiosResponse<T>;
+  
+  // Prepare config object for requests that need it
+  const config: any = {
+    headers: {
+      ...(options?.headers || {}),
+    },
+  };
+
+  // Handle auth exclusion
   if (options?.excludeAuth) {
-    delete client.defaults.headers.Authorization;
+    config.headers.Authorization = undefined;
   }
-
-  const response = await client[method]<T>(url, data);
+  
+  // Handle different HTTP methods correctly
+  switch (method) {
+    case "get":
+    case "delete":
+      // GET and DELETE methods: url first, config second
+      response = await client[method]<T>(url, config);
+      break;
+    case "post":
+    case "put":
+    case "patch":
+      // POST, PUT, PATCH methods: url first, data second, config third
+      response = await client[method]<T>(url, data, config);
+      break;
+    default:
+      throw new Error(`Unsupported HTTP method: ${method}`);
+  }
+  
   return response.data;
 };
 
@@ -170,7 +199,7 @@ export const apiRequest = async <T>(
   errorMessage?: string,
   data?: unknown,
   options?: {
-    headers?: unknown;
+    headers?: Record<string, any>;
     raw?: boolean; // If true, returns the raw Axios response
   }
 ): Promise<T> => {
@@ -193,7 +222,7 @@ export const apiRequestWithBaseUrl = async <T>(
   baseUrl: string,
   data?: unknown,
   options?: {
-    headers?: unknown;
+    headers?: Record<string, any>;
   }
 ): Promise<T> => {
   const customClient = createClientWithInterceptors(baseUrl);

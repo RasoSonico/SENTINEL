@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { submitAdvance } from "../data/api/avanceApi";
 import { usePhotoUpload, UploadResult } from "./usePhotoUpload";
 import { Photo } from "./usePhotoCapture";
@@ -16,9 +16,10 @@ interface UseAdvanceSubmissionProps {
   constructionId: number;
 }
 
-const useAdvancesSubmission = ({
+export const useAdvancesSubmission = ({
   constructionId,
 }: UseAdvanceSubmissionProps) => {
+  const queryClient = useQueryClient();
   const photoUpload = usePhotoUpload({ constructionId });
   const { location, loading: loadingLocation } = useAdvanceLocation({
     requestPermissionOnMount: true,
@@ -90,7 +91,13 @@ const useAdvancesSubmission = ({
         }
       }
 
-      // Paso 3: Completado exitosamente
+      // Paso 3: Invalidar queries para actualizar AdvanceListScreen
+      console.log("Invalidating queries to refresh AdvanceListScreen...");
+      await queryClient.invalidateQueries({
+        queryKey: ["advancesByCatalog"],
+      });
+      
+      // Paso 4: Completado exitosamente
       console.log("Advance and photos submitted successfully");
       console.groupEnd();
     },

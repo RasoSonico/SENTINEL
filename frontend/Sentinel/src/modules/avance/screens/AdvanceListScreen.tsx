@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -17,19 +17,14 @@ import { es } from "date-fns/locale";
 import ProgramStatusBadge from "../components/ProgramStatusBadge";
 import OfflineIndicator from "../components/OfflineIndicator";
 import { AvanceStackParamList } from "../../../navigation/types";
-import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { useAppSelector } from "../../../redux/hooks";
+import { selectOfflineSync } from "../../../redux/slices/avance/advanceSlice";
+import { PhysicalAdvanceResponse } from "../../../types/entities";
 import {
-  selectAdvances,
-  selectAdvanceSummary,
-  selectOfflineSync,
-} from "../../../redux/slices/avance/advanceSlice";
-import { PhysicalAdvanceResponse, Construction } from "../../../types/entities";
-import {
-  getAssignedConstruction,
-  getCatalogsByConstruction,
-  getUserConstructions,
-} from "../../../services/api/constructionService";
-import advanceService from "../services/advanceService";
+  useAssignedConstruction,
+  useCatalogsByConstruction,
+  useAdvancesByCatalog,
+} from "../../../hooks/data/query/useAvanceQueries";
 import styles from "../styles/AdvanceListScreen.styles";
 
 type AdvanceListScreenNavigationProp = StackNavigationProp<
@@ -38,163 +33,85 @@ type AdvanceListScreenNavigationProp = StackNavigationProp<
 >;
 
 const AdvanceListScreen: React.FC = () => {
-  const dispatch = useAppDispatch();
   const navigation = useNavigation<AdvanceListScreenNavigationProp>();
 
-  // Estados para almacenar la información de la construcción asignada
-  const [assignedConstruction, setAssignedConstruction] =
-    useState<Construction | null>(null);
-  const [loadingConstruction, setLoadingConstruction] = useState<boolean>(true);
-  const [constructionError, setConstructionError] = useState<string | null>(
-    null
-  );
-
-  // Estados locales para manejar avances y catálogos
-  const [catalogId, setCatalogId] = useState<number | null>(null);
-  const [localAdvances, setLocalAdvances] = useState<PhysicalAdvanceResponse[]>(
-    []
-  );
-  const [localSummary, setLocalSummary] = useState<any>(null);
-  const [loadingAdvances, setLoadingAdvances] = useState<boolean>(false);
-  const [advancesError, setAdvancesError] = useState<string | null>(null);
-
-  // Obtener datos del estado global
-  const { loading, page } = useAppSelector(selectAdvances);
-  const offlineSyncState = useAppSelector(selectOfflineSync);
-
-  const [refreshing, setRefreshing] = useState<boolean>(false);
+  // Estados para filtros y UI
   const [statusFilter, setStatusFilter] = useState<
     "all" | "pending" | "approved" | "rejected"
   >("all");
 
-  // Función para cargar catálogos y avances
-  const loadCatalogAndAdvances = async (construction: Construction) => {
-    try {
-      setLoadingAdvances(true);
-      setAdvancesError(null);
+  // Query para obtener la construcción asignada
+  const {
+    data: assignedConstruction,
+    isLoading: loadingConstruction,
+    error: constructionError,
+    refetch: refetchConstruction,
+  } = useAssignedConstruction();
 
-      console.log(
-        "🔍 [FLOW] Step 2: Getting catalogs for construction:",
-        construction.id
-      );
+  // Query para obtener catálogos de la construcción
+  const {
+    data: catalogs,
+    isLoading: loadingCatalogs,
+    error: catalogsError,
+  } = useCatalogsByConstruction(
+    assignedConstruction?.id ? parseInt(assignedConstruction.id) : null
+  );
 
-      // 1. Obtener catálogos de la construcción
-      const catalogs = await getCatalogsByConstruction(
-        parseInt(construction.id)
-      );
+  // Obtener el primer catálogo disponible
+  const mainCatalog = catalogs?.[0];
 
-      if (catalogs.length === 0) {
-        console.log("⚠️ No catalogs found for construction");
-        setAdvancesError("No se encontraron catálogos para esta obra");
-        return;
-      }
+  // Preparar parámetros para query de avances
+  const advanceParams = useMemo(() => {
+    const statusParam =
+      statusFilter !== "all"
+        ? (statusFilter.toUpperCase() as "PENDING" | "APPROVED" | "REJECTED")
+        : undefined;
 
-      // 2. Usar el primer catálogo disponible
-      const mainCatalog = catalogs[0];
-      setCatalogId(mainCatalog.id);
-      console.log("✅ [FLOW] Using catalog:", mainCatalog);
-
-      // 3. Obtener avances usando el catalog_id
-      console.log(
-        "🔍 [FLOW] Step 3: Getting advances for catalog:",
-        mainCatalog.id
-      );
-
-      const statusParam =
-        statusFilter !== "all"
-          ? (statusFilter.toUpperCase() as "PENDING" | "APPROVED" | "REJECTED")
-          : undefined;
-
-      const advancesResponse = await advanceService.getAdvancesByCatalog(
-        mainCatalog.id,
-        {
-          status: statusParam,
-          page: 1,
-          pageSize: 20,
-        }
-      );
-
-      // 4. Calcular resumen localmente
-      const summary = advanceService.calculateAdvanceSummary(
-        advancesResponse.advances
-      );
-
-      setLocalAdvances(advancesResponse.advances);
-      setLocalSummary(summary);
-
-      console.log(
-        "✅ [FLOW] Complete! Advances loaded:",
-        advancesResponse.advances.length
-      );
-    } catch (error) {
-      console.error("❌ Error loading catalog and advances:", error);
-      setAdvancesError("Error al cargar avances");
-    } finally {
-      setLoadingAdvances(false);
-    }
-  };
-
-  // Cargar la construcción asignada al contratista
-  useEffect(() => {
-    const loadAssignedConstruction = async () => {
-      try {
-        setLoadingConstruction(true);
-        setConstructionError(null);
-
-        // DEBUG: Primero obtener todas las construcciones del usuario para ver qué hay
-        console.log(
-          "🔍 [DEBUG] Obteniendo todas las construcciones del usuario..."
-        );
-        const allUserConstructions = await getUserConstructions();
-        console.log(
-          "📋 [DEBUG] Todas las construcciones:",
-          allUserConstructions
-        );
-
-        // Obtener la construcción asignada al contratista actual
-        console.log(
-          "🔍 [DEBUG] Obteniendo construcción asignada con filtros..."
-        );
-        const assigned = await getAssignedConstruction();
-        console.log("🎯 [DEBUG] Construcción asignada (filtrada):", assigned);
-
-        // Si no hay asignación con filtros, usar la primera disponible como fallback
-        const finalAssigned =
-          assigned ||
-          (allUserConstructions.length > 0 ? allUserConstructions[0] : null);
-        console.log("✅ [DEBUG] Construcción final a usar:", finalAssigned);
-
-        setAssignedConstruction(finalAssigned);
-
-        // Si encontramos una construcción asignada, cargar catálogos y avances
-        if (finalAssigned) {
-          // Configurar el título de la pantalla con el nombre de la obra
-          navigation.setOptions({
-            title: `Avances: ${finalAssigned.name}`,
-          });
-
-          // Cargar catálogos y avances usando el nuevo flujo
-          await loadCatalogAndAdvances(finalAssigned);
-        }
-      } catch (error) {
-        console.error("Error al cargar construcción asignada:", error);
-        setConstructionError("No se pudo cargar tu obra asignada");
-      } finally {
-        setLoadingConstruction(false);
-      }
+    return {
+      catalogId: mainCatalog?.id || null,
+      status: statusParam,
+      page: 1,
+      pageSize: 20,
     };
+  }, [mainCatalog?.id, statusFilter]);
 
-    loadAssignedConstruction();
-  }, [dispatch, statusFilter]);
+  // Query para obtener avances
+  const {
+    data: advancesData,
+    isLoading: loadingAdvances,
+    error: advancesError,
+    refetch: refetchAdvances,
+  } = useAdvancesByCatalog(advanceParams);
 
-  // Recargar avances cuando cambie el filtro de status
+  // Calcular resumen localmente
+  const localSummary = useMemo(() => {
+    if (!advancesData?.advances) return null;
+
+    const advances = advancesData.advances;
+    return {
+      total_advances: advances.length,
+      pending_advances: advances.filter((a) => a.status === "PENDING").length,
+      approved_advances: advances.filter((a) => a.status === "APPROVED").length,
+      rejected_advances: advances.filter((a) => a.status === "REJECTED").length,
+    };
+  }, [advancesData?.advances]);
+
+  // Obtener datos del estado global
+  const offlineSyncState = useAppSelector(selectOfflineSync);
+
+  // Estados para refresh
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+
+  // Configurar el título de la pantalla
   useEffect(() => {
-    if (assignedConstruction && catalogId) {
-      loadCatalogAndAdvances(assignedConstruction);
+    if (assignedConstruction) {
+      navigation.setOptions({
+        title: `Avances: ${assignedConstruction.name}`,
+      });
     }
-  }, [statusFilter]);
+  }, [assignedConstruction, navigation]);
 
-  // Configurar el título de la pantalla y el botón derecho para agregar avances
+  // Configurar el botón derecho para agregar avances
   useEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -207,6 +124,60 @@ const AdvanceListScreen: React.FC = () => {
       ),
     });
   }, [navigation, assignedConstruction]);
+
+  // Logs para debugging siguiendo el estilo de Giovanni
+  useEffect(() => {
+    console.log("🔧 [DEBUG] AdvanceListScreen - States:", {
+      loadingConstruction,
+      constructionError: !!constructionError,
+      assignedConstruction: !!assignedConstruction,
+      loadingCatalogs,
+      catalogsError: !!catalogsError,
+      catalogsCount: catalogs?.length || 0,
+      mainCatalog: !!mainCatalog,
+      loadingAdvances,
+      advancesError: !!advancesError,
+      advancesCount: advancesData?.advances?.length || 0,
+    });
+  }, [
+    loadingConstruction, constructionError, assignedConstruction,
+    loadingCatalogs, catalogsError, catalogs,
+    mainCatalog, loadingAdvances, advancesError, advancesData
+  ]);
+
+  useEffect(() => {
+    if (assignedConstruction) {
+      console.log("✅ [DEBUG] Construcción final a usar:", assignedConstruction);
+    }
+  }, [assignedConstruction]);
+
+  useEffect(() => {
+    if (catalogs) {
+      console.log("📁 [DEBUG] Catalogs loaded:", catalogs);
+    }
+  }, [catalogs]);
+
+  useEffect(() => {
+    if (mainCatalog) {
+      console.log("✅ [FLOW] Using catalog:", mainCatalog);
+    }
+  }, [mainCatalog]);
+
+  useEffect(() => {
+    if (advanceParams.catalogId) {
+      console.log("🔍 [DEBUG] Advance params:", advanceParams);
+    }
+  }, [advanceParams]);
+
+  useEffect(() => {
+    if (advancesData) {
+      console.log(
+        "✅ [FLOW] Complete! Advances loaded:",
+        advancesData.advances.length
+      );
+      console.log("📊 Calculated summary:", localSummary);
+    }
+  }, [advancesData, localSummary]);
 
   // Manejar la navegación al formulario de registro de avance
   const handleAddAdvance = () => {
@@ -224,24 +195,26 @@ const AdvanceListScreen: React.FC = () => {
     }
   };
 
-  // Refrescar datos
+  // Refrescar datos usando las queries
   const handleRefresh = useCallback(async () => {
-    if (!assignedConstruction) return;
-
     setRefreshing(true);
 
     try {
-      await loadCatalogAndAdvances(assignedConstruction);
+      // Refrescar todas las queries en paralelo
+      await Promise.all([
+        refetchConstruction(),
+        refetchAdvances(),
+      ]);
     } catch (error) {
       console.error("Error refreshing data:", error);
     } finally {
       setRefreshing(false);
     }
-  }, [assignedConstruction, statusFilter]);
+  }, [refetchConstruction, refetchAdvances]);
 
   // Cargar más avances (simplificado por ahora)
   const handleLoadMore = useCallback(() => {
-    // TODO: Implementar paginación con el nuevo flujo
+    // TODO: Implementar paginación con useInfiniteQuery
     console.log("Load more functionality - to be implemented");
   }, []);
 
@@ -251,7 +224,6 @@ const AdvanceListScreen: React.FC = () => {
       style={styles.advanceItem}
       onPress={() => {
         // Navegar a detalle de avance (implementar después)
-        // navigation.navigate('AvanceDetail', { avanceId: item.id, title: 'Detalle de Avance' });
         Alert.alert(
           "Próximamente",
           "La vista de detalle de avance estará disponible pronto."
@@ -445,7 +417,7 @@ const AdvanceListScreen: React.FC = () => {
 
   // Renderizar el pie de la lista (loader)
   const renderFooter = () => {
-    if (!loading || page === 1) return null;
+    if (!loadingAdvances) return null;
 
     return (
       <View style={styles.footerLoader}>
@@ -457,12 +429,12 @@ const AdvanceListScreen: React.FC = () => {
 
   // Renderizar la vista de lista vacía o error
   const renderEmpty = () => {
-    // Si estamos cargando la construcción o los avances, mostrar indicador de carga
-    if (loadingConstruction || loadingAdvances) {
+    // Si estamos cargando la construcción, mostrar indicador de carga
+    if (loadingConstruction) {
       return (
         <View style={styles.emptyContainer}>
           <ActivityIndicator size="large" color="#3498db" />
-          <Text style={styles.loadingText}>Cargando...</Text>
+          <Text style={styles.loadingText}>Cargando construcción...</Text>
         </View>
       );
     }
@@ -472,21 +444,13 @@ const AdvanceListScreen: React.FC = () => {
       return (
         <View style={styles.emptyContainer}>
           <Ionicons name="alert-circle-outline" size={64} color="#e74c3c" />
-          <Text style={styles.errorTitle}>{constructionError}</Text>
+          <Text style={styles.errorTitle}>Error al cargar construcción</Text>
           <Text style={styles.errorSubtitle}>
-            No se pueden mostrar avances sin una obra asignada
+            No se puede obtener la obra asignada
           </Text>
           <TouchableOpacity
             style={styles.retryButton}
-            onPress={() => {
-              setLoadingConstruction(true);
-              getAssignedConstruction()
-                .then(setAssignedConstruction)
-                .catch(() =>
-                  setConstructionError("No se pudo cargar tu obra asignada")
-                )
-                .finally(() => setLoadingConstruction(false));
-            }}
+            onPress={() => refetchConstruction()}
           >
             <Text style={styles.retryButtonText}>Reintentar</Text>
           </TouchableOpacity>
@@ -507,13 +471,64 @@ const AdvanceListScreen: React.FC = () => {
       );
     }
 
+    // Si estamos cargando catálogos
+    if (loadingCatalogs) {
+      return (
+        <View style={styles.emptyContainer}>
+          <ActivityIndicator size="large" color="#3498db" />
+          <Text style={styles.loadingText}>Cargando catálogos...</Text>
+        </View>
+      );
+    }
+
+    // Si hay error al cargar catálogos
+    if (catalogsError) {
+      return (
+        <View style={styles.emptyContainer}>
+          <Ionicons name="alert-circle-outline" size={64} color="#e74c3c" />
+          <Text style={styles.errorTitle}>Error al cargar catálogos</Text>
+          <Text style={styles.errorSubtitle}>
+            No se pueden obtener los catálogos de la obra
+          </Text>
+          <TouchableOpacity style={styles.retryButton} onPress={handleRefresh}>
+            <Text style={styles.retryButtonText}>Reintentar</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    // Si no hay catálogos
+    if (!mainCatalog) {
+      return (
+        <View style={styles.emptyContainer}>
+          <Ionicons name="folder-outline" size={64} color="#7f8c8d" />
+          <Text style={styles.emptyTitle}>No hay catálogos disponibles</Text>
+          <Text style={styles.emptyDescription}>
+            Esta obra no tiene catálogos configurados
+          </Text>
+        </View>
+      );
+    }
+
+    // Si estamos cargando los avances
+    if (loadingAdvances) {
+      return (
+        <View style={styles.emptyContainer}>
+          <ActivityIndicator size="large" color="#3498db" />
+          <Text style={styles.loadingText}>Cargando avances...</Text>
+        </View>
+      );
+    }
+
     // Si hay error al cargar los avances
     if (advancesError) {
       return (
         <View style={styles.emptyContainer}>
           <Ionicons name="alert-circle-outline" size={64} color="#e74c3c" />
           <Text style={styles.errorTitle}>Error al cargar avances</Text>
-          <Text style={styles.errorSubtitle}>{advancesError}</Text>
+          <Text style={styles.errorSubtitle}>
+            No se pueden obtener los avances del catálogo
+          </Text>
           <TouchableOpacity style={styles.retryButton} onPress={handleRefresh}>
             <Text style={styles.retryButtonText}>Reintentar</Text>
           </TouchableOpacity>
@@ -556,7 +571,7 @@ const AdvanceListScreen: React.FC = () => {
       </View>
 
       <FlatList
-        data={localAdvances}
+        data={advancesData?.advances || []}
         renderItem={renderAdvanceItem}
         keyExtractor={(item) => item.id.toString()}
         ListHeaderComponent={renderHeader}
@@ -573,7 +588,7 @@ const AdvanceListScreen: React.FC = () => {
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.1}
         contentContainerStyle={
-          localAdvances.length === 0
+          !advancesData?.advances?.length
             ? styles.emptyListContent
             : styles.listContent
         }

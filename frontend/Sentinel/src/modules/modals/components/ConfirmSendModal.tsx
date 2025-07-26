@@ -19,6 +19,7 @@ export interface ConfirmSendModalProps extends BaseModalProps {
     partida: string;
     concept: string;
     volume: string;
+    unit: string;
     notes: string;
   };
 }
@@ -52,7 +53,7 @@ const ConfirmSendModal: React.FC<ConfirmSendModalProps> = ({
               <Text style={styles.summaryLabel}>Concepto</Text>
               <Text style={styles.summaryValue}>{summary.concept}</Text>
               <Text style={styles.summaryLabel}>Volumen</Text>
-              <Text style={styles.summaryValue}>{summary.volume}</Text>
+              <Text style={styles.summaryValue}>{summary.volume} {summary.unit}</Text>
               {summary.notes !== "" && (
                 <>
                   <Text style={styles.summaryLabel}>Notas</Text>

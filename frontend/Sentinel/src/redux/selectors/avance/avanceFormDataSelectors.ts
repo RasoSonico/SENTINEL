@@ -22,3 +22,8 @@ export const useConceptDescriptionById = (id: number) => {
   const concept = useConceptById(id);
   return concept ? concept.description : "";
 };
+
+export const useConceptUnitById = (id: number) => {
+  const concept = useConceptById(id);
+  return concept ? concept.unit : "";
+};

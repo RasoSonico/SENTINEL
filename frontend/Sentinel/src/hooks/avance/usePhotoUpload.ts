@@ -1,6 +1,14 @@
 import { useState } from "react";
-import photoService, {
+import {
   PhotoUploadRequest,
+  requestSingleUpload,
+  requestBulkUpload,
+  uploadToAzureBlob,
+  confirmUpload,
+  uriToBlob,
+  getFileSize,
+  getImageDimensions,
+  getCameraInfo,
 } from "../../services/api/photoService";
 import { Photo } from "./usePhotoCapture";
 import { LocationData } from "./useGeolocation";
@@ -46,8 +54,8 @@ export const usePhotoUpload = ({
     physicalAdvanceId: number,
     location?: LocationData
   ): Promise<PhotoUploadRequest> => {
-    const fileSize = await photoService.getFileSize(photo.uri);
-    // Usar el filename personalizable de la foto
+    const fileSize = await getFileSize(photo.uri);
+    const dimensions = await getImageDimensions(photo.uri);
     const filename = photo.filename;
 
     return {
@@ -61,6 +69,8 @@ export const usePhotoUpload = ({
       longitude: location?.longitude || photo.location?.longitude,
       gps_accuracy: location?.accuracy || undefined,
       taken_at: new Date(photo.timestamp).toISOString(),
+      image_width: dimensions.width,
+      image_height: dimensions.height,
     };
   };
 
@@ -101,29 +111,48 @@ export const usePhotoUpload = ({
       updatePhotoProgress(photoId, { status: "uploading", progress: 10 });
 
       // Paso 1: Solicitar SAS token
-      const uploadResponse = await photoService.requestSingleUpload(photoData);
+      const uploadResponse = await requestSingleUpload(photoData);
       updatePhotoProgress(photoId, { progress: 30 });
 
       // Paso 2: Convertir URI a Blob
-      const fileBlob = await photoService.uriToBlob(photo.uri);
+      const fileBlob = await uriToBlob(photo.uri);
       updatePhotoProgress(photoId, { progress: 50 });
 
       // Paso 3: Subir a Azure Blob
-      const uploadSuccess = await photoService.uploadToAzureBlob(
+      console.log("📤 Uploading to Azure Blob:", {
+        upload_url: uploadResponse.upload_url,
+        file_size: fileBlob.size,
+        content_type: "image/jpeg"
+      });
+      
+      const uploadSuccess = await uploadToAzureBlob(
         uploadResponse.upload_url,
         fileBlob,
         "image/jpeg"
       );
+      
+      console.log("📤 Azure Blob upload result:", uploadSuccess);
       updatePhotoProgress(photoId, { progress: 80 });
 
       // Paso 4: Confirmar subida
-      await photoService.confirmUpload({
+      const cameraInfo = await getCameraInfo();
+      console.log("🔄 Confirming upload with data:", {
+        photo_id: uploadResponse.photo_id,
+        upload_successful: uploadSuccess,
+        error_message: uploadSuccess ? undefined : "Failed to upload to Azure Blob",
+        camera_info: cameraInfo,
+      });
+      
+      await confirmUpload({
         photo_id: uploadResponse.photo_id,
         upload_successful: uploadSuccess,
         error_message: uploadSuccess
           ? undefined
           : "Failed to upload to Azure Blob",
+        camera_info: cameraInfo,
       });
+      
+      console.log("✅ Upload confirmed successfully");
 
       updatePhotoProgress(photoId, {
         status: uploadSuccess ? "completed" : "failed",
@@ -165,9 +194,50 @@ export const usePhotoUpload = ({
       });
 
       // Paso 1: Solicitar SAS tokens en bulk
-      const bulkResponse = await photoService.requestBulkUpload({
+      console.log("📤 [BULK] Requesting bulk upload for photos:", photosData.length);
+      const bulkResponse = await requestBulkUpload({
         photos: photosData,
       });
+      
+      console.log("📤 [BULK] Bulk response received:", bulkResponse);
+
+      // Validar estructura de respuesta - intentar diferentes formatos
+      let uploadSessions: Array<{
+        photo_id: string;
+        filename: string;
+        upload_url: string;
+        blob_path?: string;
+        expires_at: string;
+      }> = [];
+
+      if (bulkResponse.upload_sessions && Array.isArray(bulkResponse.upload_sessions)) {
+        // Formato esperado: { upload_sessions: [...] }
+        uploadSessions = bulkResponse.upload_sessions;
+        console.log("✅ [BULK] Using upload_sessions format");
+      } else if ((bulkResponse as any).results && Array.isArray((bulkResponse as any).results)) {
+        // Formato alternativo: { results: [...] }
+        console.log("⚠️ [BULK] Using legacy results format");
+        uploadSessions = (bulkResponse as any).results.map((result: any) => ({
+          photo_id: result.photo_id,
+          filename: result.filename,
+          upload_url: result.upload_url,
+          blob_path: result.blob_path,
+          expires_at: result.expires_at
+        }));
+      } else {
+        console.error("❌ [BULK] Invalid bulk response structure:", bulkResponse);
+        throw new Error("Invalid bulk upload response from server");
+      }
+
+      if (uploadSessions.length !== photos.length) {
+        console.error("❌ [BULK] Mismatch in response count:", {
+          requested: photos.length,
+          received: uploadSessions.length
+        });
+        throw new Error("Bulk upload response count mismatch");
+      }
+
+      console.log("✅ [BULK] Response validation passed, processing", uploadSessions.length, "upload sessions");
 
       // Actualizar progreso después de obtener tokens
       photos.forEach((photo) => {
@@ -175,41 +245,57 @@ export const usePhotoUpload = ({
       });
 
       // Paso 2: Subir fotos en paralelo a Azure Blob
-      const uploadPromises = bulkResponse.results.map(async (result, index) => {
+      const uploadPromises = uploadSessions.map(async (uploadSession, index) => {
         const photo = photos[index];
         const photoId = photo.id;
 
-        if (!result.success || !result.upload_url) {
+        console.log(`📸 [PHOTO ${index + 1}] Processing photo:`, {
+          photoId,
+          filename: photo.filename,
+          uploadSession: uploadSession
+        });
+
+        if (!uploadSession.upload_url) {
+          console.error(`❌ [PHOTO ${index + 1}] Missing upload URL for photo ${photoId}`);
           updatePhotoProgress(photoId, {
             status: "failed",
             progress: 0,
-            error: result.error || "Failed to get upload URL",
+            error: "Failed to get upload URL",
           });
-          return { photoId, success: false, error: result.error };
+          return { photoId, success: false, error: "Failed to get upload URL" };
         }
 
         try {
           // Convertir URI a Blob
-          const fileBlob = await photoService.uriToBlob(photo.uri);
+          const fileBlob = await uriToBlob(photo.uri);
           updatePhotoProgress(photoId, { progress: 50 });
 
           // Subir a Azure
-          const uploadSuccess = await photoService.uploadToAzureBlob(
-            result.upload_url,
+          const uploadSuccess = await uploadToAzureBlob(
+            uploadSession.upload_url,
             fileBlob,
             "image/jpeg"
           );
           updatePhotoProgress(photoId, { progress: 80 });
 
           // Confirmar subida
-          if (result.photo_id) {
-            await photoService.confirmUpload({
-              photo_id: result.photo_id,
+          if (uploadSession.photo_id) {
+            console.log(`🔄 [PHOTO ${index + 1}] Confirming upload for photo_id:`, uploadSession.photo_id);
+            const cameraInfo = await getCameraInfo();
+            const confirmData = {
+              photo_id: uploadSession.photo_id,
               upload_successful: uploadSuccess,
-              error_message: uploadSuccess
-                ? undefined
-                : "Failed to upload to Azure Blob",
-            });
+              error_message: uploadSuccess ? undefined : "Failed to upload to Azure Blob",
+              camera_info: cameraInfo,
+            };
+            
+            console.log(`🔄 [PHOTO ${index + 1}] Confirmation data:`, confirmData);
+            
+            await confirmUpload(confirmData);
+            
+            console.log(`✅ [PHOTO ${index + 1}] Upload confirmed successfully for ${uploadSession.photo_id}`);
+          } else {
+            console.error(`❌ [PHOTO ${index + 1}] No photo_id in upload session:`, uploadSession);
           }
 
           updatePhotoProgress(photoId, {
@@ -220,6 +306,7 @@ export const usePhotoUpload = ({
 
           return { photoId, success: uploadSuccess };
         } catch (error) {
+          console.error(`❌ [PHOTO ${index + 1}] Error processing photo ${photoId}:`, error);
           updatePhotoProgress(photoId, {
             status: "failed",
             progress: 0,
@@ -237,9 +324,17 @@ export const usePhotoUpload = ({
 
       // Calcular resultados finales
       const successful = uploadResults.filter((r) => r.success).length;
+      const failed = uploadResults.filter((r) => !r.success).length;
       const errors = uploadResults
         .filter((r) => !r.success)
         .map((r) => r.error || "Unknown error");
+
+      console.log(`📊 [BULK SUMMARY] Upload completed:`, {
+        successful,
+        failed,
+        total: photos.length,
+        errors: errors.length > 0 ? errors : "None"
+      });
 
       return {
         success: successful > 0,
