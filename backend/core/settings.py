@@ -152,6 +152,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = True  # Especificar los orígenes permitidos en prod
 
+#Azure External ID settings
 AZURE_TENANT_ID = config('AZURE_TENANT_ID')
 AZURE_CLIENT_ID = config('AZURE_CLIENT_ID')
 AZURE_CLIENT_SECRET = config('AZURE_CLIENT_SECRET', default='')
@@ -186,7 +187,9 @@ REST_FRAMEWORK = {
 
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10,
+    'PAGE_SIZE': 15,
+    'PAGE_SIZE_QUERY_PARAM': 'page_size',
+    'MAX_PAGE_SIZE': 100,
 }
 
 LOGGING = {
@@ -238,7 +241,7 @@ if not DEBUG:
     # CORS más restrictivo en producción
     CORS_ALLOW_ALL_ORIGINS = False
     CORS_ALLOWED_ORIGINS = [
-        "sentinel-backend-app-bcbjhve6fcd6f4fz.mexicocentral-01.azurewebsites.net",  # Actualizaremos esto después
+        "https://sentinel-backend-app-bcbjhve6fcd6f4fz.mexicocentral-01.azurewebsites.net", 
     ]
 
 # Logging para Azure
