@@ -175,11 +175,25 @@ export interface PhysicalAdvanceSummary {
 // Nueva interfaz que coincide con la respuesta real de la API
 export interface PhysicalAdvanceResponse {
   id: number;
-  concept: number;
+  concept: number; // Mantenido para compatibilidad
   volume: string;
   date: string;
   status: "PENDING" | "APPROVED" | "REJECTED";
   comments: string | null;
+  // Nuevos campos del modo detailed=true
+  concept_id?: number;
+  concept_description?: string;
+  concept_unit?: string;
+  concept_quantity?: string;
+  concept_unit_price?: string;
+  concept_classification?: string;
+  work_item_id?: number;
+  work_item_name?: string;
+  catalog_id?: number;
+  catalog_name?: string;
+  construction_id?: number;
+  construction_name?: string;
+  total_amount?: string;
 }
 
 // Tipos adicionales para la entidad UserConstruction

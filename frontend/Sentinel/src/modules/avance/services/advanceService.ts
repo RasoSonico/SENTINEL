@@ -39,7 +39,7 @@ class AdvanceService extends BaseService<PhysicalAdvance> {
       const queryParams = new URLSearchParams({
         construction_id: constructionId,
         page: (params?.page || 1).toString(),
-        page_size: (params?.pageSize || 20).toString(),
+        page_size: (params?.pageSize || 50).toString(),
       });
 
       if (params?.workItemId)
@@ -114,7 +114,7 @@ class AdvanceService extends BaseService<PhysicalAdvance> {
       const queryParams = new URLSearchParams({
         catalog: catalogId.toString(),
         page: (params?.page || 1).toString(),
-        page_size: (params?.pageSize || 20).toString(),
+        page_size: (params?.pageSize || 50).toString(),
       });
 
       if (params?.conceptId) queryParams.append("concept", params.conceptId);
@@ -141,7 +141,7 @@ class AdvanceService extends BaseService<PhysicalAdvance> {
       return {
         advances: response.results,
         total: response.count,
-        pages: Math.ceil(response.count / (params?.pageSize || 20)),
+        pages: Math.ceil(response.count / (params?.pageSize || 50)),
       };
     } catch (error) {
       console.error("❌ Error al obtener avances por catálogo:", error);

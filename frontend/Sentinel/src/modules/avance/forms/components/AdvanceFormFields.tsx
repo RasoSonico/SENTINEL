@@ -17,6 +17,10 @@ import {
   useFetchCatalogs,
   useFetchConcepts,
   useFetchPartidas,
+  useCatalogsByConstruction,
+  usePartidasByCatalog,
+  useConceptsByWorkItem,
+  useAssignedConstruction,
 } from "src/hooks/data/query/useAvanceQueries";
 import { CatalogoItem } from "src/types/catalogo";
 import { DropdownItemType } from "src/components/ui/SearchableDropdown";
@@ -37,8 +41,6 @@ interface AdvanceFormFieldsProps {
   onCatalogSelect: (catalogId: number) => void;
   onPartidaSelect: (partidaId: number) => void;
   onConceptSelect: (conceptId: number) => void;
-  disablePartida?: boolean;
-  disableConcept?: boolean;
   setFormValue: UseFormSetValue<AdvanceFormFieldsZod>;
   watchFormValue: UseFormWatch<AdvanceFormFieldsZod>;
 }
@@ -50,34 +52,46 @@ const AdvanceFormFields: React.FC<AdvanceFormFieldsProps> = ({
   onCatalogSelect,
   onPartidaSelect,
   onConceptSelect,
-  disablePartida = false,
-  disableConcept = false,
   watchFormValue,
 }) => {
   const dispatch = useDispatch();
+
+  // Get assigned construction for CONTRATISTA
+  const {
+    data: assignedConstruction,
+    isLoading: isLoadingConstruction,
+    error: constructionError,
+  } = useAssignedConstruction("CONTRATISTA");
+
+  // Watch form values for hierarchical loading
+  const selectedCatalogId = watchFormValue("catalog");
+  const selectedPartidaId = watchFormValue("partida");
+  const selectedConceptId = watchFormValue("concept");
+  const [unit, setUnit] = useState("");
+
+  // NEW HIERARCHICAL QUERIES
   const {
     data: catalogs,
     isLoading: isLoadingCatalogs,
     error: catalogsError,
     isError: isCatalogsError,
-  } = useFetchCatalogs();
+  } = useCatalogsByConstruction(
+    assignedConstruction?.id ? parseInt(assignedConstruction.id, 10) : null
+  );
 
   const {
     data: partidas,
     isLoading: isLoadingPartidas,
     error: partidasError,
     isError: isPartidasError,
-  } = useFetchPartidas();
+  } = usePartidasByCatalog(selectedCatalogId || null);
 
   const {
     data: concepts,
     isLoading: isLoadingConcepts,
     error: conceptsError,
     isError: isConceptsError,
-  } = useFetchConcepts();
-
-  const selectedConcept = watchFormValue("concept");
-  const [unit, setUnit] = useState("");
+  } = useConceptsByWorkItem(selectedPartidaId || null);
 
   useEffect(() => {
     if (catalogs) {
@@ -97,16 +111,17 @@ const AdvanceFormFields: React.FC<AdvanceFormFieldsProps> = ({
     }
   }, [concepts, dispatch]);
 
+  // Update unit when concept is selected
   useEffect(() => {
-    if (concepts) {
-      const conceptIndex = concepts?.findIndex(
-        (concept) => concept.id === selectedConcept
+    if (concepts && selectedConceptId) {
+      const concept = concepts.find(
+        (concept) => concept.id === selectedConceptId
       );
-      const concept = concepts[conceptIndex];
-
-      setUnit(concept?.unit);
+      setUnit(concept?.unit || "");
+    } else {
+      setUnit("");
     }
-  }, [selectedConcept]);
+  }, [concepts, selectedConceptId]);
 
   const getCatalogsList = (catalogs: CatalogoItem[]): DropdownItemType[] =>
     catalogs && catalogs.length > 0
@@ -145,9 +160,13 @@ const AdvanceFormFields: React.FC<AdvanceFormFieldsProps> = ({
               selected={value}
               onSelect={onCatalogSelect}
               error={errors.catalog?.message || catalogsError?.message}
-              isLoading={isLoadingCatalogs}
-              loadingLabel="Cargando Catálogos"
-              disabled={isCatalogsError}
+              isLoading={isLoadingCatalogs || isLoadingConstruction}
+              loadingLabel={
+                isLoadingConstruction
+                  ? "Cargando obra asignada..."
+                  : "Cargando Catálogos"
+              }
+              disabled={isCatalogsError || !assignedConstruction}
             />
           )}
         />
@@ -163,7 +182,7 @@ const AdvanceFormFields: React.FC<AdvanceFormFieldsProps> = ({
               selected={value}
               onSelect={onPartidaSelect}
               error={errors.partida?.message || partidasError?.message}
-              disabled={disablePartida || isPartidasError}
+              disabled={!selectedCatalogId || isPartidasError}
               isLoading={isLoadingPartidas}
               loadingLabel="Cargando Partidas"
             />
@@ -181,7 +200,7 @@ const AdvanceFormFields: React.FC<AdvanceFormFieldsProps> = ({
               selected={value}
               onSelect={onConceptSelect}
               error={errors.concept?.message || conceptsError?.message}
-              disabled={disableConcept || isConceptsError}
+              disabled={!selectedPartidaId || isConceptsError}
               isLoading={isLoadingConcepts}
               loadingLabel="Cargando Conceptos"
             />

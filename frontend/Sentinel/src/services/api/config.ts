@@ -15,8 +15,11 @@ export const API_CONFIG = {
     partidas: "/api/catalogo/workitem",
     concepts: "/api/catalogo/concept",
     submitAdvance: "/api/avance/physical/",
+    advances: {
+      list: "/api/avance/physical/",
+    },
     photos: {
-      confirmUpload: "/api/avance/photos/confirm-upload",
+      confirmUpload: "/api/avance/photos/confirm-upload/",
       bulkUpload: "/api/avance/photos/bulk-upload/",
       upload: "/api/avance/photos/upload/",
     },
@@ -29,6 +32,11 @@ export const API_CONFIG = {
       },
     },
     obraConstructions: "/api/obra/constructions/",
+    incidencias: {
+      incidents: "/api/incidencias/incidents/",
+      incidentTypes: "/api/incidencias/incident-types/",
+      incidentClassifications: "/api/incidencias/incident-classifications/",
+    },
   },
   azureBlobUrl: "https://sentinel.blob.core.windows.net",
 };

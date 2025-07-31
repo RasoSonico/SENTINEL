@@ -12,11 +12,8 @@ import {
 } from "react-native";
 import { Button } from "../../../components/ui/Button";
 import { useAppSelector, useAppDispatch } from "../../../redux/hooks";
-import {
-  selectLoading,
-  selectError,
-} from "../../../redux/selectors/authSelectors";
-import { setError, setLoading } from "../../../redux/slices/authSlice";
+import { selectError } from "../../../redux/selectors/authSelectors";
+import { setError } from "../../../redux/slices/authSlice";
 import * as Device from "expo-device";
 import { useAuth } from "../../../hooks/useAuth";
 import ServerErrorModal from "src/components/ServerErrorModal";
@@ -25,9 +22,12 @@ const LoginScreen: React.FC = () => {
   const { login, isAuthUserError, isAuthUserPending, authUserError } =
     useAuth();
   const dispatch = useAppDispatch();
-  const isLoading = useAppSelector(selectLoading) || isAuthUserPending;
   const error = useAppSelector(selectError);
   const [serverErrorVisible, setServerErrorVisible] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  // Use dedicated login loading state
+  const isLoading = isLoggingIn;
 
   useEffect(() => {
     if (
@@ -49,18 +49,29 @@ const LoginScreen: React.FC = () => {
   }, [error, dispatch]);
 
   const handleLogin = async () => {
-    login()
-      .catch((err) => {
-        console.error("Login error caught:", err);
-        Alert.alert(
-          "Error de Autenticación",
-          "Ocurrió un error durante el inicio de sesión: " +
-            (err instanceof Error ? err.message : "Error desconocido")
-        );
-      })
-      .finally(() => {
-        dispatch(setLoading(false));
-      });
+    if (isLoading) return;
+
+    setIsLoggingIn(true);
+    console.log("Starting login process...");
+
+    try {
+      await login();
+      console.log("Login completed successfully");
+    } catch (err) {
+      console.error("Login error:", err);
+      const errorMessage =
+        err instanceof Error ? err.message : "Error desconocido";
+
+      Alert.alert(
+        "Error de Autenticación",
+        `Ocurrió un error durante el inicio de sesión: ${errorMessage}`
+      );
+
+      dispatch(setError(errorMessage));
+    } finally {
+      setIsLoggingIn(false);
+      console.log("Login process finished");
+    }
   };
 
   return (

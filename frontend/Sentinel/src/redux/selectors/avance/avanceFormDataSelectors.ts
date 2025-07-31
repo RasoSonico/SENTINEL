@@ -22,3 +22,14 @@ export const useConceptDescriptionById = (id: number) => {
   const concept = useConceptById(id);
   return concept ? concept.description : "";
 };
+
+export const useConceptUnitById = (id: number) => {
+  const concept = useConceptById(id);
+  return concept ? concept.unit : "";
+};
+
+export const usePartidaNameByConceptId = (conceptId: number) => {
+  const concept = useConceptById(conceptId);
+  const partida = usePartidaById(concept?.work_item || 0);
+  return partida ? partida.name : "";
+};

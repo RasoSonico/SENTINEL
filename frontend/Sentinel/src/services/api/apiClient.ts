@@ -6,7 +6,7 @@ import axios, {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from "axios";
-import { getTokenResponse } from "../../utils/auth";
+import { deleteToken, getTokenResponse } from "../../utils/auth";
 import { API_CONFIG, isDevelopment } from "./config";
 
 // Interceptor to add token to requests - prioritizes SecureStore over AsyncStorage
@@ -77,8 +77,7 @@ const responseHandlerInterceptor = (client: AxiosInstance) =>
         if (error.response.status === 401) {
           console.log("401 Unauthorized - clearing tokens");
           try {
-            await AsyncStorage.removeItem("token");
-            await SecureStore.deleteItemAsync("auth-token");
+            await deleteToken();
           } catch (clearError: unknown) {
             console.error("Error clearing tokens:", clearError);
           }
@@ -149,19 +148,48 @@ const makeApiRequest = async <T>(
   url: string,
   data?: unknown,
   options?: {
-    headers?: unknown;
+    headers?: Record<string, any>;
     excludeAuth?: boolean;
   }
 ): Promise<T> => {
-  if (options?.headers) {
-    Object.assign(client.defaults.headers, options.headers);
+  if (isDevelopment) {
+    console.log(`🔧 [API] Making ${method.toUpperCase()} request to: ${url}`);
+    if (data) {
+      console.log(`🔧 [API] With data:`, data);
+    }
   }
 
+  let response: AxiosResponse<T>;
+
+  // Prepare config object for requests that need it
+  const config: any = {
+    headers: {
+      ...(options?.headers || {}),
+    },
+  };
+
+  // Handle auth exclusion
   if (options?.excludeAuth) {
-    delete client.defaults.headers.Authorization;
+    config.headers.Authorization = undefined;
   }
 
-  const response = await client[method]<T>(url, data);
+  // Handle different HTTP methods correctly
+  switch (method) {
+    case "get":
+    case "delete":
+      // GET and DELETE methods: url first, config second
+      response = await client[method]<T>(url, config);
+      break;
+    case "post":
+    case "put":
+    case "patch":
+      // POST, PUT, PATCH methods: url first, data second, config third
+      response = await client[method]<T>(url, data, config);
+      break;
+    default:
+      throw new Error(`Unsupported HTTP method: ${method}`);
+  }
+
   return response.data;
 };
 
@@ -171,7 +199,7 @@ export const apiRequest = async <T>(
   errorMessage?: string,
   data?: unknown,
   options?: {
-    headers?: unknown;
+    headers?: Record<string, any>;
     raw?: boolean; // If true, returns the raw Axios response
   }
 ): Promise<T> => {
@@ -194,7 +222,7 @@ export const apiRequestWithBaseUrl = async <T>(
   baseUrl: string,
   data?: unknown,
   options?: {
-    headers?: unknown;
+    headers?: Record<string, any>;
   }
 ): Promise<T> => {
   const customClient = createClientWithInterceptors(baseUrl);

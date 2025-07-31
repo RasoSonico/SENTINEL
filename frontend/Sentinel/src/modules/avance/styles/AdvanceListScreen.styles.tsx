@@ -117,6 +117,17 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginTop: 2,
   },
+  partidaName: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#2c3e50",
+    marginBottom: 4,
+  },
+  conceptDescription: {
+    fontSize: 14,
+    color: "#7f8c8d",
+    lineHeight: 18,
+  },
   statusChip: {
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -150,6 +161,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 12,
+    marginTop: 8,
   },
   quantityContainer: {
     flexDirection: "row",
@@ -204,8 +216,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#2c3e50",
   },
+  bottomSection: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 12,
+  },
   programStatusContainer: {
     alignItems: "flex-start",
+  },
+  dateContainer: {
+    alignItems: "flex-end",
   },
   footerLoader: {
     flexDirection: "row",
@@ -275,6 +296,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#7f8c8d",
     marginTop: 12,
+  },
+  loadingConceptContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20,
+  },
+  loadingConceptText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: "#7f8c8d",
   },
 });
 

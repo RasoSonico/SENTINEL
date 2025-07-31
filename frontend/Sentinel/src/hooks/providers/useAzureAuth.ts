@@ -32,7 +32,9 @@ export const useAzureAuth = (
   );
 
   const handleAuthResponse = useCallback(
-    async (response: AuthSession.AuthSessionResult): Promise<AuthSession.TokenResponse | null> => {
+    async (
+      response: AuthSession.AuthSessionResult
+    ): Promise<AuthSession.TokenResponse | null> => {
       if (!enabled) return null;
 
       if (response.type === "success" && discovery) {

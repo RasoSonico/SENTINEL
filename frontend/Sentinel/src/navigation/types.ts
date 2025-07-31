@@ -2,6 +2,7 @@
 import { RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { NavigatorScreenParams } from "@react-navigation/native";
+import { Incident } from "../types/incidencia";
 
 // Parámetros para la navegación de autenticación
 export type AuthStackParamList = {
@@ -17,6 +18,7 @@ export type AppTabParamList = {
   Catalogos: undefined;
   Cronogramas: undefined;
   Avances: undefined;
+  Incidencias: undefined;
   Perfil: undefined;
   Dashboard: undefined;
   Aprobacion: undefined;
@@ -72,6 +74,13 @@ export type AvanceStackParamList = {
   Dashboard: undefined;
 };
 
+// Parámetros para el navegador de Incidencias
+export type IncidenciaStackParamList = {
+  IncidentsList: undefined;
+  IncidentRegistration: undefined;
+  IncidentDetail: { incident: Incident };
+};
+
 // Tipos para props de navegación específicas
 export type AvanceListScreenNavigationProp = StackNavigationProp<
   AvanceStackParamList,
@@ -86,6 +95,22 @@ export type AdvanceRegistrationScreenNavigationProp = StackNavigationProp<
 export type AdvanceDetailScreenNavigationProp = StackNavigationProp<
   AvanceStackParamList,
   "AvanceDetail"
+>;
+
+// Tipos para props de navegación específicas de Incidencias
+export type IncidentListScreenNavigationProp = StackNavigationProp<
+  IncidenciaStackParamList,
+  "IncidentsList"
+>;
+
+export type IncidentRegistrationScreenNavigationProp = StackNavigationProp<
+  IncidenciaStackParamList,
+  "IncidentRegistration"
+>;
+
+export type IncidentDetailScreenNavigationProp = StackNavigationProp<
+  IncidenciaStackParamList,
+  "IncidentDetail"
 >;
 
 // Tipo para la ruta raíz que decide entre Auth y App
@@ -103,6 +128,8 @@ export type CatalogoNavigationProp =
 export type CronogramaNavigationProp =
   StackNavigationProp<CronogramaStackParamList>;
 export type AvanceNavigationProp = StackNavigationProp<AvanceStackParamList>;
+export type IncidenciaNavigationProp =
+  StackNavigationProp<IncidenciaStackParamList>;
 export type RootNavigationProp = StackNavigationProp<RootStackParamList>;
 
 // Tipos para las propiedades de ruta
@@ -121,4 +148,8 @@ export type CronogramaRouteProps = RouteProp<
 export type AvanceRouteProps = RouteProp<
   AvanceStackParamList,
   keyof AvanceStackParamList
+>;
+export type IncidenciaRouteProps = RouteProp<
+  IncidenciaStackParamList,
+  keyof IncidenciaStackParamList
 >;

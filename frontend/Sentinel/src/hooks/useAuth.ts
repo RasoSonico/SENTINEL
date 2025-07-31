@@ -9,20 +9,21 @@ import {
   clearCredentials,
   setCredentials,
   setIsAuthenticated,
+  setToken,
 } from "src/redux/slices/authSlice";
 import { AuthConfig, AuthProvider } from "src/types/auth";
 import { deleteToken, saveTokenResponse } from "src/utils/auth";
 
 export const useAuth = () => {
   const dispatch = useDispatch();
-  const { token, role, user } = useSelector(selectAuthInfo);
+  const { token, role, user, isAuthenticated } = useSelector(selectAuthInfo);
   const {
     data: authUser,
     isSuccess: isAuthUserSuccessful,
     isPending: isAuthUserPending,
     isError: isAuthUserError,
     error: authUserError,
-  } = useAuthMeQuery(!!user);
+  } = useAuthMeQuery(isAuthenticated && !!token);
   const queryClient = useQueryClient();
 
   const activeProvider = (authConfig as AuthConfig).activeProvider;
@@ -49,7 +50,8 @@ export const useAuth = () => {
     console.log(tokenResponse);
 
     if (tokenResponse) {
-      saveTokenResponse(tokenResponse);
+      await saveTokenResponse(tokenResponse);
+      dispatch(setToken(tokenResponse.accessToken));
       dispatch(setIsAuthenticated(true));
     }
   };
@@ -81,11 +83,12 @@ export const useAuth = () => {
 
   const logout = async () => {
     console.debug("[useAuth] Logging out user");
+    dispatch(setToken(null));
+    dispatch(clearCredentials());
+    await deleteToken();
     queryClient.invalidateQueries({
       queryKey: ["authMe"],
     });
-    await deleteToken();
-    dispatch(clearCredentials());
   };
 
   return {

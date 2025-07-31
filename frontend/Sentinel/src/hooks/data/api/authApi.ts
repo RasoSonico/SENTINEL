@@ -4,7 +4,7 @@ import { User } from "src/types/auth";
 
 export const authMe = async (): Promise<User> => {
   try {
-    const response = await apiClient.get<User>("/api/usuarios/me");
+    const response = await apiClient.get<User>("/api/usuarios/users/me/");
     return response.data;
   } catch (error) {
     console.log("authMe | Error fetching user data:", error);
