@@ -28,6 +28,7 @@ import {
   useAdvancesByCatalog,
 } from "../../../hooks/data/query/useAvanceQueries";
 import styles from "../styles/AdvanceListScreen.styles";
+import { ColorUtils } from "../../../styles/designTokens";
 
 type AdvanceListScreenNavigationProp = StackNavigationProp<
   AvanceStackParamList,
@@ -132,20 +133,6 @@ const AdvanceListScreen: React.FC = () => {
     }
   }, [assignedConstruction, navigation]);
 
-  // Configurar el botón derecho para agregar avances
-  useEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity
-          style={{ marginRight: 16 }}
-          onPress={handleAddAdvance}
-        >
-          <Ionicons name="add-circle" size={24} color="#fff" />
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation, assignedConstruction]);
-
   // Manejar la navegación al formulario de registro de avance
   const handleAddAdvance = () => {
     if (assignedConstruction) {
@@ -213,7 +200,7 @@ const AdvanceListScreen: React.FC = () => {
       return null;
     }
 
-    //Toda la información viene directamente en el avance
+    // La información viene directamente en el avance
     const conceptDescription =
       item.concept_description || `Concepto #${item.concept}`;
     const conceptUnit = item.concept_unit || "";
@@ -221,7 +208,10 @@ const AdvanceListScreen: React.FC = () => {
 
     return (
       <TouchableOpacity
-        style={styles.advanceItem}
+        style={[
+          styles.advanceItem,
+          { borderLeftColor: ColorUtils.getStatusBorderColor(item.status) }, // ✅ COLOR DINÁMICO POR ESTADO
+        ]}
         onPress={() => handleAdvancePress(item)}
       >
         <View style={styles.advanceHeader}>
@@ -614,6 +604,15 @@ const AdvanceListScreen: React.FC = () => {
         advance={selectedAdvance}
         onAdvanceUpdated={handleAdvanceUpdated}
       />
+
+      {/* FLOATING ACTION BUTTON */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={handleAddAdvance}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="add" size={24} style={styles.fabIcon} />
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };

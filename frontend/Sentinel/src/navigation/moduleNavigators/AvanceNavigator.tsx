@@ -1,8 +1,14 @@
 import React from "react";
 import { createStackNavigator } from "@react-navigation/stack";
+import { Platform, Dimensions } from "react-native";
 import { AvanceStackParamList } from "../types";
 import AdvanceListScreen from "../../modules/avance/screens/AdvanceListScreen";
 import AdvanceRegistrationScreen from "../../modules/avance/screens/AdvanceRegistrationScreen";
+import { DesignTokens } from "../../styles/designTokens";
+
+// HEADER UTILITIES
+const { width: screenWidth } = Dimensions.get("window");
+const isTablet = screenWidth >= 768;
 
 const Stack = createStackNavigator<AvanceStackParamList>();
 
@@ -12,14 +18,23 @@ export const AvanceNavigator: React.FC = () => {
       initialRouteName="AvancesList"
       screenOptions={{
         headerStyle: {
-          backgroundColor: "#3498db",
+          backgroundColor: DesignTokens.colors.executive.primary,
+          shadowColor: DesignTokens.colors.neutral[900],
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+          elevation: 4,
         },
-        headerTintColor: "#fff",
+        headerTintColor: DesignTokens.colors.background.primary,
         headerTitleStyle: {
-          fontWeight: "bold",
+          fontWeight: DesignTokens.typography.fontWeight.bold,
+          fontSize: isTablet ? 20 : 18, // RESPONSIVO
+          color: DesignTokens.colors.background.primary,
         },
+        headerTitleAlign: "center" as const, // CENTRAR TÍTULO
+        headerBackTitle: "", // OCULTAR TEXTO DE BACK EN iOS
         cardStyle: {
-          backgroundColor: "#f9f9f9",
+          backgroundColor: DesignTokens.colors.background.secondary,
         },
       }}
     >

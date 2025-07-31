@@ -1,25 +1,26 @@
 import { StyleSheet } from "react-native";
+import { DesignTokens } from "../../../../styles/designTokens";
 
 const submitButtonStyles = StyleSheet.create({
   button: {
-    backgroundColor: "#3498db",
-    borderRadius: 8,
-    paddingVertical: 16,
+    backgroundColor: DesignTokens.colors.executive.primary,
+    borderRadius: DesignTokens.borderRadius.base,
+    paddingVertical: DesignTokens.spacing.lg,
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 40,
+    marginBottom: DesignTokens.spacing["5xl"],
   },
   buttonDisabled: {
-    backgroundColor: "#bdc3c7",
+    backgroundColor: DesignTokens.colors.neutral[400],
   },
   icon: {
-    marginRight: 8,
+    marginRight: DesignTokens.spacing.sm,
   },
   text: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
+    color: DesignTokens.colors.background.primary,
+    fontSize: DesignTokens.typography.fontSize.base,
+    fontWeight: DesignTokens.typography.fontWeight.semibold as any,
   },
 });
 

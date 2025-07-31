@@ -14,6 +14,7 @@ import { getTabBarIconName } from "./utils/tabBarUtils";
 import { UserRole } from "src/types/auth";
 import ObrasListScreen from "src/modules/obra/screens/ObraListScreen";
 import ServerErrorModal from "src/components/ServerErrorModal";
+import { DesignTokens } from "../styles/designTokens";
 
 // --- Skeletons for role-based screens ---
 const AprobacionAvancesScreen = () => (
@@ -100,8 +101,8 @@ export const AppNavigator = () => {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: "#0366d6",
-        tabBarInactiveTintColor: "gray",
+        tabBarActiveTintColor: DesignTokens.colors.executive.primary, // ✅ COLOR EJECUTIVO
+        tabBarInactiveTintColor: DesignTokens.colors.neutral[400], // ✅ GRIS NEUTRO
         headerShown: false,
       })}
     >
