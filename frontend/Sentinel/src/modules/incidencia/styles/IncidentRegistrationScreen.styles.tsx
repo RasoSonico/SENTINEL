@@ -1,9 +1,29 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Dimensions } from "react-native";
+import { DesignTokens } from "../../../styles/designTokens";
+
+// RESPONSIVE DESIGN UTILITIES
+const { width: screenWidth } = Dimensions.get("window");
+const isTablet = screenWidth >= 768;
+const isSmallPhone = screenWidth < 375;
+
+// RESPONSIVE SPACING
+const getResponsiveSpacing = (base: number) => {
+  if (isTablet) return base * 1.5;
+  if (isSmallPhone) return base * 0.8;
+  return base;
+};
+
+// RESPONSIVE TYPOGRAPHY
+const getResponsiveFontSize = (base: number) => {
+  if (isTablet) return base * 1.2;
+  if (isSmallPhone) return Math.max(base * 0.9, 12);
+  return base;
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: DesignTokens.colors.background.primary,
   },
   keyboardAvoidingView: {
     flex: 1,
@@ -12,70 +32,81 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: DesignTokens.colors.background.primary,
   },
   loadingText: {
-    fontSize: 16,
-    color: "#666",
-    marginTop: 16,
+    marginTop: getResponsiveSpacing(DesignTokens.spacing.lg),
+    fontSize: getResponsiveFontSize(DesignTokens.typography.fontSize.base),
+    color: DesignTokens.colors.neutral[500],
   },
   errorContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 32,
+    paddingHorizontal: getResponsiveSpacing(DesignTokens.spacing["3xl"]),
   },
   errorTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#333",
-    marginTop: 16,
+    fontSize: getResponsiveFontSize(DesignTokens.typography.fontSize.xl),
+    fontWeight: DesignTokens.typography.fontWeight.bold,
+    color: DesignTokens.colors.error[600],
+    marginTop: getResponsiveSpacing(DesignTokens.spacing.lg),
     textAlign: "center",
   },
   errorMessage: {
-    fontSize: 16,
-    color: "#666",
-    marginTop: 8,
+    fontSize: getResponsiveFontSize(DesignTokens.typography.fontSize.base),
+    color: DesignTokens.colors.neutral[600],
+    marginTop: getResponsiveSpacing(DesignTokens.spacing.sm),
     textAlign: "center",
-    lineHeight: 22,
+    lineHeight: DesignTokens.typography.lineHeight.relaxed,
+    maxWidth: 280,
   },
   retryButton: {
-    backgroundColor: "#0366d6",
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginTop: 24,
+    backgroundColor: DesignTokens.colors.primary[500],
+    paddingHorizontal: getResponsiveSpacing(DesignTokens.spacing["2xl"]),
+    paddingVertical: getResponsiveSpacing(DesignTokens.spacing.md),
+    borderRadius: DesignTokens.borderRadius.base,
+    marginTop: getResponsiveSpacing(DesignTokens.spacing["2xl"]),
+    ...DesignTokens.shadows.sm,
   },
   retryButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
+    color: DesignTokens.colors.background.primary,
+    fontSize: getResponsiveFontSize(DesignTokens.typography.fontSize.base),
+    fontWeight: DesignTokens.typography.fontWeight.semibold,
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e9ecef",
+    marginBottom: getResponsiveSpacing(DesignTokens.spacing.xl),
   },
-  cancelButton: {
-    padding: 8,
+  constructionName: {
+    fontSize: getResponsiveFontSize(DesignTokens.typography.fontSize.xl),
+    fontWeight: DesignTokens.typography.fontWeight.bold,
+    marginBottom: getResponsiveSpacing(DesignTokens.spacing.sm),
+    color: DesignTokens.colors.neutral[900],
   },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#333",
+  headerDescription: {
+    fontSize: getResponsiveFontSize(DesignTokens.typography.fontSize.sm),
+    color: DesignTokens.colors.neutral[500],
+    lineHeight:
+      getResponsiveFontSize(DesignTokens.typography.fontSize.sm) *
+      DesignTokens.typography.lineHeight.normal,
   },
-  headerSpacer: {
-    width: 40, // Same width as cancel button to center title
-  },
-  scrollContainer: {
+  contentContainer: {
     flex: 1,
+    padding: getResponsiveSpacing(DesignTokens.spacing.lg),
   },
-  scrollContent: {
-    paddingBottom: 24,
+  infoContainer: {
+    backgroundColor: DesignTokens.colors.neutral[50],
+    padding: getResponsiveSpacing(DesignTokens.spacing.md),
+    borderRadius: DesignTokens.borderRadius.base,
+    marginBottom: getResponsiveSpacing(DesignTokens.spacing.xl),
+    borderLeftWidth: 3,
+    borderLeftColor: DesignTokens.colors.primary[200],
+  },
+  infoText: {
+    fontSize: getResponsiveFontSize(DesignTokens.typography.fontSize.xs),
+    color: DesignTokens.colors.neutral[500],
+    lineHeight:
+      getResponsiveFontSize(DesignTokens.typography.fontSize.xs) * 1.4,
+    marginBottom: getResponsiveSpacing(DesignTokens.spacing.xs),
   },
 });
 

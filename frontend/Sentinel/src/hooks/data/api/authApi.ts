@@ -1,16 +1,11 @@
 import { AxiosError } from "axios";
-import apiClient, { apiRequest } from "../../../services/api/apiClient";
+import apiClient from "../../../services/api/apiClient";
 import { User } from "src/types/auth";
 
 export const authMe = async (): Promise<User> => {
   try {
-    const response = await apiRequest<User>(
-      "get",
-      "/api/usuarios/me",
-      "Error al obtener el rol del usuario"
-    );
-
-    return response;
+    const response = await apiClient.get<User>("/api/usuarios/me");
+    return response.data;
   } catch (error) {
     console.log("authMe | Error fetching user data:", error);
     // Normalize error for React Query consumers

@@ -28,7 +28,7 @@ export const AvanceNavigator: React.FC = () => {
         headerTintColor: DesignTokens.colors.background.primary,
         headerTitleStyle: {
           fontWeight: DesignTokens.typography.fontWeight.bold,
-          fontSize: isTablet ? 20 : 18, // RESPONSIVO
+          fontSize: isTablet ? 28 : 25, // RESPONSIVO
           color: DesignTokens.colors.background.primary,
         },
         headerTitleAlign: "center" as const, // CENTRAR TÍTULO

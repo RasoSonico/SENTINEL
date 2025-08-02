@@ -174,6 +174,27 @@ export const DesignTokens = {
     },
   },
 
+  // Z-INDEX Y ELEVACIÓN
+  zIndex: {
+    modal: 1000,
+    bottomSheet: 900,
+    overlay: 800,
+    fab: 700,
+    header: 100,
+    dropdown: 50,
+    card: 1,
+  },
+
+  elevation: {
+    none: 0,
+    sm: 2,
+    base: 4,
+    md: 8,
+    lg: 12,
+    xl: 16,
+    xxl: 24,
+  },
+
   // COMPONENTES ESPECÍFICOS
   components: {
     card: {
@@ -196,6 +217,15 @@ export const DesignTokens = {
       height: 32,
       borderRadius: 16,
       paddingHorizontal: 12,
+    },
+    bottomSheet: {
+      borderRadius: 20,
+      elevation: 24,
+    },
+    fab: {
+      size: 56,
+      borderRadius: 28,
+      elevation: 8,
     },
   },
 } as const;

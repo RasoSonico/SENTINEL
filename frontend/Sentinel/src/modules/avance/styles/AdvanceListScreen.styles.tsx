@@ -445,7 +445,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
-    elevation: 8,
+    elevation: DesignTokens.elevation.md,
+    zIndex: DesignTokens.zIndex.fab,
   },
   fabIcon: {
     color: DesignTokens.colors.background.primary,

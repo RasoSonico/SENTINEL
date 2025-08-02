@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useCallback, useMemo, memo } from "react";
 import {
   View,
   Text,
@@ -30,6 +30,7 @@ import { Incident } from "../../../types/incidencia";
 import { IncidentListScreenNavigationProp } from "../../../navigation/types";
 import IncidentCard from "../components/IncidentCard";
 import styles from "../styles/IncidentListScreen.styles";
+import { DesignTokens } from "../../../styles/designTokens";
 
 const IncidentListScreen: React.FC = () => {
   const navigation = useNavigation<IncidentListScreenNavigationProp>();
@@ -47,39 +48,52 @@ const IncidentListScreen: React.FC = () => {
 
   const [refreshing, setRefreshing] = useState(false);
 
-  // Cargar catálogos al montar el componente
+  // Cargar datos en paralelo para mejor rendimiento
   useEffect(() => {
-    const loadCatalogs = async () => {
+    const loadInitialData = async () => {
+      const promises = [];
+
+      // Solo cargar si no existen
       if (catalogs.types.items.length === 0) {
-        const typesResult = await dispatch(fetchIncidentTypes());
-        if (fetchIncidentTypes.fulfilled.match(typesResult)) {
-          dispatch(setTypesById(typesResult.payload));
-        }
+        promises.push(
+          dispatch(fetchIncidentTypes()).then((result) => {
+            if (fetchIncidentTypes.fulfilled.match(result)) {
+              dispatch(setTypesById(result.payload));
+            }
+          })
+        );
       }
 
       if (catalogs.classifications.items.length === 0) {
-        const classificationsResult = await dispatch(
-          fetchIncidentClassifications()
+        promises.push(
+          dispatch(fetchIncidentClassifications()).then((result) => {
+            if (fetchIncidentClassifications.fulfilled.match(result)) {
+              dispatch(setClassificationsById(result.payload));
+            }
+          })
         );
-        if (
-          fetchIncidentClassifications.fulfilled.match(classificationsResult)
-        ) {
-          dispatch(setClassificationsById(classificationsResult.payload));
-        }
       }
+
+      // Cargar incidencias en paralelo
+      promises.push(dispatch(fetchIncidents(filters)));
+
+      // Ejecutar todas las promesas en paralelo
+      await Promise.all(promises);
     };
 
-    loadCatalogs();
-  }, [
-    dispatch,
-    catalogs.types.items.length,
-    catalogs.classifications.items.length,
-  ]);
+    loadInitialData();
+  }, [dispatch]);
 
-  // Cargar incidencias al montar y cuando cambien los filtros
+  // Recargar incidencias solo cuando cambien los filtros (no en mount inicial)
   useEffect(() => {
-    dispatch(fetchIncidents(filters));
-  }, [dispatch, filters]);
+    // Skip primera carga que ya se hace en el useEffect anterior
+    if (
+      catalogs.types.items.length > 0 ||
+      catalogs.classifications.items.length > 0
+    ) {
+      dispatch(fetchIncidents(filters));
+    }
+  }, [filters]);
 
   // Función para refrescar la lista
   const onRefresh = useCallback(async () => {
@@ -138,13 +152,54 @@ const IncidentListScreen: React.FC = () => {
 
     return (
       <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color="#0366d6" />
+        <ActivityIndicator
+          size="small"
+          color={DesignTokens.colors.primary[500]}
+        />
         <Text style={styles.footerText}>Cargando más incidencias...</Text>
       </View>
     );
   }, [incidents.loading]);
 
-  // Render del header con filtros
+  // Memoizar chips de filtro para evitar re-renders innecesarios
+  const filterChips = useMemo(() => {
+    return catalogs.classifications.items.map((classification) => ({
+      id: classification.id,
+      name: classification.name,
+      isActive: classificationFilter === classification.id,
+    }));
+  }, [catalogs.classifications.items, classificationFilter]);
+
+  // Componente memoizado para cada chip de filtro
+  const FilterChip = memo(
+    ({
+      id,
+      name,
+      isActive,
+      onPress,
+    }: {
+      id: number;
+      name: string;
+      isActive: boolean;
+      onPress: (id: number) => void;
+    }) => (
+      <TouchableOpacity
+        style={[styles.filterButton, isActive && styles.filterButtonActive]}
+        onPress={() => onPress(id)}
+      >
+        <Text
+          style={[
+            styles.filterButtonText,
+            isActive && styles.filterButtonTextActive,
+          ]}
+        >
+          {name}
+        </Text>
+      </TouchableOpacity>
+    )
+  );
+
+  // Render del header con filtros optimizado
   const renderHeader = useCallback(
     () => (
       <View style={styles.header}>
@@ -169,28 +224,14 @@ const IncidentListScreen: React.FC = () => {
             </Text>
           </TouchableOpacity>
 
-          {catalogs.classifications.items.map((classification) => (
-            <TouchableOpacity
-              key={classification.id}
-              style={[
-                styles.filterButton,
-                classificationFilter === classification.id &&
-                  styles.filterButtonActive,
-              ]}
-              onPress={() =>
-                handleClassificationFilterChange(classification.id)
-              }
-            >
-              <Text
-                style={[
-                  styles.filterButtonText,
-                  classificationFilter === classification.id &&
-                    styles.filterButtonTextActive,
-                ]}
-              >
-                {classification.name}
-              </Text>
-            </TouchableOpacity>
+          {filterChips.map((chip) => (
+            <FilterChip
+              key={chip.id}
+              id={chip.id}
+              name={chip.name}
+              isActive={chip.isActive}
+              onPress={handleClassificationFilterChange}
+            />
           ))}
         </View>
 
@@ -205,7 +246,7 @@ const IncidentListScreen: React.FC = () => {
     ),
     [
       classificationFilter,
-      catalogs.classifications.items,
+      filterChips,
       incidents.total,
       handleClassificationFilterChange,
     ]
@@ -215,7 +256,10 @@ const IncidentListScreen: React.FC = () => {
   if (incidents.loading && incidents.items.length === 0) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0366d6" />
+        <ActivityIndicator
+          size="large"
+          color={DesignTokens.colors.primary[500]}
+        />
         <Text style={styles.loadingText}>Cargando incidencias...</Text>
       </View>
     );
@@ -247,15 +291,17 @@ const IncidentListScreen: React.FC = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={["#0366d6"]}
-            tintColor="#0366d6"
+            colors={[DesignTokens.colors.primary[500]]}
+            tintColor={DesignTokens.colors.primary[500]}
           />
         }
         onEndReached={loadMore}
         onEndReachedThreshold={0.1}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={
-          incidents.items.length === 0 ? styles.emptyContainer : undefined
+          incidents.items.length === 0
+            ? styles.emptyContainer
+            : styles.listContent
         }
         ListEmptyComponent={
           !incidents.loading ? (
@@ -276,7 +322,11 @@ const IncidentListScreen: React.FC = () => {
         onPress={handleNewIncident}
         activeOpacity={0.8}
       >
-        <Ionicons name="add" size={24} color="#fff" />
+        <Ionicons
+          name="add"
+          size={24}
+          color={DesignTokens.colors.background.primary}
+        />
       </TouchableOpacity>
     </SafeAreaView>
   );

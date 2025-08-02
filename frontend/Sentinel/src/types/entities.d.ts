@@ -13,12 +13,16 @@ export interface Construction {
   name: string;
   description: string;
   location: string;
-  budget: number;
+  country?: string;
+  state?: string;
+  client?: string;
+  budget: string; // Cambiado a string para coincidir con la API
+  creation_date?: string;
   start_date: string;
   end_date: string;
-  status: "PLANNING" | "IN_PROGRESS" | "COMPLETED" | "SUSPENDED";
-  created_at: string;
-  updated_at: string;
+  status: "PLANNING" | "IN_PROGRESS" | "COMPLETED" | "SUSPENDED" | "Pending";
+  created_at?: string;
+  updated_at?: string;
 }
 
 // Catálogo

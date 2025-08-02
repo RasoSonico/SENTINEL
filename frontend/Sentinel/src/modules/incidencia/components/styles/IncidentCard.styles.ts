@@ -1,53 +1,118 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Dimensions } from "react-native";
+import { DesignTokens } from "../../../../styles/designTokens";
+
+// RESPONSIVE DESIGN UTILITIES (consistente con AdvanceListScreen)
+const { width: screenWidth } = Dimensions.get("window");
+const isTablet = screenWidth >= 768;
+const isSmallPhone = screenWidth < 375;
+
+// RESPONSIVE SPACING
+const getResponsiveSpacing = (base: number) => {
+  if (isTablet) return base * 1.5;
+  if (isSmallPhone) return base * 0.8;
+  return base;
+};
+
+// RESPONSIVE TYPOGRAPHY
+const getResponsiveFontSize = (base: number) => {
+  if (isTablet) return base * 1.2;
+  if (isSmallPhone) return Math.max(base * 0.9, 12);
+  return base;
+};
 
 const styles = StyleSheet.create({
+  // CARD PRINCIPAL - ESTILO IGUAL A ADVANCELISTSCREEN (SIN MARGIN HORIZONTAL)
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
-    marginHorizontal: 16,
-    marginVertical: 8,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    backgroundColor: DesignTokens.colors.background.primary,
+    borderRadius: getResponsiveSpacing(DesignTokens.borderRadius.md),
+    padding: getResponsiveSpacing(DesignTokens.spacing.lg),
+    marginBottom: getResponsiveSpacing(DesignTokens.spacing.md),
+    ...DesignTokens.shadows.base,
+    borderLeftWidth: 4, // ✅ BORDE LATERAL COMO ADVANCELISTSCREEN
+    // borderLeftColor se asignará dinámicamente
+    minHeight: isTablet ? 140 : 120,
+    // SIN marginHorizontal porque el padding viene del FlatList
   },
+
+  // HEADER SIMILAR A ADVANCELISTSCREEN (MARGIN REDUCIDO)
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
+    alignItems: "flex-start",
+    marginBottom: getResponsiveSpacing(DesignTokens.spacing.sm), // REDUCIDO de md a sm
+    minHeight: isTablet ? 60 : 50,
   },
-  date: {
-    fontSize: 12,
-    color: "#666",
-    fontWeight: "500",
+
+  headerInfo: {
+    flex: 1,
+    marginRight: getResponsiveSpacing(DesignTokens.spacing.sm),
+    minHeight: isTablet ? 50 : 40,
   },
-  typeContainer: {
-    marginBottom: 12,
+
+  // ESTILOS DE DETALLES ELIMINADOS PARA REDUCIR ALTURA DE CARD
+
+  // SECCIÓN DE COMENTARIOS COMO ADVANCELISTSCREEN
+  commentsContainer: {
+    marginBottom: getResponsiveSpacing(DesignTokens.spacing.md),
+    padding: getResponsiveSpacing(DesignTokens.spacing.md),
+    backgroundColor: DesignTokens.colors.neutral[50],
+    borderRadius: getResponsiveSpacing(DesignTokens.borderRadius.sm),
+    borderLeftWidth: 3,
+    borderLeftColor: DesignTokens.colors.primary[200],
+    minHeight: getResponsiveSpacing(50),
   },
-  description: {
-    fontSize: 14,
-    color: "#333",
-    lineHeight: 20,
-    marginBottom: 12,
+
+  commentsLabel: {
+    fontSize: getResponsiveFontSize(DesignTokens.typography.fontSize.xs),
+    color: DesignTokens.colors.neutral[500],
+    marginBottom: getResponsiveSpacing(DesignTokens.spacing.xs),
+    fontWeight: DesignTokens.typography.fontWeight.semibold,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    includeFontPadding: false,
+    lineHeight:
+      getResponsiveFontSize(DesignTokens.typography.fontSize.xs) * 1.3,
   },
-  footer: {
+
+  commentsText: {
+    fontSize: getResponsiveFontSize(DesignTokens.typography.fontSize.sm),
+    color: DesignTokens.colors.neutral[700],
+    includeFontPadding: false,
+    lineHeight:
+      getResponsiveFontSize(DesignTokens.typography.fontSize.sm) * 1.5,
+    minHeight: getResponsiveFontSize(DesignTokens.typography.fontSize.sm) * 1.5,
+    flexWrap: "wrap",
+    flex: 1,
+  },
+
+  // SECCIÓN INFERIOR COMO ADVANCELISTSCREEN
+  bottomSection: {
     flexDirection: "row",
-    justifyContent: "flex-end",
+    justifyContent: "space-between",
     alignItems: "center",
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: "#f0f0f0",
+    marginTop: DesignTokens.spacing.md,
+    paddingTop: DesignTokens.spacing.sm,
   },
-  incidentId: {
-    fontSize: 12,
-    color: "#999",
-    fontWeight: "600",
+
+  statusContainer: {
+    alignItems: "flex-start",
+  },
+
+  dateContainer: {
+    alignItems: "flex-end",
+  },
+
+  dateText: {
+    fontSize: DesignTokens.typography.fontSize.xs,
+    color: DesignTokens.colors.neutral[500],
+    fontWeight: DesignTokens.typography.fontWeight.medium,
+  },
+
+  // ID DE INCIDENCIA EN BOTTOM SECTION
+  incidentIdText: {
+    fontSize: DesignTokens.typography.fontSize.xs,
+    color: DesignTokens.colors.neutral[600],
+    fontWeight: DesignTokens.typography.fontWeight.semibold,
   },
 });
 

@@ -1,43 +1,39 @@
 import { StyleSheet } from "react-native";
+import { DesignTokens } from "../../../../styles/designTokens";
 
 const styles = StyleSheet.create({
   // BottomSheet container styles
   bottomSheetContainer: {
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: -8,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 16,
-    elevation: 16,
+    ...DesignTokens.shadows.lg,
+    elevation: DesignTokens.elevation.xxl,
+    zIndex: DesignTokens.zIndex.bottomSheet,
   },
   bottomSheetBackground: {
-    backgroundColor: "#92a4bdff",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    borderWidth: 2,
-    borderColor: "#92a4bdff",
+    backgroundColor: DesignTokens.colors.background.secondary,
+    borderTopLeftRadius: DesignTokens.components.bottomSheet.borderRadius,
+    borderTopRightRadius: DesignTokens.components.bottomSheet.borderRadius,
+    borderWidth: 1,
+    borderColor: DesignTokens.colors.neutral[300],
   },
   handleIndicator: {
-    backgroundColor: "#C7C7CC",
+    backgroundColor: DesignTokens.colors.neutral[400],
     width: 48,
     height: 4,
-    borderRadius: 2,
+    borderRadius: DesignTokens.borderRadius.sm,
   },
 
   // Content container
   contentContainer: {
-    backgroundColor: "#f3f4f6",
+    backgroundColor: DesignTokens.colors.background.tertiary,
     paddingBottom: 0,
   },
 
   // Header - Ejecutivo con gradiente sutil
   fixedHeader: {
-    backgroundColor: "#c5cfddc7", // Mismo color que el fondo del bottom sheet
+    backgroundColor: DesignTokens.colors.background.secondary,
     paddingHorizontal: 0,
-    borderBottomWidth: 0.5,
-    borderBottomColor: "#E5E5EA", // Línea separadora opcional
+    borderBottomWidth: 1,
+    borderBottomColor: DesignTokens.colors.neutral[200],
   },
   header: {
     paddingHorizontal: 20,
@@ -49,172 +45,176 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#21371fff",
+    fontSize: DesignTokens.typography.fontSize.xl,
+    fontWeight: DesignTokens.typography.fontWeight.bold as any,
+    color: DesignTokens.colors.executive.primary,
     alignItems: "flex-start",
     letterSpacing: -0.5,
     borderBottomWidth: 1,
-    borderBottomColor: "#1F2937",
+    borderBottomColor: DesignTokens.colors.neutral[800],
   },
   subheaderSection: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 1,
-    flexWrap: "nowrap", // Evita que los elementos se envuelvan
+    marginTop: DesignTokens.spacing.xs / 4,
+    flexWrap: "nowrap",
     minHeight: 32,
-    paddingHorizontal: 15,
-    paddingVertical: 8,
+    paddingHorizontal: DesignTokens.spacing.lg,
+    paddingVertical: DesignTokens.spacing.sm,
   },
   statusContainer: {
     alignContent: "center",
     maxWidth: "60%",
-    paddingLeft: 10,
+    paddingLeft: DesignTokens.spacing.sm,
     backgroundColor: "transparent",
-    paddingBottom: 8,
+    paddingBottom: DesignTokens.spacing.sm,
   },
   dateContainer: {
     alignItems: "flex-start",
-    paddingRight: 25,
+    paddingRight: DesignTokens.spacing["2xl"] + DesignTokens.spacing.xs,
     backgroundColor: "transparent",
   },
 
   // Item container - Minimalista
   itemContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
+    paddingHorizontal: DesignTokens.spacing.xl,
+    paddingVertical: DesignTokens.spacing.sm,
     borderBottomWidth: 0.5,
-    borderBottomColor: "#F3F4F6",
-    backgroundColor: "#F3F4F6",
+    borderBottomColor: DesignTokens.colors.background.tertiary,
+    backgroundColor: DesignTokens.colors.background.tertiary,
   },
 
   // Item label - Minimalista
   itemLabel: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: DesignTokens.spacing.sm,
     justifyContent: "flex-start",
   },
   editIconContainer: {
-    padding: 4,
+    padding: DesignTokens.spacing.xs,
     marginLeft: "auto",
   },
   labelText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#6B7280",
-    marginLeft: 10,
+    fontSize: DesignTokens.typography.fontSize.sm,
+    fontWeight: DesignTokens.typography.fontWeight.semibold as any,
+    color: DesignTokens.colors.neutral[500],
+    marginLeft: DesignTokens.spacing.sm,
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
 
   // Values - Minimalista
   valueText: {
-    fontSize: 14,
-    color: "#1F2937",
-    lineHeight: 18,
-    fontWeight: "400",
-    paddingLeft: 32,
+    fontSize: DesignTokens.typography.fontSize.sm,
+    color: DesignTokens.colors.neutral[800],
+    lineHeight:
+      DesignTokens.typography.fontSize.sm *
+      DesignTokens.typography.lineHeight.tight,
+    fontWeight: DesignTokens.typography.fontWeight.normal as any,
+    paddingLeft: DesignTokens.spacing["4xl"] - DesignTokens.spacing.sm,
   },
 
   // Volume specific - Destacado
   volumeValue: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#1F2937",
-    paddingLeft: 32,
-    marginBottom: 8,
+    fontSize: DesignTokens.typography.fontSize.lg,
+    fontWeight: DesignTokens.typography.fontWeight.semibold as any,
+    color: DesignTokens.colors.neutral[800],
+    paddingLeft: DesignTokens.spacing["4xl"] - DesignTokens.spacing.sm,
+    marginBottom: DesignTokens.spacing.sm,
     letterSpacing: -0.5,
   },
   amountValue: {
-    fontSize: 15,
-    color: "#059669",
-    fontWeight: "600",
-    paddingLeft: 32,
+    fontSize: DesignTokens.typography.fontSize.base,
+    color: DesignTokens.colors.success[600],
+    fontWeight: DesignTokens.typography.fontWeight.semibold as any,
+    paddingLeft: DesignTokens.spacing["4xl"] - DesignTokens.spacing.sm,
   },
 
   // Comment specific - Minimalista
   commentText: {
-    fontSize: 15,
-    color: "#6B7280",
-    lineHeight: 20,
-    paddingLeft: 32,
+    fontSize: DesignTokens.typography.fontSize.base,
+    color: DesignTokens.colors.neutral[500],
+    lineHeight:
+      DesignTokens.typography.fontSize.base *
+      DesignTokens.typography.lineHeight.normal,
+    paddingLeft: DesignTokens.spacing["4xl"] - DesignTokens.spacing.sm,
   },
 
   // Status badge - Minimalista
   statusBadge: {
     alignSelf: "flex-start",
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: DesignTokens.spacing.md,
+    paddingVertical: DesignTokens.spacing.xs,
+    borderRadius: DesignTokens.borderRadius.md,
   },
   approvedBadge: {
-    backgroundColor: "#DCFCE7",
+    backgroundColor: DesignTokens.colors.success[50],
   },
   rejectedBadge: {
-    backgroundColor: "#FEE2E2",
+    backgroundColor: DesignTokens.colors.error[50],
   },
   pendingBadge: {
-    backgroundColor: "#FEF3C7",
+    backgroundColor: DesignTokens.colors.warning[50],
   },
 
   // Status text - Minimalista
   statusText: {
-    fontSize: 13,
-    fontWeight: "600",
+    fontSize: DesignTokens.typography.fontSize.xs,
+    fontWeight: DesignTokens.typography.fontWeight.semibold as any,
     textTransform: "capitalize",
   },
   approvedText: {
-    color: "#059669",
+    color: DesignTokens.colors.success[600],
   },
   rejectedText: {
-    color: "#DC2626",
+    color: DesignTokens.colors.error[600],
   },
   pendingText: {
-    color: "#D97706",
+    color: DesignTokens.colors.warning[600],
   },
 
   // Input styles
   volumeInputRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    paddingLeft: 32,
+    gap: DesignTokens.spacing.md,
+    paddingLeft: DesignTokens.spacing["4xl"] - DesignTokens.spacing.sm,
   },
   volumeInput: {
     flex: 1,
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1F2937",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 8,
+    fontSize: DesignTokens.typography.fontSize.base,
+    fontWeight: DesignTokens.typography.fontWeight.semibold as any,
+    color: DesignTokens.colors.neutral[800],
+    paddingVertical: DesignTokens.spacing.sm,
+    paddingHorizontal: DesignTokens.spacing.md,
+    backgroundColor: DesignTokens.colors.background.primary,
+    borderRadius: DesignTokens.borderRadius.base,
     borderWidth: 1,
-    borderColor: "#E5E5EA",
+    borderColor: DesignTokens.colors.neutral[300],
   },
   commentsInput: {
-    fontSize: 15,
-    color: "#6B7280",
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 8,
+    fontSize: DesignTokens.typography.fontSize.base,
+    color: DesignTokens.colors.neutral[500],
+    paddingVertical: DesignTokens.spacing.md,
+    paddingHorizontal: DesignTokens.spacing.md,
+    backgroundColor: DesignTokens.colors.background.primary,
+    borderRadius: DesignTokens.borderRadius.base,
     borderWidth: 1,
-    borderColor: "#E5E5EA",
+    borderColor: DesignTokens.colors.neutral[300],
     minHeight: 80,
     textAlignVertical: "top",
-    marginLeft: 32,
+    marginLeft: DesignTokens.spacing["4xl"] - DesignTokens.spacing.sm,
   },
   inputError: {
-    borderColor: "#e74c3c",
-    backgroundColor: "#FFF5F5",
+    borderColor: DesignTokens.colors.error[500],
+    backgroundColor: DesignTokens.colors.error[50],
   },
   unitText: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#6B7280",
+    fontSize: DesignTokens.typography.fontSize.base,
+    fontWeight: DesignTokens.typography.fontWeight.medium as any,
+    color: DesignTokens.colors.neutral[500],
     minWidth: 40,
   },
 
@@ -222,58 +222,58 @@ const styles = StyleSheet.create({
   errorRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 8,
-    marginLeft: 32,
-    gap: 6,
+    marginTop: DesignTokens.spacing.sm,
+    marginLeft: DesignTokens.spacing["4xl"] - DesignTokens.spacing.sm,
+    gap: DesignTokens.spacing.xs + 2,
   },
   errorText: {
-    fontSize: 14,
-    color: "#e74c3c",
+    fontSize: DesignTokens.typography.fontSize.sm,
+    color: DesignTokens.colors.error[500],
     flex: 1,
   },
   actionButtonsContainer: {
-    backgroundColor: "#F3F4F6",
+    backgroundColor: DesignTokens.colors.background.tertiary,
     borderTopWidth: 0.5,
-    borderTopColor: "#F3F4F6",
-    paddingBottom: 16,
+    borderTopColor: DesignTokens.colors.background.tertiary,
+    paddingBottom: DesignTokens.spacing.lg,
   },
   actionButtons: {
     flexDirection: "row",
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 5,
-    gap: 12,
+    paddingHorizontal: DesignTokens.spacing.xl,
+    paddingTop: DesignTokens.spacing.lg,
+    paddingBottom: DesignTokens.spacing.xs,
+    gap: DesignTokens.spacing.md,
   },
   cancelButton: {
     flex: 1,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    backgroundColor: "#ffffffff",
-    borderRadius: 12,
-    borderColor: "#3B82F6",
+    paddingVertical: DesignTokens.spacing.lg - 2,
+    paddingHorizontal: DesignTokens.spacing.lg,
+    backgroundColor: DesignTokens.colors.background.primary,
+    borderRadius: DesignTokens.borderRadius.md,
+    borderColor: DesignTokens.colors.primary[500],
     borderWidth: 1,
     alignItems: "center",
   },
   cancelButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#007AFF",
+    fontSize: DesignTokens.typography.fontSize.base,
+    fontWeight: DesignTokens.typography.fontWeight.semibold as any,
+    color: DesignTokens.colors.primary[500],
   },
   saveButton: {
     flex: 1,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    backgroundColor: "#007AFF",
-    borderRadius: 12,
+    paddingVertical: DesignTokens.spacing.lg - 2,
+    paddingHorizontal: DesignTokens.spacing.lg,
+    backgroundColor: DesignTokens.colors.executive.primary,
+    borderRadius: DesignTokens.borderRadius.md,
     alignItems: "center",
   },
   saveButtonDisabled: {
-    backgroundColor: "#C7C7CC",
+    backgroundColor: DesignTokens.colors.neutral[400],
   },
   saveButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#FFFFFF",
+    fontSize: DesignTokens.typography.fontSize.base,
+    fontWeight: DesignTokens.typography.fontWeight.semibold as any,
+    color: DesignTokens.colors.background.primary,
   },
 });
 

@@ -1,10 +1,12 @@
-import React from "react";
+import React, { memo, useMemo } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Incident } from "src/types/incidencia";
 import IncidentClassificationBadge from "./IncidentClassificationBadge";
 import IncidentTypeDisplay from "./IncidentTypeDisplay";
+import { useOptimizedIncidentTypeNameById } from "../../../redux/selectors/incidencia/optimizedSelectors";
+import { DesignTokens } from "../../../styles/designTokens";
 import styles from "./styles/IncidentCard.styles";
 
 interface IncidentCardProps {
@@ -12,51 +14,106 @@ interface IncidentCardProps {
   onPress: (incident: Incident) => void;
 }
 
-const IncidentCard: React.FC<IncidentCardProps> = ({ incident, onPress }) => {
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), "dd 'de' MMMM, yyyy", { locale: es });
-    } catch {
-      return dateString;
-    }
-  };
+const IncidentCard: React.FC<IncidentCardProps> = memo(
+  ({ incident, onPress }) => {
+    // Memoizar formateo de fecha para evitar recalcular en cada render
+    const formattedDate = useMemo(() => {
+      try {
+        return format(new Date(incident.date), "dd MMM yyyy", { locale: es });
+      } catch {
+        return incident.date;
+      }
+    }, [incident.date]);
 
-  const truncateDescription = (text: string, maxLength: number = 120) => {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + "...";
-  };
+    // Memoizar truncado de descripción
+    const truncatedDescription = useMemo(() => {
+      const maxLength = 120;
+      if (incident.description.length <= maxLength) return incident.description;
+      return incident.description.substring(0, maxLength) + "...";
+    }, [incident.description]);
 
-  return (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => onPress(incident)}
-      activeOpacity={0.7}
-    >
-      {/* Header with classification badge */}
-      <View style={styles.header}>
-        <IncidentClassificationBadge
-          classificationId={incident.clasification}
-          size="small"
-        />
-        <Text style={styles.date}>{formatDate(incident.date)}</Text>
-      </View>
+    // Hook para obtener el nombre del tipo
+    const typeName = useOptimizedIncidentTypeNameById(incident.type);
 
-      {/* Type display */}
-      <View style={styles.typeContainer}>
-        <IncidentTypeDisplay typeId={incident.type} size="medium" />
-      </View>
+    // Función para obtener color del borde lateral según tipo de incidencia
+    const getIncidentBorderColor = useMemo(() => {
+      const lowerTypeName = typeName.toLowerCase();
 
-      {/* Description */}
-      <Text style={styles.description}>
-        {truncateDescription(incident.description)}
-      </Text>
+      // Colores según el tipo de incidencia (similar a IncidentTypeDisplay)
+      if (
+        lowerTypeName.includes("accidente") ||
+        lowerTypeName.includes("lesión")
+      ) {
+        return DesignTokens.colors.error[500]; // Rojo para accidentes
+      } else if (lowerTypeName.includes("seguridad")) {
+        return DesignTokens.colors.warning[500]; // Amarillo para seguridad
+      } else if (
+        lowerTypeName.includes("material") ||
+        lowerTypeName.includes("equipo")
+      ) {
+        return DesignTokens.colors.primary[500]; // Azul para material/equipo
+      } else if (lowerTypeName.includes("ambiental")) {
+        return DesignTokens.colors.success[500]; // Verde para ambiental
+      } else if (lowerTypeName.includes("calidad")) {
+        return DesignTokens.colors.primary[600]; // Azul oscuro para calidad
+      } else {
+        return DesignTokens.colors.neutral[400]; // Gris por defecto
+      }
+    }, [typeName]);
 
-      {/* Footer with incident ID */}
-      <View style={styles.footer}>
-        <Text style={styles.incidentId}>Incidencia #{incident.id}</Text>
-      </View>
-    </TouchableOpacity>
-  );
-};
+    // Memoizar handler para evitar recreación
+    const handlePress = useMemo(
+      () => () => onPress(incident),
+      [onPress, incident]
+    );
+
+    return (
+      <TouchableOpacity
+        style={[
+          styles.card,
+          { borderLeftColor: getIncidentBorderColor }, // ✅ BORDE LATERAL DINÁMICO
+        ]}
+        onPress={handlePress}
+        activeOpacity={0.7}
+      >
+        {/* Header similar a AdvanceListScreen */}
+        <View style={styles.header}>
+          <View style={styles.headerInfo}>
+            <IncidentTypeDisplay typeId={incident.type} size="medium" />
+          </View>
+
+          {/* Chip de clasificación con colores como IncidentRegistrationScreen */}
+          <IncidentClassificationBadge
+            classificationId={incident.clasification}
+            size="small"
+          />
+        </View>
+
+        {/* Sección eliminada para reducir altura de card */}
+
+        {/* Sección de comentarios como AdvanceListScreen */}
+        {incident.description && (
+          <View style={styles.commentsContainer}>
+            <Text style={styles.commentsLabel}>Descripción:</Text>
+            <Text style={styles.commentsText} numberOfLines={2}>
+              {truncatedDescription}
+            </Text>
+          </View>
+        )}
+
+        {/* Sección inferior como AdvanceListScreen */}
+        <View style={styles.bottomSection}>
+          <View style={styles.statusContainer}>
+            <Text style={styles.incidentIdText}>Incidencia #{incident.id}</Text>
+          </View>
+
+          <View style={styles.dateContainer}>
+            <Text style={styles.dateText}>{formattedDate}</Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  }
+);
 
 export default IncidentCard;

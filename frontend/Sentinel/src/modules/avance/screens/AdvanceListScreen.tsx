@@ -128,7 +128,7 @@ const AdvanceListScreen: React.FC = () => {
   useEffect(() => {
     if (assignedConstruction) {
       navigation.setOptions({
-        title: `Avances: ${assignedConstruction.name}`,
+        title: `Avances`, //contemplar agregar: ${assignedConstruction.name}
       });
     }
   }, [assignedConstruction, navigation]);
@@ -605,14 +605,16 @@ const AdvanceListScreen: React.FC = () => {
         onAdvanceUpdated={handleAdvanceUpdated}
       />
 
-      {/* FLOATING ACTION BUTTON */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={handleAddAdvance}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="add" size={24} style={styles.fabIcon} />
-      </TouchableOpacity>
+      {/* FLOATING ACTION BUTTON - Solo visible cuando NO hay bottom sheet */}
+      {!isBottomSheetVisible && (
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={handleAddAdvance}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="add" size={24} style={styles.fabIcon} />
+        </TouchableOpacity>
+      )}
     </SafeAreaView>
   );
 };

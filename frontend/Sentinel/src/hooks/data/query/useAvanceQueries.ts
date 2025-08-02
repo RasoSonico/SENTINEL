@@ -106,8 +106,8 @@ export const useAssignedConstruction = (role: string = "CONTRATISTA") =>
   useQuery({
     queryKey: ["assignedConstruction", role],
     queryFn: () => getAssignedConstruction(role),
-    staleTime: 5 * 60 * 1000, // 5 minutos
-    gcTime: 10 * 60 * 1000, // 10 minutos
+    staleTime: 30 * 60 * 1000, // 30 minutos - datos que no cambian frecuentemente
+    gcTime: 60 * 60 * 1000, // 1 hora - mantener en caché más tiempo
   });
 
 /**

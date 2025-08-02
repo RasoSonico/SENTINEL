@@ -1,6 +1,7 @@
-import React from "react";
+import React, { memo, useMemo } from "react";
 import { View, Text } from "react-native";
-import { useIncidentClassificationNameById } from "src/redux/selectors/incidencia/incidenciaFormDataSelectors";
+import { useOptimizedIncidentClassificationNameById } from "src/redux/selectors/incidencia/optimizedSelectors";
+import { DesignTokens } from "../../../styles/designTokens";
 import styles from "./styles/IncidentClassificationBadge.styles";
 
 interface IncidentClassificationBadgeProps {
@@ -8,47 +9,84 @@ interface IncidentClassificationBadgeProps {
   size?: "small" | "medium" | "large";
 }
 
-const IncidentClassificationBadge: React.FC<
-  IncidentClassificationBadgeProps
-> = ({ classificationId, size = "medium" }) => {
-  const classificationName =
-    useIncidentClassificationNameById(classificationId);
+// Cache global para colores de clasificación
+const colorCache = new Map<
+  string,
+  { backgroundColor: string; color: string }
+>();
 
-  // Define colors based on classification name (you can customize these)
-  const getClassificationColor = (name: string) => {
-    const lowerName = name.toLowerCase();
-    if (lowerName.includes("crítica") || lowerName.includes("critica")) {
-      return { backgroundColor: "#e74c3c", color: "#fff" };
-    }
-    if (lowerName.includes("alta")) {
-      return { backgroundColor: "#f39c12", color: "#fff" };
-    }
-    if (lowerName.includes("media")) {
-      return { backgroundColor: "#3498db", color: "#fff" };
-    }
-    if (lowerName.includes("baja")) {
-      return { backgroundColor: "#2ecc71", color: "#fff" };
-    }
-    // Default color
-    return { backgroundColor: "#95a5a6", color: "#fff" };
-  };
+// MISMO SISTEMA DE COLORES QUE INCIDENTREGISTRATIONSCREEN
+const getClassificationColor = (name: string) => {
+  if (!colorCache.has(name)) {
+    const normalizedName = name.toLowerCase().trim();
+    let color;
 
-  const colors = getClassificationColor(classificationName);
-  const sizeStyle = styles[size];
-
-  return (
-    <View
-      style={[
-        styles.badge,
-        sizeStyle,
-        { backgroundColor: colors.backgroundColor },
-      ]}
-    >
-      <Text style={[styles.text, sizeStyle, { color: colors.color }]}>
-        {classificationName}
-      </Text>
-    </View>
-  );
+    // Muy Crítica → Rojo (error[600])
+    if (
+      normalizedName.includes("muy crítica") ||
+      normalizedName.includes("muy critica")
+    ) {
+      color = {
+        backgroundColor: DesignTokens.colors.error[600],
+        color: DesignTokens.colors.background.primary,
+      };
+    }
+    // No Crítica → Verde (success[600])
+    else if (
+      normalizedName.includes("no crítica") ||
+      normalizedName.includes("no critica")
+    ) {
+      color = {
+        backgroundColor: DesignTokens.colors.success[600],
+        color: DesignTokens.colors.background.primary,
+      };
+    }
+    // Crítica → Amarillo/Naranja (warning[600])
+    else if (
+      normalizedName.includes("crítica") ||
+      normalizedName.includes("critica")
+    ) {
+      color = {
+        backgroundColor: DesignTokens.colors.warning[600],
+        color: DesignTokens.colors.background.primary,
+      };
+    } else {
+      // Color por defecto
+      color = {
+        backgroundColor: DesignTokens.colors.primary[500],
+        color: DesignTokens.colors.background.primary,
+      };
+    }
+    colorCache.set(name, color);
+  }
+  return colorCache.get(name)!;
 };
+
+const IncidentClassificationBadge: React.FC<IncidentClassificationBadgeProps> =
+  memo(({ classificationId, size = "medium" }) => {
+    const classificationName =
+      useOptimizedIncidentClassificationNameById(classificationId);
+
+    // Memoizar cálculo de colores
+    const colors = useMemo(
+      () => getClassificationColor(classificationName),
+      [classificationName]
+    );
+    const sizeStyle = useMemo(() => styles[size], [size]);
+
+    return (
+      <View
+        style={[
+          styles.badge,
+          sizeStyle,
+          { backgroundColor: colors.backgroundColor },
+        ]}
+      >
+        <Text style={[styles.text, sizeStyle, { color: colors.color }]}>
+          {classificationName}
+        </Text>
+      </View>
+    );
+  });
 
 export default IncidentClassificationBadge;
