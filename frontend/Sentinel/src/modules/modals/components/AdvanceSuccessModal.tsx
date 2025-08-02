@@ -3,6 +3,7 @@ import { Modal, View, Text, TouchableOpacity, Dimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import styles from "./styles/AdvanceSuccessModal.styles";
 import { BaseModalProps } from "../modalTypes";
+import { DesignTokens } from "../../../styles/designTokens";
 
 export interface AdvanceSuccessModalProps extends BaseModalProps {
   onRegisterAnother: () => void;
@@ -29,7 +30,7 @@ const AdvanceSuccessModal: React.FC<AdvanceSuccessModalProps> = ({
           <Ionicons
             name="checkmark-circle"
             size={64}
-            color="#4BB543"
+            color={DesignTokens.colors.success[500]}
             style={styles.icon}
           />
           <Text style={styles.title}>¡Avance registrado!</Text>

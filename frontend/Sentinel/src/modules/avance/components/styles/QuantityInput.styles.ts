@@ -1,48 +1,51 @@
 import { StyleSheet } from "react-native";
+import { DesignTokens } from "../../../../styles/designTokens";
 
 const quantityInputStyles = StyleSheet.create({
   container: {
-    marginBottom: 8,
+    marginBottom: DesignTokens.spacing.sm,
   },
   label: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 4,
+    fontSize: DesignTokens.typography.fontSize.base,
+    fontWeight: DesignTokens.typography.fontWeight.semibold as any,
+    marginBottom: DesignTokens.spacing.xs,
+    color: DesignTokens.colors.neutral[900],
   },
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: DesignTokens.spacing.sm,
   },
   input: {
     flexGrow: 1,
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    backgroundColor: "#fff",
+    borderColor: DesignTokens.colors.neutral[300],
+    borderRadius: DesignTokens.borderRadius.base,
+    paddingHorizontal: DesignTokens.spacing.md,
+    backgroundColor: DesignTokens.colors.background.primary,
     height: 48,
-    fontSize: 16,
+    fontSize: DesignTokens.typography.fontSize.base,
+    color: DesignTokens.colors.neutral[900],
   },
   unitInput: {
-    color: "#7f8c8d",
-    backgroundColor: "#ecf0f1",
-    borderRadius: 8,
-    paddingHorizontal: 12,
+    color: DesignTokens.colors.neutral[500],
+    backgroundColor: DesignTokens.colors.background.secondary,
+    borderRadius: DesignTokens.borderRadius.base,
+    paddingHorizontal: DesignTokens.spacing.md,
     width: 120,
     height: 48,
-    fontSize: 16,
+    fontSize: DesignTokens.typography.fontSize.base,
   },
   errorRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 4,
-    gap: 4,
+    marginTop: DesignTokens.spacing.xs,
+    gap: DesignTokens.spacing.xs,
   },
   errorText: {
-    color: "#e74c3c",
-    fontSize: 12,
-    fontWeight: "500",
+    color: DesignTokens.colors.error[500],
+    fontSize: DesignTokens.typography.fontSize.xs,
+    fontWeight: DesignTokens.typography.fontWeight.medium as any,
   },
 });
 

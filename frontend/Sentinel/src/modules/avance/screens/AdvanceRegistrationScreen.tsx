@@ -7,6 +7,7 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
+import { DesignTokens } from "../../../styles/designTokens";
 import { RouteProp, useRoute, useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import NetInfo from "@react-native-community/netinfo";
@@ -52,7 +53,7 @@ const AdvanceRegistrationScreen: React.FC = () => {
         <Ionicons
           name="help-circle-outline"
           size={24}
-          color="#3498db"
+          color={DesignTokens.colors.primary[400]}
           style={{ marginRight: 16 }}
           onPress={showHelp}
         />
@@ -89,11 +90,12 @@ const AdvanceRegistrationScreen: React.FC = () => {
       "Ayuda - Registro de avances",
       "Esta pantalla te permite registrar avances en conceptos de obra. " +
         "Para registrar un avance, sigue estos pasos:\n\n" +
-        "1. Selecciona el concepto que deseas reportar\n" +
-        "2. Ingresa la cantidad ejecutada\n" +
-        "3. Toma al menos una foto como evidencia\n" +
-        "4. Añade notas si es necesario\n" +
-        '5. Presiona "Registrar avance"\n\n' +
+        "1. Selecciona el catálogo y la partida que deseas reportar\n" +
+        "2. Selecciona el concepto\n" +
+        "3. Ingresa la cantidad ejecutada\n" +
+        "4. Toma al menos una foto como evidencia\n" +
+        "5. Añade comentarios si es necesario\n" +
+        '6. Presiona "Registrar avance"\n\n' +
         "Si estás sin conexión, el avance se guardará localmente y se sincronizará automáticamente cuando recuperes la conexión.",
       [{ text: "Entendido", style: "default" }]
     );
@@ -107,7 +109,10 @@ const AdvanceRegistrationScreen: React.FC = () => {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#3498db" />
+        <ActivityIndicator
+          size="large"
+          color={DesignTokens.colors.executive.primary}
+        />
         <Text style={styles.loadingText}>Cargando...</Text>
       </View>
     );
@@ -136,35 +141,38 @@ const AdvanceRegistrationScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f9f9f9",
+    backgroundColor: DesignTokens.colors.background.primary,
   },
   contentContainer: {
     flex: 1,
-    padding: 16,
+    padding: DesignTokens.spacing.lg,
   },
   headerContainer: {
-    marginBottom: 24,
+    marginBottom: DesignTokens.spacing.xl,
   },
   constructionName: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 8,
+    fontSize: DesignTokens.typography.fontSize.xl,
+    fontWeight: DesignTokens.typography.fontWeight.bold as any,
+    marginBottom: DesignTokens.spacing.sm,
+    color: DesignTokens.colors.neutral[900],
   },
   headerDescription: {
-    fontSize: 14,
-    color: "#7f8c8d",
-    lineHeight: 20,
+    fontSize: DesignTokens.typography.fontSize.sm,
+    color: DesignTokens.colors.neutral[500],
+    lineHeight:
+      DesignTokens.typography.fontSize.sm *
+      DesignTokens.typography.lineHeight.normal,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f9f9f9",
+    backgroundColor: DesignTokens.colors.background.primary,
   },
   loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: "#7f8c8d",
+    marginTop: DesignTokens.spacing.lg,
+    fontSize: DesignTokens.typography.fontSize.base,
+    color: DesignTokens.colors.neutral[500],
   },
 });
 

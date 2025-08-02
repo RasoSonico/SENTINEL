@@ -4,6 +4,7 @@ import {
   getConcepts,
   getPartidas,
   submitAdvance,
+  updateAdvance,
   getAdvancesByCatalog,
   getAssignedConstruction,
   getCatalogsByConstruction as getCatalogsByConstructionApi,
@@ -77,6 +78,25 @@ export const useSubmitAdvance = () =>
     mutationFn: (advance: SubmitAdvance) => submitAdvance(advance),
   });
 
+/**
+ * Hook para editar un avance existente
+ */
+export const useUpdateAdvance = () =>
+  useMutation({
+    mutationKey: ["updateAdvance"],
+    mutationFn: ({
+      advanceId,
+      updates,
+    }: {
+      advanceId: number;
+      updates: {
+        volume?: string;
+        comments?: string;
+        status?: "PENDING" | "APPROVED" | "REJECTED";
+      };
+    }) => updateAdvance(advanceId, updates),
+  });
+
 // Nuevas queries para AdvanceListScreen
 
 /**
@@ -86,8 +106,8 @@ export const useAssignedConstruction = (role: string = "CONTRATISTA") =>
   useQuery({
     queryKey: ["assignedConstruction", role],
     queryFn: () => getAssignedConstruction(role),
-    staleTime: 5 * 60 * 1000, // 5 minutos
-    gcTime: 10 * 60 * 1000, // 10 minutos
+    staleTime: 30 * 60 * 1000, // 30 minutos - datos que no cambian frecuentemente
+    gcTime: 60 * 60 * 1000, // 1 hora - mantener en caché más tiempo
   });
 
 
@@ -99,27 +119,34 @@ export const useAdvancesByCatalog = ({
   status,
   page = 1,
   pageSize = 20,
+  detailed = true,
+  ordering = "-date", // Por defecto: más recientes primero
 }: {
   catalogId: number | null;
   status?: "PENDING" | "APPROVED" | "REJECTED";
   page?: number;
   pageSize?: number;
+  detailed?: boolean;
+  ordering?: string;
 }) => {
-  console.log("🔍 [QUERY] useAdvancesByCatalog called with:", { catalogId, status, page, pageSize });
-  console.log("🔍 [QUERY] Query enabled:", !!catalogId);
-  
   return useQuery({
-    queryKey: ["advancesByCatalog", catalogId, status, page, pageSize],
+    queryKey: ["advancesByCatalog", catalogId, status, page, pageSize, detailed, ordering],
     queryFn: () => {
-      console.log("🔍 [QUERY] Executing getAdvancesByCatalog with catalogId:", catalogId);
       return getAdvancesByCatalog({ 
         catalogId: catalogId!, 
         status, 
         page, 
-        pageSize 
+        pageSize,
+        detailed,
+        ordering
       });
     },
     enabled: !!catalogId,
     staleTime: 2 * 60 * 1000, // 2 minutos para datos más frescos
   });
 };
+
+
+// useConceptsByIds ya no es necesario con detailed=true
+// La información viene directamente en los avances
+

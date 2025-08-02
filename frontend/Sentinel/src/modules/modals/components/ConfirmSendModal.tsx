@@ -10,6 +10,7 @@ import {
 import { Checkbox } from "react-native-paper";
 import styles from "./styles/ConfirmSendModal.styles";
 import { BaseModalProps } from "../modalTypes";
+import { DesignTokens } from "../../../styles/designTokens";
 
 export interface ConfirmSendModalProps extends BaseModalProps {
   onEdit: () => void;
@@ -65,7 +66,7 @@ const ConfirmSendModal: React.FC<ConfirmSendModalProps> = ({
           <View style={styles.checkboxContainer} onTouchEnd={() => setChecked(!checked)}>
             <Checkbox
               status={checked ? "checked" : "unchecked"}
-              color="#3498db"
+              color={DesignTokens.colors.executive.primary}
             />
             <Text style={styles.checkboxLabel}>
               Confirmo que los datos son correctos y decido enviar los avances
@@ -88,7 +89,7 @@ const ConfirmSendModal: React.FC<ConfirmSendModalProps> = ({
             </TouchableOpacity>
           </View>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <Text style={{ fontSize: 22, color: "#888" }}>×</Text>
+            <Text style={{ fontSize: 22, color: DesignTokens.colors.neutral[400] }}>×</Text>
           </TouchableOpacity>
         </View>
       </View>

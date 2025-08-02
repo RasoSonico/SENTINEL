@@ -15,7 +15,29 @@ const QuantityInput: React.FC<QuantityInputProps> = ({
   onChange,
   unit,
   error,
-}) => (
+}) => {
+  // Función para validar y formatear el input en tiempo real
+  const handleQuantityChange = (value: string) => {
+    // Permitir solo números y un punto decimal
+    const numericValue = value.replace(/[^0-9.]/g, '');
+    
+    // Evitar múltiples puntos decimales
+    const parts = numericValue.split('.');
+    if (parts.length > 2) {
+      return; // No hacer nada si hay más de un punto
+    }
+    
+    // Limitar a 2 decimales
+    if (parts.length === 2 && parts[1].length > 2) {
+      const limitedValue = parts[0] + '.' + parts[1].substring(0, 2);
+      onChange(limitedValue);
+      return;
+    }
+    
+    onChange(numericValue);
+  };
+
+  return (
   <View style={styles.container}>
     <Text style={styles.label}>Volumen ejecutado</Text>
     <View style={styles.inputRow}>
@@ -23,7 +45,7 @@ const QuantityInput: React.FC<QuantityInputProps> = ({
         style={styles.input}
         placeholder="Volumen"
         value={quantity}
-        onChangeText={onChange}
+        onChangeText={handleQuantityChange}
         keyboardType="numeric"
       />
       <TextInput
@@ -40,6 +62,7 @@ const QuantityInput: React.FC<QuantityInputProps> = ({
       </View>
     )}
   </View>
-);
+  );
+};
 
 export default QuantityInput;

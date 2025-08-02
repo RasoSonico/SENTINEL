@@ -1,21 +1,73 @@
 // src/modules/profile/screens/PerfilScreen.tsx
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import React, { useMemo } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  ScrollView,
+  SafeAreaView,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { Avatar, Card, Chip } from "react-native-paper";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { logout } from "../../redux/slices/authSlice";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   selectUserName,
   selectUserEmail,
+  selectUser,
 } from "../../redux/selectors/authSelectors";
 import { useAuth } from "../../hooks/useAuth";
+import { useAssignedConstruction } from "../../hooks/data/query/useAvanceQueries";
+import { DesignTokens, ColorUtils } from "../../styles/designTokens";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 const PerfilScreen = () => {
   const dispatch = useAppDispatch();
   const auth = useAuth();
+  const user = useAppSelector(selectUser);
   const userName = useAppSelector(selectUserName) || "Usuario";
   const userEmail = useAppSelector(selectUserEmail) || "usuario@ejemplo.com";
+
+  // Obtener construcción asignada con caché extendido
+  const { data: assignedConstruction, isLoading: loadingConstruction } =
+    useAssignedConstruction();
+
+  // Generar iniciales para el avatar
+  const userInitials = useMemo(() => {
+    if (!userName || userName === "Usuario") return "U";
+    return userName
+      .split(" ")
+      .map((name) => name.charAt(0).toUpperCase())
+      .slice(0, 2)
+      .join("");
+  }, [userName]);
+
+  // Obtener rol principal
+  const primaryRole = useMemo(() => {
+    if (!user?.roles || user.roles.length === 0) return "Sin rol";
+    const roleMap = {
+      CONTRATISTA: "Contratista",
+      INSPECTOR: "Inspector",
+      DESARROLLADOR: "Desarrollador",
+      INVERSIONISTA: "Inversionista",
+      ADMIN: "Administrador",
+    };
+    return roleMap[user.roles[0]] || user.roles[0];
+  }, [user?.roles]);
+
+  // Calcular métricas básicas (mock data por ahora)
+  const userStats = useMemo(() => {
+    // TODO: Estos datos vendrán de una API optimizada en el futuro
+    return {
+      totalAdvances: 0, // Será calculado
+      photosThisWeek: 0, // Será calculado
+      workingSince: new Date(2024, 0, 15), // Será obtenido de la API
+    };
+  }, []);
 
   const handleLogout = async () => {
     Alert.alert(
@@ -54,142 +106,372 @@ const PerfilScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.avatarContainer}>
-          <Ionicons name="person-circle" size={100} color="#0366d6" />
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Header con información del usuario */}
+        <View style={styles.header}>
+          <Avatar.Text
+            size={100}
+            label={userInitials}
+            style={styles.avatar}
+            labelStyle={styles.avatarLabel}
+          />
+          <Text style={styles.userName}>{userName}</Text>
+          <Text style={styles.userEmail}>{userEmail}</Text>
+          <Chip
+            mode="outlined"
+            style={styles.roleChip}
+            textStyle={styles.roleChipText}
+          >
+            {primaryRole}
+          </Chip>
         </View>
-        <Text style={styles.userName}>{userName}</Text>
-        <Text style={styles.userEmail}>{userEmail}</Text>
-      </View>
 
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>Información de la Cuenta</Text>
+        {/* Obra Asignada */}
+        {assignedConstruction && (
+          <Card style={styles.constructionCard}>
+            <Card.Content>
+              <View style={styles.cardHeader}>
+                <Ionicons
+                  name="business"
+                  size={24}
+                  color={DesignTokens.colors.construction}
+                />
+                <Text style={styles.cardTitle}>Obra Activa</Text>
+              </View>
 
-        <TouchableOpacity style={styles.menuItem}>
-          <Ionicons name="person-outline" size={24} color="#666" />
-          <Text style={styles.menuItemText}>Editar Perfil</Text>
-          <Ionicons name="chevron-forward" size={20} color="#999" />
-        </TouchableOpacity>
+              <Text style={styles.constructionName}>
+                {assignedConstruction.name}
+              </Text>
 
-        <TouchableOpacity style={styles.menuItem}>
-          <Ionicons name="notifications-outline" size={24} color="#666" />
-          <Text style={styles.menuItemText}>Notificaciones</Text>
-          <Ionicons name="chevron-forward" size={20} color="#999" />
-        </TouchableOpacity>
+              {/* Ubicación */}
+              <View style={styles.infoRow}>
+                <Ionicons
+                  name="location-outline"
+                  size={16}
+                  color={DesignTokens.colors.neutral[500]}
+                />
+                <Text style={styles.infoText}>
+                  {assignedConstruction.location}, {assignedConstruction.state}
+                </Text>
+              </View>
 
-        <TouchableOpacity style={styles.menuItem}>
-          <Ionicons name="shield-checkmark-outline" size={24} color="#666" />
-          <Text style={styles.menuItemText}>Privacidad y Seguridad</Text>
-          <Ionicons name="chevron-forward" size={20} color="#999" />
-        </TouchableOpacity>
-      </View>
+              {/* Cliente */}
+              {assignedConstruction.client && (
+                <View style={styles.infoRow}>
+                  <Ionicons
+                    name="people-outline"
+                    size={16}
+                    color={DesignTokens.colors.neutral[500]}
+                  />
+                  <Text style={styles.infoText}>
+                    Cliente: {assignedConstruction.client}
+                  </Text>
+                </View>
+              )}
 
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>Preferencias</Text>
+              {/* Fechas y Presupuesto */}
+              <View style={styles.detailsContainer}>
+                <View style={styles.detailItem}>
+                  <Text style={styles.detailLabel}>Inicio</Text>
+                  <Text style={styles.detailValue}>
+                    {assignedConstruction.start_date
+                      ? format(
+                          new Date(assignedConstruction.start_date),
+                          "dd MMM yyyy",
+                          { locale: es }
+                        )
+                      : "No definido"}
+                  </Text>
+                </View>
 
-        <TouchableOpacity style={styles.menuItem}>
-          <Ionicons name="settings-outline" size={24} color="#666" />
-          <Text style={styles.menuItemText}>Configuración</Text>
-          <Ionicons name="chevron-forward" size={20} color="#999" />
-        </TouchableOpacity>
+                <View style={styles.detailItem}>
+                  <Text style={styles.detailLabel}>Fin</Text>
+                  <Text style={styles.detailValue}>
+                    {assignedConstruction.end_date
+                      ? format(
+                          new Date(assignedConstruction.end_date),
+                          "dd MMM yyyy",
+                          { locale: es }
+                        )
+                      : "No definido"}
+                  </Text>
+                </View>
 
-        <TouchableOpacity style={styles.menuItem}>
-          <Ionicons name="help-circle-outline" size={24} color="#666" />
-          <Text style={styles.menuItemText}>Ayuda y Soporte</Text>
-          <Ionicons name="chevron-forward" size={20} color="#999" />
-        </TouchableOpacity>
+                <View style={styles.detailItem}>
+                  <Text style={styles.detailLabel}>Presupuesto</Text>
+                  <Text style={styles.detailValue}>
+                    {assignedConstruction.budget
+                      ? `$${(
+                          parseFloat(assignedConstruction.budget) / 1000000
+                        ).toFixed(2)} M`
+                      : "No definido"}
+                  </Text>
+                </View>
+              </View>
+            </Card.Content>
+          </Card>
+        )}
+
+        {/* Métricas de Actividad - COMENTADO POR AHORA */}
+        {/* 
+        <Card style={styles.statsCard}>
+          <Card.Content>
+            <View style={styles.cardHeader}>
+              <Ionicons 
+                name="stats-chart" 
+                size={24} 
+                color={DesignTokens.colors.advance} 
+              />
+              <Text style={styles.cardTitle}>Mi Actividad</Text>
+            </View>
+            
+            <View style={styles.statsRow}>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{userStats.totalAdvances}</Text>
+                <Text style={styles.statLabel}>Avances</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{userStats.photosThisWeek}</Text>
+                <Text style={styles.statLabel}>Fotos esta semana</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>
+                  {format(userStats.workingSince, "MMM yyyy", { locale: es })}
+                </Text>
+                <Text style={styles.statLabel}>Trabajando desde</Text>
+              </View>
+            </View>
+          </Card.Content>
+        </Card>
+        */}
+
+        {/* Opciones de Cuenta */}
+        <Card style={styles.menuCard}>
+          <Card.Content>
+            <Text style={styles.cardTitle}>Configuración</Text>
+
+            <TouchableOpacity style={styles.menuItem}>
+              <Ionicons
+                name="person-outline"
+                size={24}
+                color={DesignTokens.colors.neutral[600]}
+              />
+              <Text style={styles.menuItemText}>Editar Perfil</Text>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={DesignTokens.colors.neutral[400]}
+              />
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.menuItem}>
+              <Ionicons
+                name="notifications-outline"
+                size={24}
+                color={DesignTokens.colors.neutral[600]}
+              />
+              <Text style={styles.menuItemText}>Notificaciones</Text>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={DesignTokens.colors.neutral[400]}
+              />
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.menuItem}>
+              <Ionicons
+                name="help-circle-outline"
+                size={24}
+                color={DesignTokens.colors.neutral[600]}
+              />
+              <Text style={styles.menuItemText}>Ayuda y Soporte</Text>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={DesignTokens.colors.neutral[400]}
+              />
+            </TouchableOpacity>
+          </Card.Content>
+        </Card>
+
+        {/* Botón de Logout */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={24} color="#FFF" />
           <Text style={styles.logoutText}>Cerrar Sesión</Text>
         </TouchableOpacity>
-      </View>
 
-      {/* Botón de Logout */}
-
-      <Text style={styles.versionText}>SENTINEL v1.0.0</Text>
-    </View>
+        <Text style={styles.versionText}>SENTINEL v1.0.0</Text>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F7FA",
+    backgroundColor: DesignTokens.colors.background.secondary,
+  },
+  scrollContent: {
+    paddingBottom: DesignTokens.spacing.xl,
   },
   header: {
     alignItems: "center",
-    padding: 20,
-    backgroundColor: "#FFFFFF",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
+    paddingTop: DesignTokens.spacing["4xl"],
+    paddingHorizontal: DesignTokens.spacing["2xl"],
+    paddingBottom: DesignTokens.spacing["2xl"],
+    backgroundColor: DesignTokens.colors.background.primary,
+    marginBottom: DesignTokens.spacing.lg,
   },
-  avatarContainer: {
-    marginBottom: 12,
+  avatar: {
+    backgroundColor: DesignTokens.colors.executive.primary,
+    marginBottom: DesignTokens.spacing.md,
+  },
+  avatarLabel: {
+    fontSize: DesignTokens.typography.fontSize["2xl"],
+    fontWeight: DesignTokens.typography.fontWeight.bold,
+    color: DesignTokens.colors.background.primary,
   },
   userName: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 4,
+    fontSize: DesignTokens.typography.fontSize["2xl"],
+    fontWeight: DesignTokens.typography.fontWeight.bold,
+    color: DesignTokens.colors.neutral[900],
+    marginBottom: DesignTokens.spacing.xs,
   },
   userEmail: {
-    fontSize: 16,
-    color: "#666",
+    fontSize: DesignTokens.typography.fontSize.base,
+    color: DesignTokens.colors.neutral[600],
+    marginBottom: DesignTokens.spacing.sm,
   },
-  sectionContainer: {
-    marginTop: 20,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 16,
-    marginHorizontal: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+  roleChip: {
+    borderColor: DesignTokens.colors.executive.primary,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 16,
+  roleChipText: {
+    color: DesignTokens.colors.executive.primary,
+    fontSize: DesignTokens.typography.fontSize.sm,
+  },
+  constructionCard: {
+    marginHorizontal: DesignTokens.spacing.lg,
+    marginBottom: DesignTokens.spacing.lg,
+    borderRadius: DesignTokens.borderRadius.md,
+    ...DesignTokens.shadows.base,
+  },
+  statsCard: {
+    marginHorizontal: DesignTokens.spacing.lg,
+    marginBottom: DesignTokens.spacing.lg,
+    borderRadius: DesignTokens.borderRadius.md,
+    ...DesignTokens.shadows.base,
+  },
+  menuCard: {
+    marginHorizontal: DesignTokens.spacing.lg,
+    marginBottom: DesignTokens.spacing.lg,
+    borderRadius: DesignTokens.borderRadius.md,
+    ...DesignTokens.shadows.base,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: DesignTokens.spacing.md,
+  },
+  cardTitle: {
+    fontSize: DesignTokens.typography.fontSize.lg,
+    fontWeight: DesignTokens.typography.fontWeight.semibold,
+    color: DesignTokens.colors.neutral[900],
+    marginLeft: DesignTokens.spacing.sm,
+  },
+  constructionName: {
+    fontSize: DesignTokens.typography.fontSize.base,
+    fontWeight: DesignTokens.typography.fontWeight.medium,
+    color: DesignTokens.colors.neutral[800],
+    marginBottom: DesignTokens.spacing.xs,
+  },
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: DesignTokens.spacing.xs,
+  },
+  infoText: {
+    fontSize: DesignTokens.typography.fontSize.sm,
+    color: DesignTokens.colors.neutral[600],
+    marginLeft: DesignTokens.spacing.xs,
+  },
+  detailsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: DesignTokens.spacing.md,
+    paddingTop: DesignTokens.spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: DesignTokens.colors.neutral[200],
+  },
+  detailItem: {
+    flex: 1,
+    alignItems: "center",
+  },
+  detailLabel: {
+    fontSize: DesignTokens.typography.fontSize.xs,
+    color: DesignTokens.colors.neutral[500],
+    fontWeight: DesignTokens.typography.fontWeight.medium,
+    marginBottom: DesignTokens.spacing.xs,
+  },
+  detailValue: {
+    fontSize: DesignTokens.typography.fontSize.sm,
+    color: DesignTokens.colors.neutral[800],
+    fontWeight: DesignTokens.typography.fontWeight.semibold,
+    textAlign: "center",
+  },
+  statsRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+  },
+  statItem: {
+    alignItems: "center",
+  },
+  statValue: {
+    fontSize: DesignTokens.typography.fontSize.xl,
+    fontWeight: DesignTokens.typography.fontWeight.bold,
+    color: DesignTokens.colors.advance,
+  },
+  statLabel: {
+    fontSize: DesignTokens.typography.fontSize.xs,
+    color: DesignTokens.colors.neutral[600],
+    textAlign: "center",
+    marginTop: DesignTokens.spacing.xs,
   },
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 12,
+    paddingVertical: DesignTokens.spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
+    borderBottomColor: DesignTokens.colors.neutral[200],
   },
   menuItemText: {
     flex: 1,
-    marginLeft: 12,
-    fontSize: 16,
-    color: "#333",
+    marginLeft: DesignTokens.spacing.md,
+    fontSize: DesignTokens.typography.fontSize.base,
+    color: DesignTokens.colors.neutral[800],
   },
   logoutButton: {
-    backgroundColor: "#F44336",
+    backgroundColor: DesignTokens.colors.error[500],
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginHorizontal: 16,
-    marginTop: 30,
-    padding: 16,
-    borderRadius: 12,
+    marginHorizontal: DesignTokens.spacing.lg,
+    marginTop: DesignTokens.spacing.xl,
+    padding: DesignTokens.spacing.lg,
+    borderRadius: DesignTokens.borderRadius.md,
+    ...DesignTokens.shadows.sm,
   },
   logoutText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
-    marginLeft: 8,
+    color: DesignTokens.colors.background.primary,
+    fontSize: DesignTokens.typography.fontSize.base,
+    fontWeight: DesignTokens.typography.fontWeight.semibold,
+    marginLeft: DesignTokens.spacing.sm,
   },
   versionText: {
     textAlign: "center",
-    color: "#999",
-    fontSize: 14,
-    marginTop: 30,
-    marginBottom: 20,
+    color: DesignTokens.colors.neutral[400],
+    fontSize: DesignTokens.typography.fontSize.sm,
+    marginTop: DesignTokens.spacing.xl,
   },
 });
 

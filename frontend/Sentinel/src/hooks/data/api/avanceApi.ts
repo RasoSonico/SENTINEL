@@ -45,18 +45,12 @@ export const getConcepts = async () =>
  */
 export const getCatalogsByConstruction = async (constructionId: number) => {
   const endpoint = `${API_CONFIG.endpoints.catalogs}?construction=${constructionId}`;
-  console.log("🔍 [API] Getting catalogs for construction:", constructionId);
 
   return await apiRequest<CatalogoApiResponse>(
     "get",
     endpoint,
     "Error al obtener catálogos de la construcción"
   ).then((response) => {
-    console.log(
-      "📦 [API] Catalogs response:",
-      response.results?.length || 0,
-      "catalogs"
-    );
     return response.results ?? [];
   });
 };
@@ -65,19 +59,13 @@ export const getCatalogsByConstruction = async (constructionId: number) => {
  * Obtener partidas (workitems) de un catálogo específico
  */
 export const getPartidasByCatalog = async (catalogId: number) => {
-  const endpoint = `${API_CONFIG.endpoints.partidas}?catalog=${catalogId}&page_size=100`;
-  console.log("🔍 [API] Getting partidas for catalog:", catalogId);
+  const endpoint = `${API_CONFIG.endpoints.partidas}?catalog=${catalogId}`;
 
   return await apiRequest<PartidaApiResponse>(
     "get",
     endpoint,
     "Error al obtener partidas del catálogo"
   ).then((response) => {
-    console.log(
-      "📦 [API] Partidas response:",
-      response.results?.length || 0,
-      "partidas"
-    );
     return response.results ?? [];
   });
 };
@@ -87,20 +75,39 @@ export const getPartidasByCatalog = async (catalogId: number) => {
  */
 export const getConceptsByWorkItem = async (workItemId: number) => {
   const endpoint = `${API_CONFIG.endpoints.concepts}?work_item=${workItemId}&page_size=100`;
-  console.log("🔍 [API] Getting concepts for work_item:", workItemId);
 
   return await apiRequest<ConceptoApiResponse>(
     "get",
     endpoint,
     "Error al obtener conceptos de la partida"
   ).then((response) => {
-    console.log(
-      "📦 [API] Concepts response:",
-      response.results?.length || 0,
-      "concepts"
-    );
     return response.results ?? [];
   });
+};
+
+// getConceptsByIds ya no es necesario con detailed=true
+// La información viene directamente en los avances
+
+/**
+ * Actualizar un avance existente (edición)
+ * Utiliza PATCH para actualización parcial de volume y/o comments
+ */
+export const updateAdvance = async (
+  advanceId: number,
+  updates: {
+    volume?: string;
+    comments?: string;
+    status?: "PENDING" | "APPROVED" | "REJECTED";
+  }
+): Promise<PhysicalAdvanceResponse> => {
+  const endpoint = `${API_CONFIG.endpoints.advances.list}${advanceId}/`;
+
+  return await apiRequest<PhysicalAdvanceResponse>(
+    "patch",
+    endpoint,
+    "Error al actualizar el avance",
+    updates
+  );
 };
 
 export const submitAdvance = async (advance: SubmitAdvance) =>
@@ -121,11 +128,15 @@ export const getAdvancesByCatalog = async ({
   status,
   page = 1,
   pageSize = 20,
+  detailed = true, // Nuevo parámetro para obtener información expandida
+  ordering = "-date", // Nuevo parámetro para ordenamiento (por defecto: más recientes primero)
 }: {
   catalogId: number;
   status?: "PENDING" | "APPROVED" | "REJECTED";
   page?: number;
   pageSize?: number;
+  detailed?: boolean;
+  ordering?: string;
 }): Promise<{ advances: PhysicalAdvanceResponse[]; count: number }> => {
   const params = new URLSearchParams({
     catalog: catalogId.toString(),
@@ -137,10 +148,17 @@ export const getAdvancesByCatalog = async ({
     params.append("status", status);
   }
 
-  const endpoint = `${API_CONFIG.endpoints.advances.list}?${params.toString()}`;
+  // Agregar parámetro detailed si está habilitado
+  if (detailed) {
+    params.append("detailed", "true");
+  }
 
-  console.log("🔍 Requesting advances by catalog:", endpoint);
-  console.log("🔍 Request params:", { catalogId, status, page, pageSize });
+  // Agregar parámetro ordering para definir el criterio de ordenamiento
+  if (ordering) {
+    params.append("ordering", ordering);
+  }
+
+  const endpoint = `${API_CONFIG.endpoints.advances.list}?${params.toString()}`;
 
   const response = await apiRequest<{
     results: PhysicalAdvanceResponse[];
@@ -148,8 +166,6 @@ export const getAdvancesByCatalog = async ({
     next: string | null;
     previous: string | null;
   }>("get", endpoint, "Error al obtener avances por catálogo");
-
-  console.log("📦 Advances response:", response);
 
   return {
     advances: response.results || [],
@@ -165,7 +181,6 @@ export const getAssignedConstruction = async (
 ): Promise<Construction | null> => {
   try {
     const endpoint = `${API_CONFIG.endpoints.obra.constructions.myConstructions}?role=${role}`;
-    console.log("🔍 Requesting assigned construction:", endpoint);
 
     const response = await apiRequest<Construction[]>(
       "get",
@@ -173,14 +188,7 @@ export const getAssignedConstruction = async (
       "Error al obtener obra asignada"
     );
 
-    console.log("📦 Response from getAssignedConstruction:", {
-      responseLength: response.length,
-      constructions: response,
-    });
-
     const result = response.length > 0 ? response[0] : null;
-    console.log("✅ Returning assigned construction:", result);
-
     return result;
   } catch (error) {
     console.error("❌ Error al obtener obra asignada:", error);

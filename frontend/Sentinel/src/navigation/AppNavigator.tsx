@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { AppTabParamList } from "./types";
 import { ObraNavigator } from "./moduleNavigators/ObraNavigator";
 import { AvanceNavigator } from "./moduleNavigators/AvanceNavigator";
+import { IncidenciaNavigator } from "./moduleNavigators/IncidenciaNavigator";
 import { Ionicons } from "@expo/vector-icons";
 import { View, Text } from "react-native";
 import PerfilScreen from "../modules/profiles/PerfilScreen";
@@ -13,6 +14,7 @@ import { getTabBarIconName } from "./utils/tabBarUtils";
 import { UserRole } from "src/types/auth";
 import ObrasListScreen from "src/modules/obra/screens/ObraListScreen";
 import ServerErrorModal from "src/components/ServerErrorModal";
+import { DesignTokens } from "../styles/designTokens";
 
 // --- Skeletons for role-based screens ---
 const AprobacionAvancesScreen = () => (
@@ -99,14 +101,15 @@ export const AppNavigator = () => {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: "#0366d6",
-        tabBarInactiveTintColor: "gray",
+        tabBarActiveTintColor: DesignTokens.colors.executive.primary, // ✅ COLOR EJECUTIVO
+        tabBarInactiveTintColor: DesignTokens.colors.neutral[400], // ✅ GRIS NEUTRO
         headerShown: false,
       })}
     >
       {hasRole("CONTRATISTA") && (
         <>
           <Tab.Screen name="Avances" component={AvanceNavigator} />
+          <Tab.Screen name="Incidencias" component={IncidenciaNavigator} />
         </>
       )}
 

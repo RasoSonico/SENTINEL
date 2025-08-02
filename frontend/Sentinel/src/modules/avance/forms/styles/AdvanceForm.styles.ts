@@ -1,4 +1,5 @@
 import { StyleSheet } from "react-native";
+import { DesignTokens } from "../../../../styles/designTokens";
 
 const advanceFormStyles = StyleSheet.create({
   container: {
@@ -6,14 +7,14 @@ const advanceFormStyles = StyleSheet.create({
   },
   formSection: {
     flex: 1,
-    gap: 4,
-    marginBottom: 16,
+    gap: DesignTokens.spacing.xs,
+    marginBottom: DesignTokens.spacing.lg,
   },
   advancedSection: {
-    marginBottom: 16,
+    marginBottom: DesignTokens.spacing.lg,
   },
   photoSection: {
-    marginBottom: 16,
+    marginBottom: DesignTokens.spacing.lg,
   },
 });
 

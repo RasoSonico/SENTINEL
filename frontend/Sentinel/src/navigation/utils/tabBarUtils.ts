@@ -17,6 +17,8 @@ export function getTabBarIconName(
       return focused ? "calendar" : "calendar-outline";
     case "Avances":
       return focused ? "trending-up" : "trending-up-outline";
+    case "Incidencias":
+      return focused ? "warning" : "warning-outline";
     case "Perfil":
       return focused ? "person" : "person-outline";
     default:

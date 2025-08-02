@@ -1,24 +1,26 @@
 import { StyleSheet } from "react-native";
+import { DesignTokens } from "../../../../styles/designTokens";
 
 const labeledDropdownStyles = StyleSheet.create({
   container: {
-    marginBottom: 8,
+    marginBottom: DesignTokens.spacing.sm,
   },
   label: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 4,
+    fontSize: DesignTokens.typography.fontSize.base,
+    fontWeight: DesignTokens.typography.fontWeight.semibold as any,
+    marginBottom: DesignTokens.spacing.xs,
+    color: DesignTokens.colors.neutral[900],
   },
   loadingContainer: {
     flex: 1,
     flexDirection: 'row',
     justifyContent: "center",
     alignItems: "center",
-    gap: 8
+    gap: DesignTokens.spacing.sm
   },
   loadingText: {
-    fontSize: 16,
-    color: "#7f8c8d",
+    fontSize: DesignTokens.typography.fontSize.base,
+    color: DesignTokens.colors.neutral[500],
   },
 });
 

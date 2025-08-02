@@ -16,9 +16,11 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import ProgramStatusBadge from "../components/ProgramStatusBadge";
 import OfflineIndicator from "../components/OfflineIndicator";
+import AdvanceDetailBottomSheet from "../components/AdvanceDetailBottomSheet";
 import { AvanceStackParamList } from "../../../navigation/types";
-import { useAppSelector } from "../../../redux/hooks";
+import { useAppSelector, useAppDispatch } from "../../../redux/hooks";
 import { selectOfflineSync } from "../../../redux/slices/avance/advanceSlice";
+import { setCatalogsById } from "../../../redux/slices/avance/avanceFormDataSlice";
 import { PhysicalAdvanceResponse } from "../../../types/entities";
 import {
   useAssignedConstruction,
@@ -26,6 +28,7 @@ import {
   useAdvancesByCatalog,
 } from "../../../hooks/data/query/useAvanceQueries";
 import styles from "../styles/AdvanceListScreen.styles";
+import { ColorUtils } from "../../../styles/designTokens";
 
 type AdvanceListScreenNavigationProp = StackNavigationProp<
   AvanceStackParamList,
@@ -34,11 +37,17 @@ type AdvanceListScreenNavigationProp = StackNavigationProp<
 
 const AdvanceListScreen: React.FC = () => {
   const navigation = useNavigation<AdvanceListScreenNavigationProp>();
+  const dispatch = useAppDispatch();
 
   // Estados para filtros y UI
   const [statusFilter, setStatusFilter] = useState<
     "all" | "pending" | "approved" | "rejected"
   >("all");
+
+  // Estados para el bottom sheet
+  const [selectedAdvance, setSelectedAdvance] =
+    useState<PhysicalAdvanceResponse | null>(null);
+  const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
 
   // Query para obtener la construcción asignada
   const {
@@ -75,13 +84,16 @@ const AdvanceListScreen: React.FC = () => {
     };
   }, [mainCatalog?.id, statusFilter]);
 
-  // Query para obtener avances
+  // Query para obtener avances con información detallada (detailed=true)
   const {
     data: advancesData,
     isLoading: loadingAdvances,
     error: advancesError,
     refetch: refetchAdvances,
-  } = useAdvancesByCatalog(advanceParams);
+  } = useAdvancesByCatalog({
+    ...advanceParams,
+    detailed: true,
+  });
 
   // Calcular resumen localmente
   const localSummary = useMemo(() => {
@@ -99,6 +111,16 @@ const AdvanceListScreen: React.FC = () => {
   // Obtener datos del estado global
   const offlineSyncState = useAppSelector(selectOfflineSync);
 
+  // Effect para poblar el store con catálogos
+  useEffect(() => {
+    if (catalogs && catalogs.length > 0) {
+      dispatch(setCatalogsById(catalogs));
+    }
+  }, [catalogs, dispatch]);
+
+  // Ya no necesitamos poblar el store con partidas/conceptos
+  // La información viene directamente en los avances (detailed=true)
+
   // Estados para refresh
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
@@ -110,74 +132,6 @@ const AdvanceListScreen: React.FC = () => {
       });
     }
   }, [assignedConstruction, navigation]);
-
-  // Configurar el botón derecho para agregar avances
-  useEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity
-          style={{ marginRight: 16 }}
-          onPress={handleAddAdvance}
-        >
-          <Ionicons name="add-circle" size={24} color="#fff" />
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation, assignedConstruction]);
-
-  // Logs para debugging siguiendo el estilo de Giovanni
-  useEffect(() => {
-    console.log("🔧 [DEBUG] AdvanceListScreen - States:", {
-      loadingConstruction,
-      constructionError: !!constructionError,
-      assignedConstruction: !!assignedConstruction,
-      loadingCatalogs,
-      catalogsError: !!catalogsError,
-      catalogsCount: catalogs?.length || 0,
-      mainCatalog: !!mainCatalog,
-      loadingAdvances,
-      advancesError: !!advancesError,
-      advancesCount: advancesData?.advances?.length || 0,
-    });
-  }, [
-    loadingConstruction, constructionError, assignedConstruction,
-    loadingCatalogs, catalogsError, catalogs,
-    mainCatalog, loadingAdvances, advancesError, advancesData
-  ]);
-
-  useEffect(() => {
-    if (assignedConstruction) {
-      console.log("✅ [DEBUG] Construcción final a usar:", assignedConstruction);
-    }
-  }, [assignedConstruction]);
-
-  useEffect(() => {
-    if (catalogs) {
-      console.log("📁 [DEBUG] Catalogs loaded:", catalogs);
-    }
-  }, [catalogs]);
-
-  useEffect(() => {
-    if (mainCatalog) {
-      console.log("✅ [FLOW] Using catalog:", mainCatalog);
-    }
-  }, [mainCatalog]);
-
-  useEffect(() => {
-    if (advanceParams.catalogId) {
-      console.log("🔍 [DEBUG] Advance params:", advanceParams);
-    }
-  }, [advanceParams]);
-
-  useEffect(() => {
-    if (advancesData) {
-      console.log(
-        "✅ [FLOW] Complete! Advances loaded:",
-        advancesData.advances.length
-      );
-      console.log("📊 Calculated summary:", localSummary);
-    }
-  }, [advancesData, localSummary]);
 
   // Manejar la navegación al formulario de registro de avance
   const handleAddAdvance = () => {
@@ -201,10 +155,7 @@ const AdvanceListScreen: React.FC = () => {
 
     try {
       // Refrescar todas las queries en paralelo
-      await Promise.all([
-        refetchConstruction(),
-        refetchAdvances(),
-      ]);
+      await Promise.all([refetchConstruction(), refetchAdvances()]);
     } catch (error) {
       console.error("Error refreshing data:", error);
     } finally {
@@ -218,86 +169,136 @@ const AdvanceListScreen: React.FC = () => {
     console.log("Load more functionality - to be implemented");
   }, []);
 
-  // Renderizar un elemento de avance
-  const renderAdvanceItem = ({ item }: { item: PhysicalAdvanceResponse }) => (
-    <TouchableOpacity
-      style={styles.advanceItem}
-      onPress={() => {
-        // Navegar a detalle de avance (implementar después)
-        Alert.alert(
-          "Próximamente",
-          "La vista de detalle de avance estará disponible pronto."
-        );
-      }}
-    >
-      <View style={styles.advanceHeader}>
-        <View style={styles.conceptInfo}>
-          <Text style={styles.conceptCode}>Concepto #{item.concept}</Text>
-          <Text style={styles.conceptName}>Avance físico</Text>
-        </View>
+  // Manejar apertura del bottom sheet
+  const handleAdvancePress = useCallback((advance: PhysicalAdvanceResponse) => {
+    setSelectedAdvance(advance);
+    setIsBottomSheetVisible(true);
+  }, []);
 
-        {/* Estatus de aprobación */}
-        <View
-          style={[
-            styles.statusChip,
-            item.status === "APPROVED"
-              ? styles.approvedChip
-              : item.status === "REJECTED"
-              ? styles.rejectedChip
-              : styles.pendingChip,
-          ]}
-        >
-          <Text
+  // Manejar cierre del bottom sheet
+  const handleCloseBottomSheet = useCallback(() => {
+    setIsBottomSheetVisible(false);
+    setSelectedAdvance(null);
+  }, []);
+
+  // Manejar actualización de avance
+  const handleAdvanceUpdated = useCallback(
+    (updatedAdvance: PhysicalAdvanceResponse) => {
+      // Invalidar la query para refrescar los datos
+      refetchAdvances();
+      setSelectedAdvance(updatedAdvance);
+    },
+    [refetchAdvances]
+  );
+
+  // Componente para renderizar un elemento de avance
+  const AdvanceItemCard: React.FC<{
+    item: PhysicalAdvanceResponse;
+  }> = ({ item }) => {
+    // Verificar que item existe
+    if (!item) {
+      return null;
+    }
+
+    // La información viene directamente en el avance
+    const conceptDescription =
+      item.concept_description || `Concepto #${item.concept}`;
+    const conceptUnit = item.concept_unit || "";
+    const partidaName = item.work_item_name || "Partida no disponible";
+
+    return (
+      <TouchableOpacity
+        style={[
+          styles.advanceItem,
+          { borderLeftColor: ColorUtils.getStatusBorderColor(item.status) } // ✅ COLOR DINÁMICO POR ESTADO
+        ]}
+        onPress={() => handleAdvancePress(item)}
+      >
+        <View style={styles.advanceHeader}>
+          <View style={styles.conceptInfo}>
+            <Text style={styles.partidaName}>{partidaName}</Text>
+            <Text style={styles.conceptDescription} numberOfLines={2}>
+              {conceptDescription}
+            </Text>
+          </View>
+
+          {/* Estatus de aprobación */}
+          <View
             style={[
-              styles.statusText,
+              styles.statusChip,
               item.status === "APPROVED"
-                ? styles.approvedText
+                ? styles.approvedChip
                 : item.status === "REJECTED"
-                ? styles.rejectedText
-                : styles.pendingText,
+                ? styles.rejectedChip
+                : styles.pendingChip,
             ]}
           >
-            {item.status === "APPROVED"
-              ? "Aprobado"
-              : item.status === "REJECTED"
-              ? "Rechazado"
-              : "Pendiente"}
-          </Text>
+            <Text
+              style={[
+                styles.statusText,
+                item.status === "APPROVED"
+                  ? styles.approvedText
+                  : item.status === "REJECTED"
+                  ? styles.rejectedText
+                  : styles.pendingText,
+              ]}
+            >
+              {item.status === "APPROVED"
+                ? "Aprobado"
+                : item.status === "REJECTED"
+                ? "Rechazado"
+                : "Pendiente"}
+            </Text>
+          </View>
         </View>
-      </View>
 
-      <View style={styles.advanceDetails}>
-        <View style={styles.quantityContainer}>
-          <Text style={styles.quantityLabel}>Volumen:</Text>
-          <Text style={styles.quantityValue}>{item.volume}</Text>
+        <View style={styles.advanceDetails}>
+          <View style={styles.quantityContainer}>
+            <Text style={styles.quantityLabel}>Volumen:</Text>
+            <Text style={styles.quantityValue}>
+              {item.volume || "0"} {conceptUnit}
+            </Text>
+          </View>
         </View>
 
-        <Text style={styles.dateText}>
-          {format(new Date(item.date), "dd MMM yyyy", {
-            locale: es,
-          })}
-        </Text>
-      </View>
+        {/* Comentarios si existen */}
+        {item.comments && (
+          <View style={styles.notesContainer}>
+            <Text style={styles.notesLabel}>Comentarios:</Text>
+            <Text style={styles.notesText} numberOfLines={2}>
+              {item.comments}
+            </Text>
+          </View>
+        )}
 
-      {/* Comentarios si existen */}
-      {item.comments && (
-        <View style={styles.notesContainer}>
-          <Text style={styles.notesLabel}>Comentarios:</Text>
-          <Text style={styles.notesText} numberOfLines={2}>
-            {item.comments}
-          </Text>
+        {/* Sección inferior con badge y fecha */}
+        <View style={styles.bottomSection}>
+          <View style={styles.programStatusContainer}>
+            <ProgramStatusBadge
+              status={item.status === "APPROVED" ? "completed" : "onSchedule"}
+              compact={true}
+            />
+          </View>
+
+          <View style={styles.dateContainer}>
+            <Text style={styles.dateText}>
+              {item.date
+                ? format(new Date(item.date), "dd MMM yyyy", {
+                    locale: es,
+                  })
+                : "Sin fecha"}
+            </Text>
+          </View>
         </View>
-      )}
+      </TouchableOpacity>
+    );
+  };
 
-      {/* Mostrar estado del programa - simplificado ya que no tenemos estos datos */}
-      <View style={styles.programStatusContainer}>
-        <ProgramStatusBadge
-          status={item.status === "APPROVED" ? "completed" : "onSchedule"}
-          compact={true}
-        />
-      </View>
-    </TouchableOpacity>
-  );
+  // Renderizar un elemento de avance
+  const renderAdvanceItem = ({ item }: { item: PhysicalAdvanceResponse }) => {
+    if (!item) return null;
+    return <AdvanceItemCard item={item} />;
+  };
 
   // Renderizar el encabezado con resumen
   const renderHeader = () => (
@@ -573,7 +574,9 @@ const AdvanceListScreen: React.FC = () => {
       <FlatList
         data={advancesData?.advances || []}
         renderItem={renderAdvanceItem}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) =>
+          item?.id?.toString() || Math.random().toString()
+        }
         ListHeaderComponent={renderHeader}
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmpty}
@@ -593,6 +596,25 @@ const AdvanceListScreen: React.FC = () => {
             : styles.listContent
         }
       />
+
+      {/* Bottom Sheet para detalle de avance */}
+      <AdvanceDetailBottomSheet
+        isVisible={isBottomSheetVisible}
+        onClose={handleCloseBottomSheet}
+        advance={selectedAdvance}
+        onAdvanceUpdated={handleAdvanceUpdated}
+      />
+
+      {/* FLOATING ACTION BUTTON - Solo visible cuando NO hay bottom sheet */}
+      {!isBottomSheetVisible && (
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={handleAddAdvance}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="add" size={24} style={styles.fabIcon} />
+        </TouchableOpacity>
+      )}
     </SafeAreaView>
   );
 };
