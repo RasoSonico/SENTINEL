@@ -97,7 +97,7 @@ const LoginScreen: React.FC = () => {
         <View style={styles.logoContainer}>
           <View style={styles.logoWrapper}>
             <Image
-              source={require("../../../assets/SENTINEL.jpg")}
+              source={require("../../../assets/SENTINEL_LOGO.png")}
               style={styles.logo}
               resizeMode="contain"
             />

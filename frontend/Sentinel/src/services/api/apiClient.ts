@@ -160,7 +160,7 @@ const makeApiRequest = async <T>(
   }
 
   let response: AxiosResponse<T>;
-  
+
   // Prepare config object for requests that need it
   const config: any = {
     headers: {
@@ -172,7 +172,7 @@ const makeApiRequest = async <T>(
   if (options?.excludeAuth) {
     config.headers.Authorization = undefined;
   }
-  
+
   // Handle different HTTP methods correctly
   switch (method) {
     case "get":
@@ -189,7 +189,7 @@ const makeApiRequest = async <T>(
     default:
       throw new Error(`Unsupported HTTP method: ${method}`);
   }
-  
+
   return response.data;
 };
 

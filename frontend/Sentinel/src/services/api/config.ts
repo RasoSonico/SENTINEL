@@ -11,9 +11,10 @@ export const API_CONFIG = {
   baseURL,
   endpoints: {
     auth: "/auth",
-    catalogs: "/api/catalogo/catalog",
-    partidas: "/api/catalogo/workitem",
-    concepts: "/api/catalogo/concept",
+    me: "/api/usuarios/me/",
+    catalogs: "/api/catalogo/catalog/",
+    partidas: "/api/catalogo/workitem/",
+    concepts: "/api/catalogo/concept/",
     submitAdvance: "/api/avance/physical/",
     advances: {
       list: "/api/avance/physical/",
@@ -24,7 +25,7 @@ export const API_CONFIG = {
       upload: "/api/avance/photos/upload/",
     },
     construction: {
-      catalog: "/api/catalogo/catalog",
+      catalog: "/api/catalogo/catalog/",
     },
     obra: {
       constructions: {

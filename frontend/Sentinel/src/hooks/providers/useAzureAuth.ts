@@ -37,7 +37,6 @@ export const useAzureAuth = (
 
       if (response.type === "success" && discovery) {
         const { code } = response.params;
-        console.log("Authorization code:", code);
 
         try {
           const tokenResponse = await AuthSession.exchangeCodeAsync(
