@@ -54,9 +54,7 @@ const ConfirmSendModal: React.FC<ConfirmSendModalProps> = ({
               <Text style={styles.summaryLabel}>Concepto</Text>
               <Text style={styles.summaryValue}>{summary.concept}</Text>
               <Text style={styles.summaryLabel}>Volumen</Text>
-              <Text style={styles.summaryValue}>
-                {summary.volume} {summary.unit}
-              </Text>
+              <Text style={styles.summaryValue}>{summary.volume} {summary.unit}</Text>
               {summary.notes !== "" && (
                 <>
                   <Text style={styles.summaryLabel}>Notas</Text>
@@ -65,10 +63,7 @@ const ConfirmSendModal: React.FC<ConfirmSendModalProps> = ({
               )}
             </ScrollView>
           </View>
-          <View
-            style={styles.checkboxContainer}
-            onTouchEnd={() => setChecked(!checked)}
-          >
+          <View style={styles.checkboxContainer} onTouchEnd={() => setChecked(!checked)}>
             <Checkbox
               status={checked ? "checked" : "unchecked"}
               color={DesignTokens.colors.executive.primary}
@@ -94,11 +89,7 @@ const ConfirmSendModal: React.FC<ConfirmSendModalProps> = ({
             </TouchableOpacity>
           </View>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <Text
-              style={{ fontSize: 22, color: DesignTokens.colors.neutral[400] }}
-            >
-              ×
-            </Text>
+            <Text style={{ fontSize: 22, color: DesignTokens.colors.neutral[400] }}>×</Text>
           </TouchableOpacity>
         </View>
       </View>

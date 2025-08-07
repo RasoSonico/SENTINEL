@@ -55,7 +55,7 @@ const AdvanceFormFields: React.FC<AdvanceFormFieldsProps> = ({
   watchFormValue,
 }) => {
   const dispatch = useDispatch();
-
+  
   // Get assigned construction for CONTRATISTA
   const {
     data: assignedConstruction,
@@ -75,9 +75,7 @@ const AdvanceFormFields: React.FC<AdvanceFormFieldsProps> = ({
     isLoading: isLoadingCatalogs,
     error: catalogsError,
     isError: isCatalogsError,
-  } = useCatalogsByConstruction(
-    assignedConstruction?.id ? parseInt(assignedConstruction.id, 10) : null
-  );
+  } = useCatalogsByConstruction(assignedConstruction?.id ? parseInt(assignedConstruction.id, 10) : null);
 
   const {
     data: partidas,
@@ -161,11 +159,7 @@ const AdvanceFormFields: React.FC<AdvanceFormFieldsProps> = ({
               onSelect={onCatalogSelect}
               error={errors.catalog?.message || catalogsError?.message}
               isLoading={isLoadingCatalogs || isLoadingConstruction}
-              loadingLabel={
-                isLoadingConstruction
-                  ? "Cargando obra asignada..."
-                  : "Cargando Catálogos"
-              }
+              loadingLabel={isLoadingConstruction ? "Cargando obra asignada..." : "Cargando Catálogos"}
               disabled={isCatalogsError || !assignedConstruction}
             />
           )}

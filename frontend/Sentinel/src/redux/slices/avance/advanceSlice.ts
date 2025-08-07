@@ -143,14 +143,17 @@ export const fetchAdvancesByConstruction = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      return await advanceService.getAdvancesByCatalog(params.catalogId, {
-        conceptId: params.conceptId,
-        startDate: params.startDate,
-        endDate: params.endDate,
-        status: params.status,
-        page: params.page,
-        pageSize: params.pageSize,
-      });
+      return await advanceService.getAdvancesByCatalog(
+        params.catalogId,
+        {
+          conceptId: params.conceptId,
+          startDate: params.startDate,
+          endDate: params.endDate,
+          status: params.status,
+          page: params.page,
+          pageSize: params.pageSize,
+        }
+      );
     } catch (error) {
       return rejectWithValue(
         error instanceof Error ? error.message : "Error al obtener avances"
@@ -183,31 +186,22 @@ export const fetchAdvanceSummary = createAsyncThunk(
           pageSize: 1000, // Obtener todos para el resumen
         }
       );
-
+      
       // Luego calculamos el resumen localmente
-      const summary = advanceService.calculateAdvanceSummary(
-        advancesResponse.advances
-      );
-
+      const summary = advanceService.calculateAdvanceSummary(advancesResponse.advances);
+      
       return {
         ...summary,
         construction_id: params.catalogId.toString(),
         total_concepts: advancesResponse.advances.length,
-        completed_concepts: advancesResponse.advances.filter(
-          (a) => a.status === "APPROVED"
-        ).length,
-        physical_progress_percentage:
-          advancesResponse.advances.length > 0
-            ? (advancesResponse.advances.filter((a) => a.status === "APPROVED")
-                .length /
-                advancesResponse.advances.length) *
-              100
-            : 0,
+        completed_concepts: advancesResponse.advances.filter(a => a.status === "APPROVED").length,
+        physical_progress_percentage: advancesResponse.advances.length > 0 
+          ? (advancesResponse.advances.filter(a => a.status === "APPROVED").length / advancesResponse.advances.length) * 100 
+          : 0,
         financial_progress_percentage: 0, // Calculado separadamente si es necesario
-        last_advance_date:
-          advancesResponse.advances.length > 0
-            ? advancesResponse.advances[0].date
-            : null,
+        last_advance_date: advancesResponse.advances.length > 0 
+          ? advancesResponse.advances[0].date 
+          : null,
       } as PhysicalAdvanceSummary;
     } catch (error) {
       return rejectWithValue(
@@ -239,9 +233,7 @@ export const registerAdvance = createAsyncThunk(
       // NOTE: Photo upload is now handled by useAdvancesSubmission hook with React Query
       // This thunk is deprecated in favor of the new pattern
       if (params.photos.length > 0) {
-        console.warn(
-          "Photo upload via Redux thunk is deprecated. Use useAdvancesSubmission hook instead."
-        );
+        console.warn("Photo upload via Redux thunk is deprecated. Use useAdvancesSubmission hook instead.");
         // Photo upload should be handled by usePhotoUpload hook
       }
 
@@ -447,16 +439,14 @@ const advanceSlice = createSlice({
       // approveAdvance returns PhysicalAdvance, but state has PhysicalAdvanceResponse[]
       // Convert the ID comparison properly
       state.advances.items = state.advances.items.map((item) =>
-        item.id.toString() === action.payload.id
-          ? ({
-              id: parseInt(action.payload.id),
-              concept: parseInt(action.payload.concept_id),
-              volume: action.payload.quantity.toString(),
-              date: new Date().toISOString().split("T")[0],
-              status: action.payload.status,
-              comments: action.payload.notes,
-            } as PhysicalAdvanceResponse)
-          : item
+        item.id.toString() === action.payload.id ? {
+          id: parseInt(action.payload.id),
+          concept: parseInt(action.payload.concept_id),
+          volume: action.payload.quantity.toString(),
+          date: new Date().toISOString().split('T')[0],
+          status: action.payload.status,
+          comments: action.payload.notes
+        } as PhysicalAdvanceResponse : item
       );
     });
 
@@ -465,16 +455,14 @@ const advanceSlice = createSlice({
       // rejectAdvance returns PhysicalAdvance, but state has PhysicalAdvanceResponse[]
       // Convert the ID comparison properly
       state.advances.items = state.advances.items.map((item) =>
-        item.id.toString() === action.payload.id
-          ? ({
-              id: parseInt(action.payload.id),
-              concept: parseInt(action.payload.concept_id),
-              volume: action.payload.quantity.toString(),
-              date: new Date().toISOString().split("T")[0],
-              status: action.payload.status,
-              comments: action.payload.notes,
-            } as PhysicalAdvanceResponse)
-          : item
+        item.id.toString() === action.payload.id ? {
+          id: parseInt(action.payload.id),
+          concept: parseInt(action.payload.concept_id),
+          volume: action.payload.quantity.toString(),
+          date: new Date().toISOString().split('T')[0],
+          status: action.payload.status,
+          comments: action.payload.notes
+        } as PhysicalAdvanceResponse : item
       );
     });
   },

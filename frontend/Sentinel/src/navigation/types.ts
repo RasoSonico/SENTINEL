@@ -128,8 +128,7 @@ export type CatalogoNavigationProp =
 export type CronogramaNavigationProp =
   StackNavigationProp<CronogramaStackParamList>;
 export type AvanceNavigationProp = StackNavigationProp<AvanceStackParamList>;
-export type IncidenciaNavigationProp =
-  StackNavigationProp<IncidenciaStackParamList>;
+export type IncidenciaNavigationProp = StackNavigationProp<IncidenciaStackParamList>;
 export type RootNavigationProp = StackNavigationProp<RootStackParamList>;
 
 // Tipos para las propiedades de ruta

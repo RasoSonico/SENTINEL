@@ -59,8 +59,8 @@ const styles = StyleSheet.create({
     color: DesignTokens.colors.neutral[500],
   },
   errorRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginTop: getResponsiveSpacing(DesignTokens.spacing.xs), // 4px como QuantityInput
     gap: getResponsiveSpacing(DesignTokens.spacing.xs), // Espacio entre icono y texto
   },
@@ -71,9 +71,9 @@ const styles = StyleSheet.create({
   },
   // DROPDOWN STYLES - UNIFORME CON LABELEDDROPDOWN DE AVANCE
   dropdownContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: DesignTokens.colors.neutral[300], // Mismo que QuantityInput
     borderRadius: DesignTokens.borderRadius.base,
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     maxHeight: 200,
     ...DesignTokens.shadows.md, // Sombra más pronunciada
     zIndex: 1000, // Asegurar que aparezca encima
-    position: "relative",
+    position: 'relative',
   },
   dropdownOption: {
     paddingHorizontal: getResponsiveSpacing(DesignTokens.spacing.md),
@@ -114,18 +114,17 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: DesignTokens.colors.neutral[100],
     minHeight: 44, // Altura mínima para mejor tocabilidad
-    justifyContent: "center",
+    justifyContent: 'center',
   },
   dropdownOptionText: {
     fontSize: getResponsiveFontSize(DesignTokens.typography.fontSize.base), // 16px consistente
     color: DesignTokens.colors.neutral[700],
-    lineHeight:
-      getResponsiveFontSize(DesignTokens.typography.fontSize.base) * 1.4,
+    lineHeight: getResponsiveFontSize(DesignTokens.typography.fontSize.base) * 1.4,
   },
   // CLASIFICACIONES PERSONALIZADAS CON COLORES CONDICIONALES
   classificationsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: getResponsiveSpacing(DesignTokens.spacing.xs),
     gap: getResponsiveSpacing(DesignTokens.spacing.xs),
   },
@@ -137,15 +136,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: DesignTokens.colors.neutral[300],
     backgroundColor: DesignTokens.colors.background.primary,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     minHeight: 40,
   },
   classificationButtonText: {
     fontSize: getResponsiveFontSize(11), // Fuente muy pequeña para que quepa
     fontWeight: DesignTokens.typography.fontWeight.semibold,
     color: DesignTokens.colors.neutral[700],
-    textAlign: "center",
+    textAlign: 'center',
     includeFontPadding: false,
   },
   classificationButtonTextSelected: {

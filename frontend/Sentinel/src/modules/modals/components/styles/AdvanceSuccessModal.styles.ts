@@ -29,9 +29,7 @@ export default StyleSheet.create({
     color: DesignTokens.colors.neutral[600],
     marginBottom: DesignTokens.spacing["2xl"],
     textAlign: "center",
-    lineHeight:
-      DesignTokens.typography.fontSize.base *
-      DesignTokens.typography.lineHeight.normal,
+    lineHeight: DesignTokens.typography.fontSize.base * DesignTokens.typography.lineHeight.normal,
   },
   registerButton: {
     backgroundColor: DesignTokens.colors.executive.primary,

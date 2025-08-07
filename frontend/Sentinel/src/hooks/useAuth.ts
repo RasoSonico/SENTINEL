@@ -15,14 +15,14 @@ import { deleteToken, saveTokenResponse } from "src/utils/auth";
 
 export const useAuth = () => {
   const dispatch = useDispatch();
-  const { token, role, user } = useSelector(selectAuthInfo);
+  const { token, role, user, isAuthenticated } = useSelector(selectAuthInfo);
   const {
     data: authUser,
     isSuccess: isAuthUserSuccessful,
     isPending: isAuthUserPending,
     isError: isAuthUserError,
     error: authUserError,
-  } = useAuthMeQuery(!!user);
+  } = useAuthMeQuery(isAuthenticated);
   const queryClient = useQueryClient();
 
   const activeProvider = (authConfig as AuthConfig).activeProvider;
@@ -46,9 +46,9 @@ export const useAuth = () => {
   const login = async () => {
     const provider = getActiveProvider();
     const tokenResponse = await provider.login();
-    console.log(tokenResponse);
 
     if (tokenResponse) {
+      console.log('[useAuth] login() successful');
       saveTokenResponse(tokenResponse);
       dispatch(setIsAuthenticated(true));
     }

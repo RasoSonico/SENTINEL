@@ -96,7 +96,7 @@ export const useAdvancesSubmission = ({
       await queryClient.invalidateQueries({
         queryKey: ["advancesByCatalog"],
       });
-
+      
       // Paso 4: Completado exitosamente
       console.log("Advance and photos submitted successfully");
       console.groupEnd();

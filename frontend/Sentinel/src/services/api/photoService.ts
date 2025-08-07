@@ -100,14 +100,14 @@ export const requestBulkUpload = async (
 ): Promise<BulkUploadResponse> => {
   console.log("📤 [API] Requesting bulk upload with data:", photosData);
   console.log("📤 [API] Endpoint:", API_CONFIG.endpoints.photos.bulkUpload);
-
+  
   const response = await apiRequest<BulkUploadResponse>(
     "post",
     API_CONFIG.endpoints.photos.bulkUpload,
     "Error al solicitar tokens de subida múltiple",
     photosData
   );
-
+  
   console.log("📤 [API] Bulk upload response:", response);
   return response;
 };
@@ -123,7 +123,7 @@ export const uploadToAzureBlob = async (
   try {
     console.log("🔵 Azure Blob Upload - Starting direct upload to:", uploadUrl);
     console.log("🔵 File info:", { size: fileData.size, type: contentType });
-
+    
     // Hacer llamada directa a Azure (no usar apiRequest)
     const response = await fetch(uploadUrl, {
       method: "PUT",
@@ -135,14 +135,11 @@ export const uploadToAzureBlob = async (
     });
 
     console.log("🔵 Azure Blob Upload - Response status:", response.status);
-    console.log(
-      "🔵 Azure Blob Upload - Response headers:",
-      Object.fromEntries(response.headers.entries())
-    );
+    console.log("🔵 Azure Blob Upload - Response headers:", Object.fromEntries(response.headers.entries()));
 
     const success = response.status === 201;
     console.log("🔵 Azure Blob Upload - Success:", success);
-
+    
     return success;
   } catch (error) {
     console.error("❌ Error uploading to Azure Blob:", error);
@@ -157,12 +154,9 @@ export const confirmUpload = async (
   confirmData: ConfirmUploadRequest
 ): Promise<ConfirmUploadResponse> => {
   console.log("🟡 Confirm Upload - Sending data:", confirmData);
-  console.log(
-    "🟡 Confirm Upload - Endpoint:",
-    API_CONFIG.endpoints.photos.confirmUpload
-  );
+  console.log("🟡 Confirm Upload - Endpoint:", API_CONFIG.endpoints.photos.confirmUpload);
   console.log("🟡 Confirm Upload - Method: POST");
-
+  
   try {
     const result = await apiRequest<ConfirmUploadResponse>(
       "post",
@@ -170,7 +164,7 @@ export const confirmUpload = async (
       "Error al confirmar subida de foto",
       confirmData
     );
-
+    
     console.log("🟡 Confirm Upload - Success:", result);
     return result;
   } catch (error) {
@@ -205,13 +199,11 @@ export const getFileSize = async (uri: string): Promise<number> => {
 /**
  * Obtener las dimensiones de la imagen usando React Native Image.getSize
  */
-export const getImageDimensions = async (
-  uri: string
-): Promise<{ width: number; height: number }> => {
+export const getImageDimensions = async (uri: string): Promise<{ width: number; height: number }> => {
   try {
     // En React Native, usamos Image.getSize para obtener dimensiones
-    const { Image } = await import("react-native");
-
+    const { Image } = await import('react-native');
+    
     return new Promise((resolve) => {
       Image.getSize(
         uri,
@@ -237,7 +229,7 @@ export const getCameraInfo = async (): Promise<CameraInfo> => {
   try {
     // Importar Device dinámicamente para evitar errores si no está disponible
     const Device = await import("expo-device");
-
+    
     return {
       make: Device.default?.manufacturer || "Mobile Device",
       model: Device.default?.modelName || "Unknown Device",

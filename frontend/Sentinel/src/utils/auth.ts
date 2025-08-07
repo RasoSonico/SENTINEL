@@ -32,9 +32,9 @@ export async function maybeRefreshToken(
   if (!token) return null;
 
   if(token.shouldRefresh()) {
-    console.log("Token is expired, refreshing...");
+    console.info("Token is expired, refreshing...");
   } else {
-    console.log("Token is still valid, no refresh needed.");
+    console.info("Token is still valid, no refresh needed.");
   }
 
   if (!token.shouldRefresh()) return token;

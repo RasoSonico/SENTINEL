@@ -110,6 +110,7 @@ export const useAssignedConstruction = (role: string = "CONTRATISTA") =>
     gcTime: 60 * 60 * 1000, // 1 hora - mantener en caché más tiempo
   });
 
+
 /**
  * Query para obtener avances por catálogo con filtros
  */
@@ -129,23 +130,15 @@ export const useAdvancesByCatalog = ({
   ordering?: string;
 }) => {
   return useQuery({
-    queryKey: [
-      "advancesByCatalog",
-      catalogId,
-      status,
-      page,
-      pageSize,
-      detailed,
-      ordering,
-    ],
+    queryKey: ["advancesByCatalog", catalogId, status, page, pageSize, detailed, ordering],
     queryFn: () => {
-      return getAdvancesByCatalog({
-        catalogId: catalogId!,
-        status,
-        page,
+      return getAdvancesByCatalog({ 
+        catalogId: catalogId!, 
+        status, 
+        page, 
         pageSize,
         detailed,
-        ordering,
+        ordering
       });
     },
     enabled: !!catalogId,
@@ -153,5 +146,7 @@ export const useAdvancesByCatalog = ({
   });
 };
 
+
 // useConceptsByIds ya no es necesario con detailed=true
 // La información viene directamente en los avances
+

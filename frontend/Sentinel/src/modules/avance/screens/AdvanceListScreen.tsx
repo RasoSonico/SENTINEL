@@ -128,7 +128,7 @@ const AdvanceListScreen: React.FC = () => {
   useEffect(() => {
     if (assignedConstruction) {
       navigation.setOptions({
-        title: `Avances`, //contemplar agregar: ${assignedConstruction.name}
+        title: `Avances: ${assignedConstruction.name}`,
       });
     }
   }, [assignedConstruction, navigation]);
@@ -210,7 +210,7 @@ const AdvanceListScreen: React.FC = () => {
       <TouchableOpacity
         style={[
           styles.advanceItem,
-          { borderLeftColor: ColorUtils.getStatusBorderColor(item.status) }, // ✅ COLOR DINÁMICO POR ESTADO
+          { borderLeftColor: ColorUtils.getStatusBorderColor(item.status) } // ✅ COLOR DINÁMICO POR ESTADO
         ]}
         onPress={() => handleAdvancePress(item)}
       >

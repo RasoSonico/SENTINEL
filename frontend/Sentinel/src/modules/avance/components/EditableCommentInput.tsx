@@ -18,7 +18,10 @@ const EditableCommentInput: React.FC<EditableCommentInputProps> = ({
     <View style={styles.container}>
       <View style={styles.inputContainer}>
         <TextInput
-          style={[styles.input, error && styles.inputError]}
+          style={[
+            styles.input,
+            error && styles.inputError
+          ]}
           placeholder="Agregar comentarios (opcional)"
           value={comments}
           onChangeText={onChange}
@@ -26,14 +29,14 @@ const EditableCommentInput: React.FC<EditableCommentInputProps> = ({
           numberOfLines={3}
           textAlignVertical="top"
         />
-        <Ionicons
-          name="pencil"
-          size={16}
-          color="#3498db"
+        <Ionicons 
+          name="pencil" 
+          size={16} 
+          color="#3498db" 
           style={styles.editIcon}
         />
       </View>
-
+      
       {error && (
         <View style={styles.errorRow}>
           <Ionicons name="alert-circle" size={16} color="#e74c3c" />

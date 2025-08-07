@@ -86,8 +86,7 @@ const styles = StyleSheet.create({
     color: DesignTokens.colors.neutral[800],
     marginBottom: getResponsiveSpacing(DesignTokens.spacing.lg),
     includeFontPadding: false,
-    lineHeight:
-      getResponsiveFontSize(DesignTokens.typography.fontSize["2xl"]) * 1.3,
+    lineHeight: getResponsiveFontSize(DesignTokens.typography.fontSize["2xl"]) * 1.3,
   },
   filterContainer: {
     flexDirection: "row",

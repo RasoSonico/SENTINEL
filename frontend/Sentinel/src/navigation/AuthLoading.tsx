@@ -22,12 +22,16 @@ const AuthLoading = ({ onAuthChecked }: AuthLoadingProps) => {
     (async () => {
       const refreshed = await maybeRefreshToken(discovery, clientId);
 
+      console.group("<AuthLoading />")
       if (refreshed) {
+        console.log("Token has been refreshed")
         dispatch(setIsAuthenticated(true));
       } else {
+        console.log("Token was not refreshed, clearing credentials")
         dispatch(clearCredentials());
       }
       onAuthChecked();
+      console.groupEnd()
     })();
   }, [dispatch, discovery, clientId]);
 

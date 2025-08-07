@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
     minHeight: isTablet ? 140 : 120,
     // SIN marginHorizontal porque el padding viene del FlatList
   },
-
+  
   // HEADER SIMILAR A ADVANCELISTSCREEN (MARGIN REDUCIDO)
   header: {
     flexDirection: "row",
@@ -42,15 +42,15 @@ const styles = StyleSheet.create({
     marginBottom: getResponsiveSpacing(DesignTokens.spacing.sm), // REDUCIDO de md a sm
     minHeight: isTablet ? 60 : 50,
   },
-
+  
   headerInfo: {
     flex: 1,
     marginRight: getResponsiveSpacing(DesignTokens.spacing.sm),
     minHeight: isTablet ? 50 : 40,
   },
-
+  
   // ESTILOS DE DETALLES ELIMINADOS PARA REDUCIR ALTURA DE CARD
-
+  
   // SECCIÓN DE COMENTARIOS COMO ADVANCELISTSCREEN
   commentsContainer: {
     marginBottom: getResponsiveSpacing(DesignTokens.spacing.md),
@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
     borderLeftColor: DesignTokens.colors.primary[200],
     minHeight: getResponsiveSpacing(50),
   },
-
+  
   commentsLabel: {
     fontSize: getResponsiveFontSize(DesignTokens.typography.fontSize.xs),
     color: DesignTokens.colors.neutral[500],
@@ -70,21 +70,19 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 0.5,
     includeFontPadding: false,
-    lineHeight:
-      getResponsiveFontSize(DesignTokens.typography.fontSize.xs) * 1.3,
+    lineHeight: getResponsiveFontSize(DesignTokens.typography.fontSize.xs) * 1.3,
   },
-
+  
   commentsText: {
     fontSize: getResponsiveFontSize(DesignTokens.typography.fontSize.sm),
     color: DesignTokens.colors.neutral[700],
     includeFontPadding: false,
-    lineHeight:
-      getResponsiveFontSize(DesignTokens.typography.fontSize.sm) * 1.5,
+    lineHeight: getResponsiveFontSize(DesignTokens.typography.fontSize.sm) * 1.5,
     minHeight: getResponsiveFontSize(DesignTokens.typography.fontSize.sm) * 1.5,
     flexWrap: "wrap",
     flex: 1,
   },
-
+  
   // SECCIÓN INFERIOR COMO ADVANCELISTSCREEN
   bottomSection: {
     flexDirection: "row",
@@ -93,21 +91,21 @@ const styles = StyleSheet.create({
     marginTop: DesignTokens.spacing.md,
     paddingTop: DesignTokens.spacing.sm,
   },
-
+  
   statusContainer: {
     alignItems: "flex-start",
   },
-
+  
   dateContainer: {
     alignItems: "flex-end",
   },
-
+  
   dateText: {
     fontSize: DesignTokens.typography.fontSize.xs,
     color: DesignTokens.colors.neutral[500],
     fontWeight: DesignTokens.typography.fontWeight.medium,
   },
-
+  
   // ID DE INCIDENCIA EN BOTTOM SECTION
   incidentIdText: {
     fontSize: DesignTokens.typography.fontSize.xs,

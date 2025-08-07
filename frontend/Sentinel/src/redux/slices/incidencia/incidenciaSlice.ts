@@ -376,13 +376,9 @@ export const {
 
 // Selectores
 export const selectIncidents = (state: RootState) => state.incidencia.incidents;
-export const selectIncidentCatalogs = (state: RootState) =>
-  state.incidencia.catalogs;
-export const selectCurrentIncident = (state: RootState) =>
-  state.incidencia.currentIncident;
-export const selectNewIncident = (state: RootState) =>
-  state.incidencia.newIncident;
-export const selectIncidentFilters = (state: RootState) =>
-  state.incidencia.filters;
+export const selectIncidentCatalogs = (state: RootState) => state.incidencia.catalogs;
+export const selectCurrentIncident = (state: RootState) => state.incidencia.currentIncident;
+export const selectNewIncident = (state: RootState) => state.incidencia.newIncident;
+export const selectIncidentFilters = (state: RootState) => state.incidencia.filters;
 
 export default incidenciaSlice.reducer;

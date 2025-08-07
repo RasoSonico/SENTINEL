@@ -59,7 +59,7 @@ export const getCatalogsByConstruction = async (constructionId: number) => {
  * Obtener partidas (workitems) de un catálogo específico
  */
 export const getPartidasByCatalog = async (catalogId: number) => {
-  const endpoint = `${API_CONFIG.endpoints.partidas}?catalog=${catalogId}&page_size=100`;
+  const endpoint = `${API_CONFIG.endpoints.partidas}?catalog=${catalogId}`;
 
   return await apiRequest<PartidaApiResponse>(
     "get",

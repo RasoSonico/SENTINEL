@@ -279,11 +279,7 @@ const AdvanceDetailBottomSheet: React.FC<AdvanceDetailBottomSheetProps> = ({
               onPress={() => setIsEditingVolume(!isEditingVolume)}
               style={styles.editIconContainer}
             >
-              <Ionicons
-                name="pencil"
-                size={16}
-                color={DesignTokens.colors.primary[500]}
-              />
+              <Ionicons name="pencil" size={16} color={DesignTokens.colors.primary[500]} />
             </TouchableOpacity>
           </View>
 
@@ -313,11 +309,7 @@ const AdvanceDetailBottomSheet: React.FC<AdvanceDetailBottomSheetProps> = ({
                   </View>
                   {errors.volume && (
                     <View style={styles.errorRow}>
-                      <Ionicons
-                        name="alert-circle"
-                        size={16}
-                        color={DesignTokens.colors.error[500]}
-                      />
+                      <Ionicons name="alert-circle" size={16} color={DesignTokens.colors.error[500]} />
                       <Text style={styles.errorText}>
                         {errors.volume.message}
                       </Text>
@@ -354,22 +346,14 @@ const AdvanceDetailBottomSheet: React.FC<AdvanceDetailBottomSheetProps> = ({
                 onPress={() => setIsEditingComment(!isEditingComment)}
                 style={styles.editIconContainer}
               >
-                <Ionicons
-                  name="pencil"
-                  size={16}
-                  color={DesignTokens.colors.primary[500]}
-                />
+                <Ionicons name="pencil" size={16} color={DesignTokens.colors.primary[500]} />
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
                 onPress={() => setIsEditingComment(true)}
                 style={styles.editIconContainer}
               >
-                <Ionicons
-                  name="add"
-                  size={16}
-                  color={DesignTokens.colors.primary[500]}
-                />
+                <Ionicons name="add" size={16} color={DesignTokens.colors.primary[500]} />
               </TouchableOpacity>
             )}
           </View>
@@ -394,11 +378,7 @@ const AdvanceDetailBottomSheet: React.FC<AdvanceDetailBottomSheetProps> = ({
                   />
                   {errors.comments && (
                     <View style={styles.errorRow}>
-                      <Ionicons
-                        name="alert-circle"
-                        size={16}
-                        color={DesignTokens.colors.error[500]}
-                      />
+                      <Ionicons name="alert-circle" size={16} color={DesignTokens.colors.error[500]} />
                       <Text style={styles.errorText}>
                         {errors.comments.message}
                       </Text>
@@ -435,10 +415,7 @@ const AdvanceDetailBottomSheet: React.FC<AdvanceDetailBottomSheetProps> = ({
                 disabled={updateAdvanceMutation.isPending || !isDirty}
               >
                 {updateAdvanceMutation.isPending ? (
-                  <ActivityIndicator
-                    size="small"
-                    color={DesignTokens.colors.background.primary}
-                  />
+                  <ActivityIndicator size="small" color={DesignTokens.colors.background.primary} />
                 ) : (
                   <Text style={styles.saveButtonText}>Guardar</Text>
                 )}

@@ -19,11 +19,9 @@ import {
 /**
  * Obtener todos los tipos de incidencia
  */
-export const getIncidentTypes = async (
-  pageSize: number = 100
-): Promise<IncidentType[]> => {
+export const getIncidentTypes = async (pageSize: number = 100): Promise<IncidentType[]> => {
   const endpoint = `${API_CONFIG.endpoints.incidencias.incidentTypes}?page_size=${pageSize}`;
-
+  
   return await apiRequest<IncidentTypeApiResponse>(
     "get",
     endpoint,
@@ -36,11 +34,9 @@ export const getIncidentTypes = async (
 /**
  * Obtener todas las clasificaciones de incidencia
  */
-export const getIncidentClassifications = async (
-  pageSize: number = 100
-): Promise<IncidentClassification[]> => {
+export const getIncidentClassifications = async (pageSize: number = 100): Promise<IncidentClassification[]> => {
   const endpoint = `${API_CONFIG.endpoints.incidencias.incidentClassifications}?page_size=${pageSize}`;
-
+  
   return await apiRequest<IncidentClassificationApiResponse>(
     "get",
     endpoint,
@@ -57,34 +53,28 @@ export const getIncidentClassifications = async (
 /**
  * Obtener incidencias con filtros y paginación
  */
-export const getIncidents = async (
-  filters: IncidentFilters = {}
-): Promise<{
+export const getIncidents = async (filters: IncidentFilters = {}): Promise<{
   incidents: Incident[];
   count: number;
   next: string | null;
   previous: string | null;
 }> => {
   const params = new URLSearchParams();
-
+  
   // Agregar filtros a los parámetros
   if (filters.type) params.append("type", filters.type.toString());
-  if (filters.clasification)
-    params.append("clasification", filters.clasification.toString());
-  if (filters.construction)
-    params.append("construction", filters.construction.toString());
+  if (filters.clasification) params.append("clasification", filters.clasification.toString());
+  if (filters.construction) params.append("construction", filters.construction.toString());
   if (filters.date_after) params.append("date_after", filters.date_after);
   if (filters.date_before) params.append("date_before", filters.date_before);
   if (filters.search) params.append("search", filters.search);
   if (filters.ordering) params.append("ordering", filters.ordering);
-
+  
   // Paginación
   params.append("page", (filters.page || 1).toString());
   params.append("page_size", (filters.page_size || 15).toString());
 
-  const endpoint = `${
-    API_CONFIG.endpoints.incidencias.incidents
-  }?${params.toString()}`;
+  const endpoint = `${API_CONFIG.endpoints.incidencias.incidents}?${params.toString()}`;
 
   const response = await apiRequest<IncidentApiResponse>(
     "get",
@@ -103,11 +93,9 @@ export const getIncidents = async (
 /**
  * Obtener una incidencia específica por ID
  */
-export const getIncidentById = async (
-  incidentId: number
-): Promise<Incident> => {
+export const getIncidentById = async (incidentId: number): Promise<Incident> => {
   const endpoint = `${API_CONFIG.endpoints.incidencias.incidents}${incidentId}/`;
-
+  
   return await apiRequest<Incident>(
     "get",
     endpoint,
@@ -118,9 +106,7 @@ export const getIncidentById = async (
 /**
  * Crear una nueva incidencia
  */
-export const createIncident = async (
-  incident: CreateIncident
-): Promise<Incident> => {
+export const createIncident = async (incident: CreateIncident): Promise<Incident> => {
   return await apiRequest<Incident>(
     "post",
     API_CONFIG.endpoints.incidencias.incidents,
@@ -137,7 +123,7 @@ export const updateIncident = async (
   incident: CreateIncident
 ): Promise<Incident> => {
   const endpoint = `${API_CONFIG.endpoints.incidencias.incidents}${incidentId}/`;
-
+  
   return await apiRequest<Incident>(
     "put",
     endpoint,
@@ -154,7 +140,7 @@ export const patchIncident = async (
   updates: UpdateIncident
 ): Promise<Incident> => {
   const endpoint = `${API_CONFIG.endpoints.incidencias.incidents}${incidentId}/`;
-
+  
   return await apiRequest<Incident>(
     "patch",
     endpoint,
@@ -168,7 +154,7 @@ export const patchIncident = async (
  */
 export const deleteIncident = async (incidentId: number): Promise<void> => {
   const endpoint = `${API_CONFIG.endpoints.incidencias.incidents}${incidentId}/`;
-
+  
   return await apiRequest<void>(
     "delete",
     endpoint,
@@ -183,9 +169,7 @@ export const deleteIncident = async (incidentId: number): Promise<void> => {
 /**
  * Crear un nuevo tipo de incidencia
  */
-export const createIncidentType = async (
-  type: Omit<IncidentType, "id">
-): Promise<IncidentType> => {
+export const createIncidentType = async (type: Omit<IncidentType, "id">): Promise<IncidentType> => {
   return await apiRequest<IncidentType>(
     "post",
     API_CONFIG.endpoints.incidencias.incidentTypes,

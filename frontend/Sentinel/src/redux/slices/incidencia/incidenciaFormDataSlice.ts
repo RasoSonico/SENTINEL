@@ -20,10 +20,7 @@ const incidenciaFormDataSlice = createSlice({
         action.payload.map((item) => [item.id, item])
       );
     },
-    setClassificationsById(
-      state,
-      action: PayloadAction<IncidentClassification[]>
-    ) {
+    setClassificationsById(state, action: PayloadAction<IncidentClassification[]>) {
       state.classificationsById = Object.fromEntries(
         action.payload.map((item) => [item.id, item])
       );
@@ -35,7 +32,10 @@ const incidenciaFormDataSlice = createSlice({
   },
 });
 
-export const { setTypesById, setClassificationsById, clearIncidenciaFormData } =
-  incidenciaFormDataSlice.actions;
+export const {
+  setTypesById,
+  setClassificationsById,
+  clearIncidenciaFormData,
+} = incidenciaFormDataSlice.actions;
 
 export default incidenciaFormDataSlice.reducer;

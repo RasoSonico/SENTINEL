@@ -25,24 +25,19 @@ export const incidentFormDefaultValues = {
 export type IncidentFormData = z.infer<typeof incidentFormSchema>;
 
 // Función para validar campos individuales
-export const validateField = (
-  fieldName: keyof IncidentFormData,
-  value: any
-) => {
+export const validateField = (fieldName: keyof IncidentFormData, value: any) => {
   try {
     // Crear un schema parcial solo para el campo específico
     const fieldSchema = z.object({
       [fieldName]: incidentFormSchema.shape[fieldName],
     });
-
+    
     fieldSchema.parse({ [fieldName]: value });
     return null; // No error
   } catch (error) {
     if (error instanceof z.ZodError) {
       // Retornar el primer error del campo
-      const fieldError = error.errors.find((err) =>
-        err.path.includes(fieldName)
-      );
+      const fieldError = error.errors.find(err => err.path.includes(fieldName));
       return fieldError?.message || "Error de validación";
     }
     return "Error de validación";

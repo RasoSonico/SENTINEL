@@ -31,7 +31,6 @@ const SimpleLoginScreen = () => {
             name: "Usuario de Prueba",
             roles: ["CONTRATISTA"],
           },
-          role: "CONTRATISTA",
         })
       );
 

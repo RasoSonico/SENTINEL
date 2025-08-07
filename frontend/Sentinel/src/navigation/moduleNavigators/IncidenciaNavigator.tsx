@@ -44,15 +44,15 @@ export const IncidenciaNavigator = () => {
         },
       }}
     >
-      <Stack.Screen
-        name="IncidentsList"
+      <Stack.Screen 
+        name="IncidentsList" 
         component={IncidentListScreen}
         options={{
-          title: "Incidencias",
+          title: "Incidencias Registradas",
         }}
       />
-      <Stack.Screen
-        name="IncidentRegistration"
+      <Stack.Screen 
+        name="IncidentRegistration" 
         component={IncidentRegistrationScreen}
         options={{
           title: "Registrar incidencia",

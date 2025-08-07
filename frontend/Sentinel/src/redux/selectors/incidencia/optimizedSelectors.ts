@@ -1,12 +1,10 @@
-import { createSelector } from "@reduxjs/toolkit";
-import { RootState } from "../../store";
+import { createSelector } from '@reduxjs/toolkit';
+import { RootState } from '../../store';
 
 // Selectores base para evitar recreación
 const selectIncidenciaFormData = (state: RootState) => state.incidenciaFormData;
-const selectTypesById = (state: RootState) =>
-  state.incidenciaFormData.typesById;
-const selectClassificationsById = (state: RootState) =>
-  state.incidenciaFormData.classificationsById;
+const selectTypesById = (state: RootState) => state.incidenciaFormData.typesById;
+const selectClassificationsById = (state: RootState) => state.incidenciaFormData.classificationsById;
 
 // Selector memoizado para tipo por ID
 export const selectIncidentTypeById = createSelector(
@@ -45,30 +43,22 @@ export const selectIncidentClassificationDescriptionById = createSelector(
 );
 
 // Hooks optimizados con selectores memoizados
-import { useSelector } from "react-redux";
+import { useSelector } from 'react-redux';
 
 export const useOptimizedIncidentTypeById = (id: number) =>
   useSelector((state: RootState) => selectIncidentTypeById(state, id));
 
 export const useOptimizedIncidentClassificationById = (id: number) =>
-  useSelector((state: RootState) =>
-    selectIncidentClassificationById(state, id)
-  );
+  useSelector((state: RootState) => selectIncidentClassificationById(state, id));
 
 export const useOptimizedIncidentTypeNameById = (id: number) =>
   useSelector((state: RootState) => selectIncidentTypeNameById(state, id));
 
 export const useOptimizedIncidentClassificationNameById = (id: number) =>
-  useSelector((state: RootState) =>
-    selectIncidentClassificationNameById(state, id)
-  );
+  useSelector((state: RootState) => selectIncidentClassificationNameById(state, id));
 
 export const useOptimizedIncidentTypeDescriptionById = (id: number) =>
-  useSelector((state: RootState) =>
-    selectIncidentTypeDescriptionById(state, id)
-  );
+  useSelector((state: RootState) => selectIncidentTypeDescriptionById(state, id));
 
 export const useOptimizedIncidentClassificationDescriptionById = (id: number) =>
-  useSelector((state: RootState) =>
-    selectIncidentClassificationDescriptionById(state, id)
-  );
+  useSelector((state: RootState) => selectIncidentClassificationDescriptionById(state, id));

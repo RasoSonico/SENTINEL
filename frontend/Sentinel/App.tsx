@@ -3,7 +3,7 @@ import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { StatusBar } from "expo-status-bar";
 import { View, ActivityIndicator, Text } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { store, persistor } from "./src/redux/store";
 import { RootNavigator } from "./src/navigation/RootNagivator";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -26,10 +26,8 @@ export default function App() {
                   alignItems: "center",
                 }}
               >
-                <ActivityIndicator size="large" color="#030d18ff" />
-                <Text style={{ marginTop: 12, color: "#666" }}>
-                  Cargando...
-                </Text>
+                <ActivityIndicator size="large" color="#0366d6" />
+                <Text style={{ marginTop: 12, color: "#666" }}>Cargando...</Text>
               </View>
             }
             persistor={persistor}

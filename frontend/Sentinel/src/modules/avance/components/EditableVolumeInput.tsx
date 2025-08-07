@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import styles from "./styles/EditableVolumeInput.style";
+import styles from "./styles/EditableVolumeInput.styles";
 
 interface EditableVolumeInputProps {
   volume: string;
@@ -19,21 +19,21 @@ const EditableVolumeInput: React.FC<EditableVolumeInputProps> = ({
   // Función para validar y formatear el input en tiempo real
   const handleVolumeChange = (value: string) => {
     // Permitir solo números y un punto decimal
-    const numericValue = value.replace(/[^0-9.]/g, "");
-
+    const numericValue = value.replace(/[^0-9.]/g, '');
+    
     // Evitar múltiples puntos decimales
-    const parts = numericValue.split(".");
+    const parts = numericValue.split('.');
     if (parts.length > 2) {
       return; // No hacer nada si hay más de un punto
     }
-
+    
     // Limitar a 2 decimales
     if (parts.length === 2 && parts[1].length > 2) {
-      const limitedValue = parts[0] + "." + parts[1].substring(0, 2);
+      const limitedValue = parts[0] + '.' + parts[1].substring(0, 2);
       onChange(limitedValue);
       return;
     }
-
+    
     onChange(numericValue);
   };
 
@@ -42,26 +42,29 @@ const EditableVolumeInput: React.FC<EditableVolumeInputProps> = ({
       <View style={styles.inputRow}>
         <View style={styles.inputContainer}>
           <TextInput
-            style={[styles.input, error && styles.inputError]}
+            style={[
+              styles.input,
+              error && styles.inputError
+            ]}
             placeholder="Volumen"
             value={volume}
             onChangeText={handleVolumeChange}
             keyboardType="numeric"
             selectTextOnFocus
           />
-          <Ionicons
-            name="pencil"
-            size={16}
-            color="#3498db"
+          <Ionicons 
+            name="pencil" 
+            size={16} 
+            color="#3498db" 
             style={styles.editIcon}
           />
         </View>
-
+        
         <View style={styles.unitContainer}>
           <Text style={styles.unitText}>{unit}</Text>
         </View>
       </View>
-
+      
       {error && (
         <View style={styles.errorRow}>
           <Ionicons name="alert-circle" size={16} color="#e74c3c" />

@@ -76,7 +76,7 @@ export const useIncidentByIdQuery = (incidentId: number | null) =>
  */
 export const useCreateIncidentMutation = () => {
   const queryClient = useQueryClient();
-
+  
   return useMutation({
     mutationFn: (incident: CreateIncident) => createIncident(incident),
     onSuccess: () => {
@@ -91,21 +91,19 @@ export const useCreateIncidentMutation = () => {
  */
 export const useUpdateIncidentMutation = () => {
   const queryClient = useQueryClient();
-
+  
   return useMutation({
-    mutationFn: ({
-      incidentId,
-      incident,
-    }: {
-      incidentId: number;
+    mutationFn: ({ 
+      incidentId, 
+      incident 
+    }: { 
+      incidentId: number; 
       incident: CreateIncident;
     }) => updateIncident(incidentId, incident),
     onSuccess: (data, variables) => {
       // Invalidar queries relacionadas
       queryClient.invalidateQueries({ queryKey: ["incidents"] });
-      queryClient.invalidateQueries({
-        queryKey: ["incident", variables.incidentId],
-      });
+      queryClient.invalidateQueries({ queryKey: ["incident", variables.incidentId] });
     },
   });
 };
@@ -115,7 +113,7 @@ export const useUpdateIncidentMutation = () => {
  */
 export const usePatchIncidentMutation = () => {
   const queryClient = useQueryClient();
-
+  
   return useMutation({
     mutationFn: ({
       incidentId,
@@ -127,9 +125,7 @@ export const usePatchIncidentMutation = () => {
     onSuccess: (data, variables) => {
       // Invalidar queries relacionadas
       queryClient.invalidateQueries({ queryKey: ["incidents"] });
-      queryClient.invalidateQueries({
-        queryKey: ["incident", variables.incidentId],
-      });
+      queryClient.invalidateQueries({ queryKey: ["incident", variables.incidentId] });
     },
   });
 };
@@ -139,7 +135,7 @@ export const usePatchIncidentMutation = () => {
  */
 export const useDeleteIncidentMutation = () => {
   const queryClient = useQueryClient();
-
+  
   return useMutation({
     mutationFn: (incidentId: number) => deleteIncident(incidentId),
     onSuccess: () => {

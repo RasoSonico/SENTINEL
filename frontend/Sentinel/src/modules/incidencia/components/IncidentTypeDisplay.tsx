@@ -36,29 +36,33 @@ const getTypeIcon = (name: string): string => {
   return iconCache.get(name)!;
 };
 
-const IncidentTypeDisplay: React.FC<IncidentTypeDisplayProps> = memo(
-  ({ typeId, showIcon = true, size = "medium" }) => {
-    const typeName = useOptimizedIncidentTypeNameById(typeId);
+const IncidentTypeDisplay: React.FC<IncidentTypeDisplayProps> = memo(({
+  typeId,
+  showIcon = true,
+  size = "medium",
+}) => {
+  const typeName = useOptimizedIncidentTypeNameById(typeId);
 
-    // Memoizar cálculos costosos
-    const iconName = useMemo(() => getTypeIcon(typeName), [typeName]);
-    const sizeStyle = useMemo(() => styles[size], [size]);
-    const iconSize = useMemo(() => iconSizes[size], [size]);
+  // Memoizar cálculos costosos
+  const iconName = useMemo(() => getTypeIcon(typeName), [typeName]);
+  const sizeStyle = useMemo(() => styles[size], [size]);
+  const iconSize = useMemo(() => iconSizes[size], [size]);
 
-    return (
-      <View style={styles.container}>
-        {showIcon && (
-          <Ionicons
-            name={iconName as any}
-            size={iconSize}
-            color="#666"
-            style={styles.icon}
-          />
-        )}
-        <Text style={[styles.text, sizeStyle]}>{typeName}</Text>
-      </View>
-    );
-  }
-);
+  return (
+    <View style={styles.container}>
+      {showIcon && (
+        <Ionicons 
+          name={iconName as any} 
+          size={iconSize} 
+          color="#666" 
+          style={styles.icon} 
+        />
+      )}
+      <Text style={[styles.text, sizeStyle]}>
+        {typeName}
+      </Text>
+    </View>
+  );
+});
 
 export default IncidentTypeDisplay;
