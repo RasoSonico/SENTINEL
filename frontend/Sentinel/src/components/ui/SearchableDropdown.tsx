@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { View, FlatList, StyleSheet } from "react-native";
+import { View, FlatList, StyleSheet, TouchableOpacity } from "react-native";
 import { TextInput, List, Portal, Modal } from "react-native-paper";
 import { useDebounce } from "src/hooks/utils/useDebounce";
 
@@ -16,6 +16,10 @@ interface SearchableDropdownProps {
   selected?: string | number;
   disabled?: boolean;
 }
+
+const ITEM_HEIGHT = 56; // Approximate height per List.Item
+const MAX_VISIBLE_ITEMS = 5; // Threshold before scrolling
+const MAX_LIST_HEIGHT = ITEM_HEIGHT * MAX_VISIBLE_ITEMS;
 
 const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
   label,
@@ -52,21 +56,31 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
     onSelect(item.value);
   };
 
+  const handleOnPress = () => (!disabled ? setVisible(true) : undefined);
+
   return (
     <View>
-      <TextInput
-        label={label}
-        value={value}
-        editable={false}
-        right={
-          <TextInput.Icon icon="menu-down" onPress={() => setVisible(true)} />
-        }
-        theme={{ colors: { primary: "#009BE1" } }}
-        style={{ backgroundColor: "white", borderRadius: 8 }}
-        multiline
-        disabled={disabled}
-        onTouchStart={() => setVisible(true)}
-      />
+      {/* TouchableOpacity onPress is to handle Android actions */}
+      <TouchableOpacity onPress={handleOnPress}>
+        <TextInput
+          label={label}
+          value={value}
+          editable={false}
+          right={
+            <TextInput.Icon
+              disabled={disabled}
+              icon="menu-down"
+              onPress={handleOnPress}
+            />
+          }
+          theme={{ colors: { primary: "#009BE1" } }}
+          style={styles.input}
+          multiline
+          disabled={disabled}
+          // TextInput onPress is to handle iOS actions
+          onPress={handleOnPress}
+        />
+      </TouchableOpacity>
 
       <Portal>
         <Modal
@@ -79,7 +93,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
           contentContainerStyle={styles.modal}
         >
           <TextInput
-            style={{ backgroundColor: "white", borderRadius: 8 }}
+            style={styles.input}
             theme={{ colors: { primary: "#009BE1" } }}
             label={searchLabel || "Buscar..."}
             value={query}
@@ -88,10 +102,10 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
             autoFocus={searchFocused}
           />
           {filtered.length === 0 ? (
-            <View style={{ padding: 16 }}>
+            <View style={styles.noOptions}>
               <List.Item
                 title="No hay opciones disponibles"
-                titleStyle={{ color: "#888", textAlign: "center" }}
+                titleStyle={styles.noOptionsText}
                 disabled
               />
             </View>
@@ -105,7 +119,15 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
                   onPress={() => handleSelect(item)}
                 />
               )}
-              style={styles.list}
+              style={[
+                styles.list,
+                {
+                  maxHeight: Math.min(
+                    filtered.length * ITEM_HEIGHT,
+                    MAX_LIST_HEIGHT
+                  ),
+                },
+              ]}
               showsVerticalScrollIndicator={true}
             />
           )}
@@ -121,11 +143,20 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     padding: 20,
     borderRadius: 4,
-    maxHeight: "70%", // Limitar altura para permitir scroll
+  },
+  input: {
+    backgroundColor: "white",
+    borderRadius: 8,
   },
   list: {
-    maxHeight: 300, // Altura máxima para la lista
     marginTop: 10,
+  },
+  noOptions: {
+    padding: 16,
+  },
+  noOptionsText: {
+    color: "#888",
+    textAlign: "center",
   },
 });
 
