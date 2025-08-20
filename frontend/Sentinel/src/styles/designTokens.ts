@@ -272,7 +272,7 @@ export const ColorUtils = {
         return DesignTokens.colors.neutral[50];
     }
   },
-  
+
   // ✅ NUEVA FUNCIÓN PARA BORDES LATERALES DE CARDS
   getStatusBorderColor: (
     status: "PENDING" | "APPROVED" | "REJECTED" | "completed" | "onSchedule"

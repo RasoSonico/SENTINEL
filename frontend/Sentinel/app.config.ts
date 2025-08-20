@@ -33,10 +33,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   scheme: "sentinel",
   version: "1.0.0",
   orientation: "portrait",
-  icon: "./src/assets/SENTINEL_LOGO.png",
+  icon: "./src/assets/Icon.png",
   userInterfaceStyle: "light",
   splash: {
-    image: "./src/assets/SENTINEL_LOGO.png",
+    image: "./src/assets/SENTINEL.jpg",
     resizeMode: "contain",
     backgroundColor: "#ffffff",
   },
@@ -50,7 +50,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     adaptiveIcon: {
-      foregroundImage: "./src/assets/SENTINEL_LOGO.png",
+      foregroundImage: "./src/assets/Icon.png",
       backgroundColor: "#FFFFFF",
     },
     package: "com.urbaingenieria.sentinel",
