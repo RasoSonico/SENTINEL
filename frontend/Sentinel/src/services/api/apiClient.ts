@@ -25,6 +25,7 @@ const addTokenToRequestsInterceptor = (client: AxiosInstance) =>
         if (tokenResponse?.accessToken) {
           token = tokenResponse.accessToken;
           console.log("Using token from SecureStore (Azure AD)");
+          console.log("Token used:", token);
         }
       } catch (error: unknown) {
         console.log("No token found in SecureStore, trying AsyncStorage...");
