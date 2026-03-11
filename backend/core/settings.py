@@ -50,8 +50,9 @@ INSTALLED_APPS = [
     'cronograma',
     'recursos',
     'incidencias',
+    'reportes',
     'django_filters',
-    'drf_yasg',   
+    'drf_yasg',
 ]
 
 #Middleware

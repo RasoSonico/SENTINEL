@@ -42,6 +42,7 @@ urlpatterns = [
     path('api/avance/', include('avance.urls')),
     path('api/recursos/', include('recursos.urls')),
     path('api/incidencias/', include('incidencias.urls')),
+    path('api/reportes/', include('reportes.urls')),
 
     # Swagger URLs
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
