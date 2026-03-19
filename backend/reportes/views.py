@@ -9,6 +9,8 @@ from obra.models import Construction
 from .services.data_service import get_physical_advance_data
 from .services.excel_service import generate_physical_advance_excel
 
+_VALID_SCOPES = ('all', 'period')
+
 
 class PhysicalAdvanceReportView(APIView):
     """
@@ -16,9 +18,10 @@ class PhysicalAdvanceReportView(APIView):
       ?construction_id=<int>
       &date_from=<YYYY-MM-DD>
       &date_to=<YYYY-MM-DD>
+      &scope=<all|period>     (optional, default: all)
 
-    Returns an Excel file (.xlsx) with a table of physical advances
-    for the selected construction and date range.
+    scope=all    → all active concepts
+    scope=period → only concepts with at least one advance in the date range
     """
 
     def get(self, request):
@@ -57,7 +60,15 @@ class PhysicalAdvanceReportView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # ── 3. Resolve construction ──────────────────────────────────────
+        # ── 3. Validate scope ────────────────────────────────────────────
+        scope = request.query_params.get('scope', 'all')
+        if scope not in _VALID_SCOPES:
+            return Response(
+                {'error': f"scope must be one of: {', '.join(_VALID_SCOPES)}."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # ── 4. Resolve construction ──────────────────────────────────────
         try:
             construction = Construction.objects.get(pk=construction_id)
         except Construction.DoesNotExist:
@@ -66,14 +77,16 @@ class PhysicalAdvanceReportView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        # ── 4. Fetch data & generate Excel ───────────────────────────────
-        rows = get_physical_advance_data(construction, date_from, date_to)
-        buffer = generate_physical_advance_excel(construction, rows, date_from, date_to)
+        # ── 5. Fetch data & generate Excel ───────────────────────────────
+        table_data = get_physical_advance_data(construction, date_from, date_to, scope)
+        buffer = generate_physical_advance_excel(construction, table_data, date_from, date_to, scope)
 
-        filename = (
-            f"Avance_Fisico_{construction.name.replace(' ', '_')}"
-            f"_{date_from_str}_al_{date_to_str}.xlsx"
-        )
+        if date_from == date_to:
+            filename_date = date_from_str
+        else:
+            filename_date = f"{date_from_str}_al_{date_to_str}"
+
+        filename = f"Avance_Fisico_{construction.name.replace(' ', '_')}_{filename_date}.xlsx"
         content_type = (
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
