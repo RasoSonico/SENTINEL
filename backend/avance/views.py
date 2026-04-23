@@ -1386,8 +1386,30 @@ class CatalogBasePrefetchView(APIView):
                 )
             ).order_by('id')
             
-            # Serializar los datos
-            serializer = CatalogPrefetchSerializer(catalogs, many=True)
+            # Evaluate the queryset once — this triggers all prefetch_related queries
+            catalogs_list = list(catalogs)
+
+            # Collect concept IDs from already-in-memory prefetched objects (no extra DB hits)
+            all_concept_ids = [
+                concept.id
+                for catalog in catalogs_list
+                for work_item in catalog.work_items.all()
+                for concept in work_item.concepts.all()
+            ]
+
+            # Single aggregate query for cumulative approved volume across all concepts
+            cumulative_qs = Physical.objects.filter(
+                concept_id__in=all_concept_ids,
+            ).values('concept_id').annotate(cumulative=Sum('volume'))
+            cumulative_map = {row['concept_id']: row['cumulative'] for row in cumulative_qs}
+
+            # Serializar los datos, passing cumulative_map via context so each
+            # ConceptPrefetchSerializer can read its own value without extra queries
+            serializer = CatalogPrefetchSerializer(
+                catalogs_list,
+                many=True,
+                context={'cumulative_volumes': cumulative_map},
+            )
             
             # Calcular estadísticas
             total_catalogs = len(serializer.data)

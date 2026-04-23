@@ -218,17 +218,22 @@ class ConceptPrefetchSerializer(serializers.ModelSerializer):
     Serializer optimizado para conceptos en el prefetch
     """
     price = serializers.DecimalField(source='unit_price', max_digits=15, decimal_places=2, read_only=True)
-    
+    cumulative_volume = serializers.SerializerMethodField()
+
     class Meta:
         model = Concept
         fields = [
-            'id', 
-            'description', 
-            'unit', 
-            'quantity', 
+            'id',
+            'description',
+            'unit',
+            'quantity',
             'price',
-            'clasification'
+            'clasification',
+            'cumulative_volume',
         ]
+
+    def get_cumulative_volume(self, obj):
+        return str(self.context.get('cumulative_volumes', {}).get(obj.id, 0))
 
 class WorkItemPrefetchSerializer(serializers.ModelSerializer):
     """
