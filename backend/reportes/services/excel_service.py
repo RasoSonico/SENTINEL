@@ -13,6 +13,8 @@ from openpyxl.styles import (
 from openpyxl.utils import get_column_letter
 
 from obra.models import Construction
+import re
+
 from .data_service import PhysicalAdvanceRow, PhysicalAdvanceTableData
 
 
@@ -59,14 +61,28 @@ def _get_columns(scope: str):
     return _COLUMNS_ALL if scope == 'all' else _COLUMNS_PERIOD
 
 
+def _sanitize_sheet_name(name: str) -> str:
+    """Excel sheet names: max 31 chars, no \\ / * ? : [ ]"""
+    name = re.sub(r'[\\/*?:\[\]]', '', name).strip()
+    return name[:31] or 'Hoja'
+
+
 def _apply_border_and_fill(cell, fill):
     cell.fill = fill
     cell.border = _THIN_BORDER
 
 
-def _write_title(ws, construction: Construction, date_from: date, date_to: date, num_cols: int):
+def _write_title(
+    ws,
+    construction: Construction,
+    catalog_name: str,
+    date_from: date,
+    date_to: date,
+    num_cols: int,
+):
     last_col = get_column_letter(num_cols)
 
+    # Row 1 — construction name
     ws.merge_cells(f"A1:{last_col}1")
     title_cell = ws["A1"]
     title_cell.value = f"Reporte de Avance Físico — {construction.name}"
@@ -75,27 +91,35 @@ def _write_title(ws, construction: Construction, date_from: date, date_to: date,
     title_cell.alignment = Alignment(horizontal="center", vertical="center")
     ws.row_dimensions[1].height = 28
 
+    # Row 2 — catalog name
     ws.merge_cells(f"A2:{last_col}2")
-    period_cell = ws["A2"]
+    catalog_cell = ws["A2"]
+    catalog_cell.value = f"Catálogo: {catalog_name}"
+    catalog_cell.font = Font(name="Calibri", bold=True, size=11, color="FFFFFF")
+    catalog_cell.fill = _HEADER_FILL
+    catalog_cell.alignment = Alignment(horizontal="center", vertical="center")
+    ws.row_dimensions[2].height = 20
 
+    # Row 3 — date range
+    ws.merge_cells(f"A3:{last_col}3")
+    period_cell = ws["A3"]
     if date_from == date_to:
         period_label = f"Avance del {date_from.strftime('%d/%m/%Y')}"
     else:
         period_label = f"Avance del {date_from.strftime('%d/%m/%Y')} al {date_to.strftime('%d/%m/%Y')}"
-
     period_cell.value = period_label
     period_cell.font = Font(name="Calibri", size=11, color="FFFFFF")
     period_cell.fill = _SUBHDR_FILL
     period_cell.alignment = Alignment(horizontal="center", vertical="center")
-    ws.row_dimensions[2].height = 20
+    ws.row_dimensions[3].height = 20
 
-    ws.row_dimensions[3].height = 6  # spacer
+    ws.row_dimensions[4].height = 6  # spacer
 
 
 def _write_headers(ws, columns: list):
-    ws.row_dimensions[4].height = 40
+    ws.row_dimensions[5].height = 40
     for col_idx, header, _ in columns:
-        cell = ws.cell(row=4, column=col_idx, value=header)
+        cell = ws.cell(row=5, column=col_idx, value=header)
         cell.font = _WHITE_FONT
         cell.fill = _HEADER_FILL
         cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
@@ -103,7 +127,7 @@ def _write_headers(ws, columns: list):
 
 
 def _write_data_rows(ws, rows: list[PhysicalAdvanceRow], scope: str) -> int:
-    for row_idx, row in enumerate(rows, start=5):
+    for row_idx, row in enumerate(rows, start=6):
         fill = _ROW_ODD_FILL if row_idx % 2 else _ROW_EVEN_FILL
 
         if scope == 'all':
@@ -157,7 +181,7 @@ def _write_data_rows(ws, rows: list[PhysicalAdvanceRow], scope: str) -> int:
 
         ws.row_dimensions[row_idx].height = 18
 
-    return 4 + len(rows)
+    return 5 + len(rows)
 
 
 def _write_totals(
@@ -218,34 +242,41 @@ def _set_column_widths(ws, columns: list):
 
 def generate_physical_advance_excel(
     construction: Construction,
-    table_data: PhysicalAdvanceTableData,
+    catalogs_data: list[PhysicalAdvanceTableData],
     date_from: date,
     date_to: date,
     scope: Literal['all', 'period'] = 'all',
 ) -> BytesIO:
+    """
+    Builds one Excel sheet per catalog. Each sheet is fully independent
+    with its own title, headers, data rows and totals.
+    """
     columns = _get_columns(scope)
     num_cols = len(columns)
 
     wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "Avance Físico"
-    ws.freeze_panes = "A5"
+    wb.remove(wb.active)   # start with a clean workbook, no default sheet
 
-    _write_title(ws, construction, date_from, date_to, num_cols)
-    _write_headers(ws, columns)
-    last_data_row = _write_data_rows(ws, table_data.rows, scope)
+    for table_data in catalogs_data:
+        sheet_name = _sanitize_sheet_name(table_data.catalog_name)
+        ws = wb.create_sheet(title=sheet_name)
+        ws.freeze_panes = "A6"  # freeze through header row (now row 5)
 
-    if table_data.rows:
-        _write_totals(
-            ws,
-            table_data.rows,
-            last_data_row,
-            scope,
-            num_cols,
-            table_data.catalog_total_value,
-        )
+        _write_title(ws, construction, table_data.catalog_name, date_from, date_to, num_cols)
+        _write_headers(ws, columns)
+        last_data_row = _write_data_rows(ws, table_data.rows, scope)
 
-    _set_column_widths(ws, columns)
+        if table_data.rows:
+            _write_totals(
+                ws,
+                table_data.rows,
+                last_data_row,
+                scope,
+                num_cols,
+                table_data.catalog_total_value,
+            )
+
+        _set_column_widths(ws, columns)
 
     output = BytesIO()
     wb.save(output)

@@ -5,7 +5,7 @@ from typing import Literal
 from django.db.models import DecimalField, ExpressionWrapper, F, Sum, Q
 
 from obra.models import Construction
-from catalogo.models import Concept
+from catalogo.models import Catalog, Concept
 
 
 @dataclass
@@ -24,62 +24,13 @@ class PhysicalAdvanceRow:
 
 @dataclass
 class PhysicalAdvanceTableData:
+    catalog_id: int
+    catalog_name: str
     rows: list[PhysicalAdvanceRow]
-    catalog_total_value: float   # Σ (qty × unit_price) for ALL active concepts — always the full catalog
+    catalog_total_value: float   # Σ (qty × unit_price) — always the full catalog, scope-independent
 
 
-def get_physical_advance_data(
-    construction: Construction,
-    date_from: date,
-    date_to: date,
-    scope: Literal['all', 'period'] = 'all',
-) -> PhysicalAdvanceTableData:
-    """
-    Returns a PhysicalAdvanceTableData with:
-    - rows: one per active concept (filtered by scope)
-    - catalog_total_value: full catalog Σ(qty × unit_price), always unfiltered
-
-    scope='all'    → all active concepts
-    scope='period' → only concepts with at least one advance in the date range
-    """
-    base_filter = dict(
-        catalog__construction=construction,
-        catalog__is_active=True,
-        is_active=True,
-    )
-
-    # Single query: catalog total value — always full, scope-independent
-    catalog_total_value = float(
-        Concept.objects.filter(**base_filter).aggregate(
-            total=Sum(
-                ExpressionWrapper(
-                    F('quantity') * F('unit_price'),
-                    output_field=DecimalField(max_digits=20, decimal_places=2),
-                )
-            )
-        )['total'] or 0
-    )
-
-    # Main query: concepts with annotations
-    concepts = (
-        Concept.objects.filter(**base_filter)
-        .select_related('work_item')
-        .annotate(
-            executed_in_range=Sum(
-                'physical_progress__volume',
-                filter=Q(
-                    physical_progress__date__date__gte=date_from,
-                    physical_progress__date__date__lte=date_to,
-                ),
-            ),
-            total_executed=Sum('physical_progress__volume'),
-        )
-        .order_by('work_item__id', 'id')
-    )
-
-    if scope == 'period':
-        concepts = concepts.filter(executed_in_range__gt=0)
-
+def _build_rows(concepts) -> list[PhysicalAdvanceRow]:
     rows = []
     for concept in concepts:
         contracted_qty = float(concept.quantity)
@@ -104,5 +55,73 @@ def get_physical_advance_data(
                 progress_pct=round(progress_pct, 2),
             )
         )
+    return rows
 
-    return PhysicalAdvanceTableData(rows=rows, catalog_total_value=catalog_total_value)
+
+def get_physical_advance_data(
+    construction: Construction,
+    date_from: date,
+    date_to: date,
+    scope: Literal['all', 'period'] = 'all',
+    catalog_ids: list[int] | None = None,
+) -> list[PhysicalAdvanceTableData]:
+    """
+    Returns one PhysicalAdvanceTableData per catalog.
+
+    catalog_ids=None  → all active catalogs for the construction
+    catalog_ids=[...] → only the specified catalogs (already validated by the view)
+
+    scope='all'    → all active concepts per catalog
+    scope='period' → only concepts with at least one advance in the date range
+    """
+    catalogs = Catalog.objects.filter(construction=construction, is_active=True)
+    if catalog_ids:
+        catalogs = catalogs.filter(id__in=catalog_ids)
+
+    result = []
+
+    for catalog in catalogs:
+        base_filter = dict(catalog=catalog, is_active=True)
+
+        # Query 1: full catalog value — scope-independent denominator
+        catalog_total_value = float(
+            Concept.objects.filter(**base_filter).aggregate(
+                total=Sum(
+                    ExpressionWrapper(
+                        F('quantity') * F('unit_price'),
+                        output_field=DecimalField(max_digits=20, decimal_places=2),
+                    )
+                )
+            )['total'] or 0
+        )
+
+        # Query 2: annotated concepts
+        concepts = (
+            Concept.objects.filter(**base_filter)
+            .select_related('work_item')
+            .annotate(
+                executed_in_range=Sum(
+                    'physical_progress__volume',
+                    filter=Q(
+                        physical_progress__date__date__gte=date_from,
+                        physical_progress__date__date__lte=date_to,
+                    ),
+                ),
+                total_executed=Sum('physical_progress__volume'),
+            )
+            .order_by('work_item__id', 'id')
+        )
+
+        if scope == 'period':
+            concepts = concepts.filter(executed_in_range__gt=0)
+
+        result.append(
+            PhysicalAdvanceTableData(
+                catalog_id=catalog.id,
+                catalog_name=catalog.name or f'Catálogo {catalog.id}',
+                rows=_build_rows(concepts),
+                catalog_total_value=catalog_total_value,
+            )
+        )
+
+    return result
